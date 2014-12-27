@@ -27,6 +27,9 @@ json_t* SerializeModel(Model* model)
 int i;
 
 json_t* root=json_object();
+
+json_object_set_new(root,"name",json_string(model->Name));
+
 json_t* vertices=json_array();
     for(i=0;i<model->NumVertices;i++)
     {

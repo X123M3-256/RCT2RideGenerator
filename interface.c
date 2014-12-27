@@ -105,21 +105,22 @@ else gtk_entry_set_text(MainInterface->RideCapacityEntry,"No text in this langua
 static gboolean DeleteEvent(GtkWidget* widget,GdkEvent* event,gpointer data){
 return FALSE;
 }
-static void Exit(GtkWidget* widget,gpointer* data){
+static void Exit(GtkWidget* widget,gpointer data){
 DestroyInterface();
 gtk_main_quit();
 }
 
-static void OpenFile(GtkWidget* widget,gpointer* data){
+static void OpenFile(GtkWidget* widget,gpointer data){
 }
-static void SaveFile(GtkWidget* widget,gpointer* data){
+static void SaveFile(GtkWidget* widget,gpointer data){
 int i;
 MainWindow* interface=(MainWindow*)data;
 json_t* file=json_object();
 json_t* models=json_array();
-    for(i=0;i<interface->NumModels;i++)
+int numModels=NumModels();
+    for(i=0;i<numModels;i++)
     {
-    json_t* model=SerializeModel(interface->Models[i]);
+    json_t* model=SerializeModel(GetModelByIndex(i));
     json_array_append_new(models,model);
     }
 json_object_set_new(file,"models",models);
@@ -127,13 +128,13 @@ json_object_set_new(file,"models",models);
 json_dumpf(file,stdout,JSON_INDENT(4));
 putchar('\n');
 }
-static void OpenDatFile(GtkWidget* widget,gpointer* data){
+static void OpenDatFile(GtkWidget* widget,gpointer data){
 char* Filename=GetFilenameFromUser("Select file to open");
 if(Filename!=NULL)MainInterface->Dat=LoadDat(Filename);
 ImageViewerUpdate();
 StringHandlerLoad();
 }
-static void SaveDatFile(GtkWidget* widget,gpointer* data){
+static void SaveDatFile(GtkWidget* widget,gpointer data){
 
 GtkFileChooserDialog* FileDialog=gtk_file_chooser_dialog_new("Select file to open",NULL,GTK_FILE_CHOOSER_ACTION_SAVE,GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,GTK_STOCK_OK,GTK_RESPONSE_OK,NULL);
 char* Filename=NULL;
@@ -144,18 +145,18 @@ if(gtk_dialog_run(GTK_DIALOG(FileDialog))==GTK_RESPONSE_OK)
     };
 gtk_widget_destroy(FileDialog);
 }
-static void OpenTemplateFile(GtkWidget* widget,gpointer* data){
+static void OpenTemplateFile(GtkWidget* widget,gpointer data){
 char* Filename=GetFilenameFromUser("Select template file");
 //if(Filename!=NULL)LoadTemplate(Filename);
 }
 
-static void NextImage(GtkWidget* widget,gpointer* data){
+static void NextImage(GtkWidget* widget,gpointer data){
 ImageViewerNextImage();
 }
-static void PrevImage(GtkWidget* widget,gpointer* data){
+static void PrevImage(GtkWidget* widget,gpointer data){
 ImageViewerPrevImage();
 }
-static void MouseImage(GtkWidget *widget,GdkEvent *event,gpointer* data){
+static void MouseImage(GtkWidget *widget,GdkEvent *event,gpointer data){
     if(((GdkEventScroll*)event)->direction==GDK_SCROLL_UP)
     {
     ImageViewerNextImage();
@@ -166,7 +167,7 @@ static void MouseImage(GtkWidget *widget,GdkEvent *event,gpointer* data){
     }
 }
 
-static void SetLanguage(GtkWidget* widget,gpointer* data){
+static void SetLanguage(GtkWidget* widget,gpointer data){
 char* Language=gtk_combo_box_get_active_text(GTK_COMBO_BOX(widget));
 if(strcmp(Language,"English (UK)")==0)MainInterface->LanguageNum=0;
 else if(strcmp(Language,"English (US)")==0)MainInterface->LanguageNum=1;
@@ -181,15 +182,15 @@ else if(strcmp(Language,"Chinese")==0)MainInterface->LanguageNum=11;
 else if(strcmp(Language,"Portugese")==0)MainInterface->LanguageNum=13;
 StringHandlerLoad();
 }
-static int UpdateNameString(GtkWidget* widget,gpointer* data){
+static int UpdateNameString(GtkWidget* widget,gpointer data){
     if(MainInterface->Dat!=NULL)SetString(MainInterface->Dat,STRING_TABLE_NAME,MainInterface->LanguageNum,gtk_entry_get_text(MainInterface->RideNameEntry));
 return FALSE;
 }
-static int UpdateDescriptionString(GtkWidget* widget,gpointer* data){
+static int UpdateDescriptionString(GtkWidget* widget,gpointer data){
     if(MainInterface->Dat!=NULL)SetString(MainInterface->Dat,STRING_TABLE_DESCRIPTION,MainInterface->LanguageNum,gtk_entry_get_text(MainInterface->RideDescriptionEntry));
 return FALSE;
 }
-static int UpdateCapacityString(GtkWidget* widget,gpointer* data){
+static int UpdateCapacityString(GtkWidget* widget,gpointer data){
     if(MainInterface->Dat!=NULL)SetString(MainInterface->Dat,STRING_TABLE_CAPACITY,MainInterface->LanguageNum,gtk_entry_get_text(MainInterface->RideCapacityEntry));
 return FALSE;
 }
@@ -245,23 +246,34 @@ gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 */
 
+static void EditModel(GtkWidget* widget,gpointer* data)
+{
+Model* model=(Model*)data;
+CreateModelDialog(model);
+gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->Name);
+}
 
 static void AddNewModel(GtkWidget* widget,gpointer* data)
 {
 MainWindow* interface=(MainWindow*)data;
 char* filename=GetFilenameFromUser("Select model to load:");
-Model* model=LoadObj(filename);
-CreateModelDialog(model);
-
-interface->Models=realloc(interface->Models,(interface->NumModels+1)*sizeof(Model*));
-interface->Models[interface->NumModels++]=model;
+    if(filename)
+    {
+    //Load model
+    Model* model=LoadObj(filename);
+    //Create model dialog
+    CreateModelDialog(model);
+    //Add model to menu
+    GtkWidget* modelMenuItem=gtk_menu_item_new_with_label(model->Name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),modelMenuItem);
+    g_signal_connect(modelMenuItem,"activate",G_CALLBACK(EditModel),model);
+    gtk_widget_show(modelMenuItem);
+    }
 }
 
 MainWindow* CreateInterface()
 {
 MainInterface=malloc(sizeof(MainWindow));
-MainInterface->Models=NULL;
-MainInterface->NumModels=0;
 MainInterface->Dat=NULL;
 
 

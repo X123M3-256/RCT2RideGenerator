@@ -1,28 +1,15 @@
 #ifndef INTERFACE_H_INCLUDED
 #define INTERFACE_H_INCLUDED
 #include <gtk/gtk.h>
+#include "dat.h"
+#include "renderer.h"
 #include "types.h"
 
 typedef struct
 {
-GtkWindow* Window;
-GtkVBox* MainVBox;
-GtkHBox* LowerHBox;
-GtkVBox* LeftVBox;
-
-//Menu bar
-GtkMenuBar* MainMenu;
-GtkMenuItem* FileMenuItem;
-GtkMenuItem* AnimationMenuItem;
-//File menu;
-GtkMenu* FileMenu;
-GtkMenuItem* NewMenuItem;
-GtkMenuItem* OpenMenuItem;
-GtkMenuItem* SaveMenuItem;
-//Animation menu
-GtkMenu* AnimationMenu;
-GtkMenuItem* AddObjectMenuItem;
-GtkMenuItem* SaveTemplateMenuItem;
+GtkWidget* Window;
+GtkWidget* ModelMenu;
+ObjectFile* Dat;
 
 //Image display widgets
 int ImageDisplayCurrentImage;
@@ -42,6 +29,7 @@ GtkLabel* RideNameLabel;
 GtkEntry* RideNameEntry;
 GtkLabel* RideDescriptionLabel;
 GtkEntry* RideDescriptionEntry;
+GtkLabel* RideCapacityLabel;
 GtkEntry* RideCapacityEntry;
 GtkTable* StringEditingTable;
 

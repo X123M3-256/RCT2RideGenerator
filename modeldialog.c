@@ -277,6 +277,14 @@ ModelDialog* dialog=(ModelDialog*)user_data;
 dialog->paintState=NON_RECOLORABLE;
 }
 
+static void UpdateName(GtkWidget* widget,gpointer user_data)
+{
+Model* model=(Model*)user_data;
+const char* name=gtk_entry_get_text(GTK_ENTRY(widget));
+model->Name=realloc(model->Name,strlen(name)+1);
+strcpy(model->Name,name);
+}
+
 void CreateModelDialog(Model* model)
 {
 ModelDialog modelDialog;
@@ -288,6 +296,16 @@ GtkWidget* dialog=gtk_dialog_new_with_buttons("Model Settings",NULL,0,"OK",GTK_R
 GtkWidget* contentArea=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 modelDialog.dialog=dialog;
 
+//Name
+GtkWidget* nameBox=gtk_hbox_new(FALSE,1);
+GtkWidget* nameLabel=gtk_label_new("Name:");
+GtkWidget* name=gtk_entry_new();
+
+g_signal_connect(name,"changed",G_CALLBACK(UpdateName),model);
+gtk_entry_set_text(GTK_ENTRY(name),model->Name);
+gtk_box_pack_start(GTK_BOX(nameBox),nameLabel,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(nameBox),name,TRUE,TRUE,2);
+gtk_box_pack_start(GTK_BOX(contentArea),nameBox,TRUE,TRUE,2);
 
 //Scale
 GtkWidget* scaleBox=gtk_hbox_new(FALSE,1);
