@@ -47,7 +47,7 @@ int i;
 return NULL;
 }
 
-AnimFrame ParseFrames(char* Str)
+void ParseFrames(char* Str)
 {
 int FrameIndex=0;
 char* Token;
@@ -66,18 +66,17 @@ char* Token;
         }
         else if(strcmp(Token,"position")==0)
         {
-        Command=POSITION;
+//        Command=POSITION;
         }
         else if(strcmp(Token,"render")==0)
         {
-        Command=RENDER;
+  //      Command=RENDER;
         }
     Token=strtok(NULL," \n");
     if(Token==NULL)continue;
     AnimObject* Obj=GetObjectByName(Token);
-    Keyframe* Frame=GetKeyframeByIndex(Obj,FrameIndex);
+//    KeyFrame* Frame=GetKeyFrameByIndex(Obj,FrameIndex);
     }
-return Frame;
 }
 
 
@@ -129,12 +128,13 @@ return Str;
 AnimObject CreateAnimObject(Object* Obj)
 {
 AnimObject AnimObj;
-AnimObj.Keyframes=NULL;
+AnimObj.KeyFrames=NULL;
 AnimObj.NumKeyframes=0;
 AnimObj.Parent=NULL;
 AnimObj.Object=Obj;
 return AnimObj;
 }
+
 void AddObject(Object* Obj)
 {
 Anim->Objects=realloc(Anim->Objects,(Anim->NumObjects+1)*sizeof(AnimObject));
@@ -144,7 +144,7 @@ Anim->NumObjects++;
 
 void LoadTemplate(char* filename)
 {
-if(Anim!=NULL)FreeAnimation();
+//if(Anim!=NULL)FreeAnimation();
 
 char* Text=ReadFileText(filename);
 if(Text!=NULL)
@@ -167,20 +167,20 @@ if(Text!=NULL)
                 }
                 else if(strcmp(Token,"parent")==0)
                 {
-                Token=strtok(NULL," \n");
-                if(Token!=NULL)
-                {
-                AnimObject* Child=GetObjectByName(Token);
-                if(Child!=NULL)
-                {
-                Token=strtok(NULL," \n");
-                if(Token!=NULL)
-                {
-                AnimObject* Parent=GetObjectByName(Token);
-                if(Parent!=NULL)Child->Parent=Parent;
-                }
-                }
-                }
+                    Token=strtok(NULL," \n");
+                    if(Token!=NULL)
+                    {
+                        AnimObject* Child=GetObjectByName(Token);
+                            if(Child!=NULL)
+                            {
+                            Token=strtok(NULL," \n");
+                                if(Token!=NULL)
+                                {
+                                AnimObject* Parent=GetObjectByName(Token);
+                                    if(Parent!=NULL)Child->Parent=Parent;
+                                }
+                            }
+                    }
                 }
                 else if(strcmp(Token,"dat")==0)
                 {

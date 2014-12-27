@@ -11,14 +11,12 @@ List->Next=NULL;
 else List->Next=ListAdd(List->Next,Item);
 return List;
 }
-
 void* GetIndex(LList* List,int i)
 {
 if(List==NULL)return NULL;
 else if(i==0)return List->Data;
 else return GetIndex(List->Next,i-1);
 }
-
 void FreeList(LList* List)
 {
 free(List->Data);
@@ -47,7 +45,17 @@ while(Buffer->Pos+Num>=Buffer->Size)
 memcpy(Buffer->Buffer+Buffer->Pos,Source,Num);
 Buffer->Pos+=Num;
 }
-
+//Extends
+void ExpandBuffer(int Size,DynamicBuffer* Buffer)
+{
+while(Buffer->Pos+Size>=Buffer->Size)
+    {
+    Buffer->Size+=Buffer->Step;
+    Buffer->Buffer=realloc(Buffer->Buffer,Buffer->Size);
+    }
+memset(Buffer->Buffer+Buffer->Pos,0,Size);
+Buffer->Pos+=Size;
+}
 //Frees the buffer and returns the underlying char array, resized to the right size
 char* FreeBuffer(DynamicBuffer* Buffer)
 {

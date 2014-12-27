@@ -1,503 +1,489 @@
-#include <stdio.h>
-#include "palette.h"
-#include "datastructures.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<string.h>
 #include "renderer.h"
-static RenderInfo* Renderer;
+#include "linearalgebra.h"
+#define FRAME_BUFFER_SIZE 256
 
-typedef struct
-{
-char* Name;
-float r;
-float g;
-float b;
-}Material;
-typedef struct
-{
-int PointIndices[3];
-int NormalIndices[3];
-int MaterialIndex;
-}Face;
-typedef struct
-{
-LList* Materials;
-LList* Points;
-LList* Normals;
-LList* Faces;
-}ObjData;
 
-Material* CreateMaterial(char* name,float r,float g,float b)
+//3 metres per tile
+#define S (64.0/(3.0*sqrt(3.0)))
+//Dimetric projection
+const Matrix projection={
+      M_SQRT1_2*S  ,       0.0      ,   -M_SQRT1_2*S  , FRAME_BUFFER_SIZE/2.0,
+    0.5*M_SQRT1_2*S, sqrt(3.0)/2.0*S,  0.5*M_SQRT1_2*S, FRAME_BUFFER_SIZE/2.0,
+    sqrt(6.0)/4.0*S,   -1.0/2.0*S   ,  sqrt(6.0)/4.0*S,          0.0         ,
+           0.0     ,       0.0      ,        0.0      ,          1.0
+    };
+
+unsigned char FrameBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+float DepthBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+
+
+
+
+Image ImageFromFrameBuffer()
 {
-Material* Mat=malloc(sizeof(Material));
-int NameLen=strlen(name);
-Mat->Name=malloc(NameLen+1);
-strcpy(Mat->Name,name);
-Mat->r=r;
-Mat->g=g;
-Mat->b=b;
-return Mat;
+Image image;
+image.Width=FRAME_BUFFER_SIZE;
+image.Height=FRAME_BUFFER_SIZE;
+image.XOffset=-FRAME_BUFFER_SIZE/2;
+image.YOffset=-FRAME_BUFFER_SIZE/2;
+image.Data=malloc(FRAME_BUFFER_SIZE*sizeof(char*));
+image.Flags=5;
+int x,y;
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+    image.Data[y]=malloc(FRAME_BUFFER_SIZE);
+        for(x=0;x<FRAME_BUFFER_SIZE;x++)image.Data[y][x]=FrameBuffer[x][y];
+    }
+return image;
 }
-void FreeMaterial(Material* Mat)
+
+
+void ClearBuffers()
 {
-free(Mat->Name);
-free(Mat);
+int x,y;
+    for(x=0;x<FRAME_BUFFER_SIZE;x++)
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+    FrameBuffer[x][y]=0;
+    DepthBuffer[x][y]=-INFINITY;
+    }
 }
-void FreeMaterials(LList* Materials)
+
+//Fragment shader
+char ShadeFragment(Vector normal)
 {
-FreeMaterial(Materials->Data);
-if(Materials->Next!=NULL)FreeMaterials(Materials->Next);
-free(Materials);
+//printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
+const Vector lightDirection={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
+float lambert=VectorDotProduct(normal,lightDirection);
+if(lambert<0.0)lambert=0.0;
+return (int)(lambert*8.0)-4;
 }
-Vector* CreateVector(float x,float y,float z)
+
+
+//There's lots of linear interpolation of vectors to do, and this helps limit the amount of code
+typedef struct
 {
-Vector* Vec=malloc(sizeof(Vector));
-Vec->x=x;
-Vec->y=y;
-Vec->z=z;
-return Vec;
+Vector current;
+Vector step;
+}LinearInterp;
+inline LinearInterp LinearInterpInit(Vector x1,Vector x2,float u_start,float u_step)
+{
+LinearInterp interp;
+Vector diff=VectorSubtract(x2,x1);
+interp.current=VectorAdd(x1,VectorMultiply(diff,u_start));
+interp.step=VectorMultiply(diff,u_step);
+return interp;
 }
-Face* CreateFace(int MaterialIndex,int* Points,int* Normals)
+inline Vector LinearInterpStep(LinearInterp* interp)
 {
-Face* Poly=malloc(sizeof(Face));
-Poly->MaterialIndex=MaterialIndex;
+interp->current=VectorAdd(interp->current,interp->step);
+return interp->current;
+}
+
+/*Returns the indices of the first and last pixel enclosed int the range start-end.
+The value of skip is distance from the start of the range to the centre of the first pixel*/
+void GetEnclosedPixels(float start,float end,int* first,int* last,float* skip)
+{
+*first=(int)floor(start+0.5);
+*last=(int)floor(end-0.5);
+*skip=*first-start+0.5;
+//Ignore pixels lying outside the frame buffer
+    if(*first<0)
+    {
+    (*skip)+=-(*first);
+    *first=0;
+    }
+    if(*last>=FRAME_BUFFER_SIZE)*last=FRAME_BUFFER_SIZE-1;
+}
+
+inline float lerp(float x1,float x2,float u)
+{
+return x1+u*(x2-x1);
+}
+
+
+//Rasterizes a line from the first two vertices in the supplied primitive; others are ignored
+#define ABS(X) ((X)>0?(X):-(X))
+void RasterizeLine(Primitive* primitive)
+{
+Vector firstVertex,lastVertex;
+
+
+float dx=ABS(primitive->Vertices[0].X-primitive->Vertices[1].X);
+float dy=ABS(primitive->Vertices[0].Y-primitive->Vertices[1].Y);
+
+int steep=dy>dx;
+//If not steep, we step over x coordinate, otherwise, step over y. Either way, the first vertex must have the smaller coord
+
+    if((steep&&primitive->Vertices[0].Y<primitive->Vertices[1].Y)||(!steep&&primitive->Vertices[0].X<primitive->Vertices[1].X))
+    {
+    firstVertex=primitive->Vertices[0];
+    lastVertex=primitive->Vertices[1];
+    }
+    else
+    {
+    firstVertex=primitive->Vertices[1];
+    lastVertex=primitive->Vertices[0];
+    }
+
+int start,end;
+float skip;
+float u_step;
+//Step over y if steep, else x
+    if(steep)
+    {
+    GetEnclosedPixels(firstVertex.Y,lastVertex.Y,&start,&end,&skip);
+    u_step=1.0/dy;
+    }
+    else
+    {
+    GetEnclosedPixels(firstVertex.X,lastVertex.X,&start,&end,&skip);
+    u_step=1.0/dx;
+    }
+
+LinearInterp positionInterp=LinearInterpInit(firstVertex,lastVertex,skip*u_step,u_step);
+
 int i;
-    for(i=0;i<3;i++)
+    for(i=start;i<=end;i++)
     {
-    Poly->PointIndices[i]=Points[i];
-    Poly->NormalIndices[i]=Normals[i];
-    }
-return Poly;
-}
-LList* LoadMaterials(char* filename)
-{
-char* Data=ReadFileText(filename);
-LList* Materials=NULL;
-Material* CurMaterial=NULL;
-char* CurPtr=Data;
-char Str[8];
-    while(*CurPtr!=0)
-    {
-        if(sscanf(CurPtr,"%7s",Str)>0)
+    Vector position=positionInterp.current;
+    int x,y;
+        if(steep)
         {
-            if(strcmp(Str,"newmtl")==0)
-            {
-            char name[256];
-                if(sscanf(CurPtr,"newmtl %255s",name)==1)
-                {
-                CurMaterial=CreateMaterial(name,0,0,0);
-                Materials=ListAdd(Materials,CurMaterial);
-                }
-            }
-            //Diffuse color is the only property actually read
-            else if(strcmp(Str,"Kd")==0)
-            {
-            float r,g,b;
-                if(sscanf(CurPtr,"Kd %f %f %f",&r,&g,&b)==3)
-                {
-                CurMaterial->r=r;
-                CurMaterial->g=g;
-                CurMaterial->b=b;
-                }
-            }
-        }
-    while(*CurPtr!='\n'&&*CurPtr!=0)CurPtr++;//Go to next line
-    if(*CurPtr!=0)CurPtr++;
-    }
-return Materials;
-}
-ObjData* LoadObj(char* filename)
-{
-char* Data=ReadFileText(filename);
-
-LList* Points=NULL;
-LList* Normals=NULL;
-LList* Materials=NULL;
-LList* Faces=NULL;
-int CurMaterialIndex=-1;
-//Read file and extract data
-char* CurPtr=Data;
-char Str[8];
-    while(*CurPtr!=0)
-    {
-        if(sscanf(CurPtr,"%8s",Str)>0)
-        {
-            if(strcmp(Str,"mtllib")==0)
-            {
-            char* name[256];
-                if(sscanf(CurPtr,"mtllib %255s",name)==1)
-                {
-                Materials=LoadMaterials(name);
-                }
-            }
-            //Change material
-            else if(strcmp(Str,"usemtl")==0)
-            {
-            char* name[256];
-                if(sscanf(CurPtr,"usemtl %255s",name)==1)
-                {
-                LList* CurList=Materials;
-                CurMaterialIndex=-1;
-                while(CurList!=NULL)
-                {
-                CurMaterialIndex++;
-                if(strcmp(name,((Material*)(CurList->Data))->Name)==0)break;
-                CurList=CurList->Next;
-                }
-                }
-            }
-            //Load vertex
-            else if(strcmp(Str,"v")==0)
-            {
-            float x,y,z;
-                if(sscanf(CurPtr,"v %f %f %f",&x,&y,&z)==3)
-                {
-                Points=ListAdd(Points,CreateVector(x,y,z));
-                }
-            }
-            //Load normal
-            else if(strcmp(Str,"vn")==0)
-            {
-            float x,y,z;
-                if(sscanf(CurPtr,"vn %f %f %f",&x,&y,&z)==3)
-                {
-                Normals=ListAdd(Normals,CreateVector(x,y,z));
-                }
-            }
-            //Load face
-            else if(strcmp(Str,"f")==0)
-            {
-                int PointIndices[3];
-                int NormalIndices[3];
-                if(sscanf(CurPtr,"f %d//%d %d//%d %d//%d",PointIndices,NormalIndices,PointIndices+1,NormalIndices+1,PointIndices+2,NormalIndices+2)==6)
-                {
-                Faces=ListAdd(Faces,CreateFace(CurMaterialIndex,PointIndices,NormalIndices));
-                }
-            }
-        }
-    while(*CurPtr!='\n'&&*CurPtr!=0)CurPtr++;//Go to next line
-    if(*CurPtr!=0)CurPtr++;
-    }
-ObjData* Result=malloc(sizeof(ObjData));
-Result->Materials=Materials;
-Result->Points=Points;
-Result->Normals=Normals;
-Result->Faces=Faces;
-return Result;
-}
-struct VertexSignature
-{
-int MaterialIndex;
-int PointIndex;
-int NormalIndex;
-};
-Object* CreateObject(char* filename,char* name)
-{
-ObjData* Data=LoadObj(filename);
-
-//Generate the opengl vertices
-DynamicBuffer* VertexBuffer=CreateBuffer(512);
-DynamicBuffer* IndexBuffer=CreateBuffer(512);
-GLuint NumVertices=0;
-GLuint NumIndices=0;
-LList* VertexSignatures=NULL;
-LList* CurList=Data->Faces;
-    while(CurList!=NULL)
-    {
-    Face* CurFace=CurList->Data;
-    Material* CurMaterial=(Material*)GetIndex(Data->Materials,CurFace->MaterialIndex);
-    int i;
-        for(i=2;i>=0;i--)
-        {
-        Vertex CurVertex;
-        Vector* CurPoint=(Vector*)GetIndex(Data->Points,CurFace->PointIndices[i]-1);
-        Vector* CurNormal=(Vector*)GetIndex(Data->Normals,CurFace->NormalIndices[i]-1);
-        CurVertex.location[0]=CurPoint->x;
-        CurVertex.location[1]=CurPoint->y;
-        CurVertex.location[2]=CurPoint->z;
-
-        CurVertex.normal[0]=CurNormal->x;
-        CurVertex.normal[1]=CurNormal->y;
-        CurVertex.normal[2]=CurNormal->z;
-        if(CurMaterial!=NULL)
-        {
-        CurVertex.color[0]=(GLubyte)((CurMaterial->r*255)+0.5);
-        CurVertex.color[1]=(GLubyte)((CurMaterial->g*255)+0.5);
-        CurVertex.color[2]=(GLubyte)((CurMaterial->b*255)+0.5);
+        x=(int)position.X,
+        y=i;
         }
         else
         {
-        CurVertex.color[0]=255;
-        CurVertex.color[1]=255;
-        CurVertex.color[2]=255;
+        x=i;
+        y=(int)position.Y;
         }
-        WriteBuffer(&CurVertex,sizeof(Vertex),VertexBuffer);
-        WriteBuffer(&NumVertices,sizeof(GLuint),IndexBuffer);
-        NumVertices++;
-        NumIndices++;
+        if(x>=0&&x<FRAME_BUFFER_SIZE&&y>=0&&y<FRAME_BUFFER_SIZE&&position.Z>DepthBuffer[x][y])
+        {
+        FrameBuffer[x][y]=primitive->Color;
+        DepthBuffer[x][y]=position.Z;
         }
-    CurList=CurList->Next;
+    LinearInterpStep(&positionInterp);
     }
-FreeMaterials(Data->Materials);
-FreeList(Data->Points);
-FreeList(Data->Normals);
-FreeList(Data->Faces);
-
-
-Vertex* Vertices=(Vertex*)FreeBuffer(VertexBuffer);
-GLuint* Indices=(Vertex*)FreeBuffer(IndexBuffer);
-
-Object* Obj=malloc(sizeof(Object));
-Obj->Name=malloc(strlen(name)+1);
-strcpy(Obj->Name,name);
-Obj->NumVertices=NumVertices;
-Obj->NumIndices=NumIndices;
-Obj->Parent=NULL;
-glGenBuffers(1,&Obj->VBO);
-glGenBuffers(1,&Obj->IBO);
-glBindBuffer(GL_ARRAY_BUFFER,Obj->VBO);
-glBufferData(GL_ARRAY_BUFFER,Obj->NumVertices*sizeof(Vertex),Vertices,GL_STATIC_DRAW);
-
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,Obj->IBO);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER,Obj->NumIndices*sizeof(GLuint),Indices,GL_STATIC_DRAW);
-return Obj;
 }
-
-void FreeObject(Object* Obj)
+//DWISOTT
+void RasterizePrimitive(Primitive* primitive)
 {
-free(Obj->Name);
-free(Obj);
-}
-void InitOpenGL(int Width,int Height)
-{
-//Create render context
-Renderer=malloc(sizeof(RenderInfo));
-Renderer->Data=malloc(Width*Height*4*sizeof(GLubyte));
-Renderer->Width=Width;
-Renderer->Height=Height;
-OSMesaContext context=OSMesaCreateContext(OSMESA_RGB,NULL);
-OSMesaMakeCurrent(context,Renderer->Data,GL_UNSIGNED_BYTE,Width,Height);
-Renderer->Context=context;
-//Create shaders
-int FragmentShader=glCreateShader(GL_FRAGMENT_SHADER);
-int VertexShader=glCreateShader(GL_VERTEX_SHADER);
+Vector topVertex,middleVertex,bottomVertex,topNormal,middleNormal,bottomNormal;
+
+//Sort the vertices
+//Table of possible permutations. 0 values are not used
+const unsigned char permutations[8]={36,0,24,18,33,9,0,6};
+unsigned char bits=0;
+    //Three comparisons are sufficient to enumerate all 6 permutations
+    if(primitive->Vertices[0].Y<primitive->Vertices[1].Y)bits|=4;
+    if(primitive->Vertices[1].Y<primitive->Vertices[2].Y)bits|=2;
+    if(primitive->Vertices[0].Y<primitive->Vertices[2].Y)bits|=1;
+unsigned char permutation=permutations[bits];
+//printf("Permutation %d bits %d\n",permutation,bits);
+topVertex=primitive->Vertices[(permutation>>4)&3];
+topNormal=primitive->Normals[(permutation>>4)&3];
+middleVertex=primitive->Vertices[(permutation>>2)&3];
+middleNormal= primitive->Normals[(permutation>>2)&3];
+bottomVertex=primitive->Vertices[permutation&3];
+bottomNormal= primitive->Normals[permutation&3];
+//printf("%f %f %f\n",topVertex.Y,middleVertex.Y,bottomVertex.Y);
 
 
-char* FragmentShaderSource=ReadFileText("rct2shader.glsl");
-int Error;
-glShaderSource(FragmentShader,1,&FragmentShaderSource,NULL);
-glCompileShader(FragmentShader);
-glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Error);
-if(!Error)printf("Failed to compile fragment shader\n");
-free(FragmentShaderSource);
+int longest_side_right=middleVertex.X<lerp(topVertex.X,bottomVertex.X,(middleVertex.Y-topVertex.Y)/(bottomVertex.Y-topVertex.Y));
+//Actually rasterize triangle
 
-char* VertexShaderSource=ReadFileText("vertexshader.glsl");
-glShaderSource(VertexShader,1,&VertexShaderSource,NULL);
-glCompileShader(VertexShader);
-glGetShaderiv(VertexShader, GL_COMPILE_STATUS, &Error);
-if(!Error)printf("Failed to compile vertex shader\n");
-free(VertexShaderSource);
+int x_start=0,x_end=0;
+int y_start,y_end;
+float x_skip,y_skip;
+
+GetEnclosedPixels(topVertex.Y,middleVertex.Y,&y_start,&y_end,&y_skip);
 
 
-int ShaderProgram=glCreateProgram();
-glAttachShader(ShaderProgram,FragmentShader);
-glAttachShader(ShaderProgram,VertexShader);
-glLinkProgram(ShaderProgram);
-glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Error);
-if(!Error)printf("Failed to link shader program\n");
-Renderer->Shader=ShaderProgram;
-glUseProgram(ShaderProgram);
-//Create palette for render
-SetDrawablePalette(Renderer);
-//Set up matrices
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glClearColor(0.0,0.0,0.0,0.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  float ViewportWidth=((float)Renderer->Width)/12.3168;
-  float ViewportHeight=((float)Renderer->Height)/12.3168;
-  glOrtho(ViewportWidth/-2,ViewportWidth/2,ViewportHeight/-2,ViewportWidth/2,1,50);
-  glScalef(1.0,-1.0,1.0);
-  glTranslatef(0.0, 0.0, -25.0);
-  glRotatef(30, 1.0, 0.0, 0.0);
-  glRotatef(-45, 0.0, 1.0, 0.0);
-  return Renderer;
-}
+//Draw top triangle
+//Assume longest side is on the left
+float u_step=1/(middleVertex.Y-topVertex.Y);
+LinearInterp rightPositionInterp=LinearInterpInit(topVertex,middleVertex,y_skip*u_step,u_step);
+LinearInterp rightNormalInterp=LinearInterpInit(topNormal,middleNormal,y_skip*u_step,u_step);
 
-void QuitOpenGL()
-{
-OSMesaDestroyContext(Renderer->Context);
-free(Renderer->Data);
-free(Renderer);
-}
+u_step=1/(bottomVertex.Y-topVertex.Y);
+LinearInterp leftPositionInterp=LinearInterpInit(topVertex,bottomVertex,y_skip*u_step,u_step);
+LinearInterp leftNormalInterp=LinearInterpInit(topNormal,bottomNormal,y_skip*u_step,u_step);
 
-int Maximum(int a,int b,int c)
-{
-int max1=a>b?a:b;
-return max1>c?max1:c;
-}
-int Minimum(int a,int b,int c)
-{
-int max1=a<b?a:b;
-return max1<c?max1:c;
-}
-typedef struct
-{
-float Hue;
-float Saturation;
-float Value;
-}HSV;
-HSV GetHSV(Color RGB)
-{
-HSV ColorHSV;
-float Max=(float)(Maximum(RGB.Red,RGB.Blue,RGB.Green))/255.0;
-float Min=(float)(Minimum(RGB.Red,RGB.Blue,RGB.Green))/255.0;
-float Delta=Max-Min;
-//V
-ColorHSV.Value=Max;
-//S
-if(Max>0.002)
-{
-ColorHSV.Saturation=Delta/Max;
-    //H
-    if(RGB.Red==Max)
-		ColorHSV.Hue=((float)(RGB.Green-RGB.Blue)/255.0)/Delta;
-	else if(RGB.Blue==Max)
-		ColorHSV.Hue=2.0+((float)(RGB.Blue-RGB.Red)/255.0)/Delta;
-	else
-		ColorHSV.Hue=4.0+((float)(RGB.Red-RGB.Green)/255.0)/Delta;
 
-ColorHSV.Hue=ColorHSV.Hue/6.0;
-if(ColorHSV.Hue<0)ColorHSV.Hue+=1;
-}
-else
-{
-ColorHSV.Saturation=0.0;
-ColorHSV.Hue=0.0;//Technically, it's undefined, but I have to give it *some* value
-}
-return ColorHSV;
-}
-void SetDrawablePalette(RenderInfo* Renderer)
-{
-//Get locations of shader variables
-int Palette=glGetUniformLocation(Renderer->Shader,"Palette");
-int PaletteHSV=glGetUniformLocation(Renderer->Shader,"PaletteHSV");
-int Remap1Index=glGetUniformLocation(Renderer->Shader,"Remap1Index");
-int Remap2Index=glGetUniformLocation(Renderer->Shader,"Remap2Index");
 
-GLfloat* DrawablePalette=malloc(255*3*sizeof(GLfloat));
-GLfloat* DrawablePaletteHSV=malloc(255*3*sizeof(GLfloat));
-
-//Fill pallete with data: for now, this is everything minus the two default remappable colors. Later, this will depend on what's selected
+//Swap if that isn't the case
+    if(longest_side_right)
+    {
+    LinearInterp temp=leftPositionInterp;
+    leftPositionInterp=rightPositionInterp;
+    rightPositionInterp=temp;
+    temp=leftNormalInterp;
+    leftNormalInterp=rightNormalInterp;
+    rightNormalInterp=temp;
+    }
+//Rasterize the primitive
 int i;
-Color Col;
-HSV ColHSV;
-for(i=0;i<255;i++)
-    {
-    Col=GetColorFromPalette(i);
-    ColHSV=GetHSV(Col);
-    DrawablePalette[i*3]=((float)Col.Red)/255.0;
-    DrawablePalette[(i*3)+1]=((float)Col.Green)/255.0;
-    DrawablePalette[(i*3)+2]=((float)Col.Blue)/255.0;
-    DrawablePaletteHSV[i*3]=ColHSV.Hue;
-    DrawablePaletteHSV[(i*3)+1]=ColHSV.Saturation;
-    DrawablePaletteHSV[(i*3)+2]=ColHSV.Value;
-    }
-
-glUniform3fv(Palette,255,DrawablePalette);
-glUniform3fv(PaletteHSV,255,DrawablePaletteHSV);
-glUniform1i(Remap1Index,243);
-glUniform1i(Remap2Index,202);
-
-free(DrawablePalette);
-free(DrawablePaletteHSV);
-}
-
-void StartRender()
+//Loop twice: One to draw the top half and then again for the bottom half
+for(i=0;i<2;i++)
 {
-glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-glEnableClientState(GL_VERTEX_ARRAY);
-glEnableClientState(GL_NORMAL_ARRAY);
-glEnableClientState(GL_COLOR_ARRAY);
-}
-void FinishRender()
-{
-glDisableClientState(GL_NORMAL_ARRAY);
-glDisableClientState(GL_VERTEX_ARRAY);
-glFlush();
-}
-Image* GetRenderedImage()
-{
-Image* Img=malloc(sizeof(Image));
-
-
-int XStart=-1;
-int YStart=-1;
-int XEnd=-1;
-int YEnd=-1;
-
 int x,y;
-    for(x=0;x<Renderer->Width;x++)
+    for(y=y_start;y<=y_end;y++)
     {
-    int Flag=0;
-        for(y=0;y<Renderer->Height;y++)
+    //Interpolate values
+    Vector leftPosition=leftPositionInterp.current;
+    Vector rightPosition=rightPositionInterp.current;
+    Vector leftNormal=leftNormalInterp.current;
+    Vector rightNormal=rightNormalInterp.current;
+    //printf("%f %f\n",leftPosition.X,rightPosition);
+    //Get pixel range to use
+    GetEnclosedPixels(leftPosition.X,rightPosition.X,&x_start,&x_end,&x_skip);
+    u_step=1/(rightPosition.X-leftPosition.X);
+    LinearInterp curPositionInterp=LinearInterpInit(leftPosition,rightPosition,x_skip*u_step,u_step);
+    LinearInterp curNormalInterp=LinearInterpInit(leftNormal,rightNormal,x_skip*u_step,u_step);
+        for(x=x_start;x<=x_end;x++)
         {
-            if(Renderer->Data[(((y*Renderer->Width)+x)*3)]!=0)
+        Vector curPosition=curPositionInterp.current;
+        Vector curNormal=VectorNormalize(curNormalInterp.current);
+            if(curPosition.Z>DepthBuffer[x][y])
             {
-            Flag=1;
-            if(YStart==-1||y<YStart)YStart=y;
-            if(YEnd==-1||y+1>YEnd)YEnd=y+1;
+            FrameBuffer[x][y]=primitive->Color+ShadeFragment(curNormal);
+            DepthBuffer[x][y]=curPosition.Z;
             }
+        LinearInterpStep(&curPositionInterp);
+        LinearInterpStep(&curNormalInterp);
         }
-    if(XStart==-1&&Flag)XStart=x;
-    if(Flag)XEnd=x+1;
+    LinearInterpStep(&leftPositionInterp);
+    LinearInterpStep(&rightPositionInterp);
+    LinearInterpStep(&leftNormalInterp);
+    LinearInterpStep(&rightNormalInterp);
     }
-
-if(XStart==-1||YStart==-1||XEnd==-1||YEnd==-1)
-{
-XStart=0;
-XEnd=1;
-YStart=0;
-YEnd=1;
-}
-
-int Width=XEnd-XStart;
-int Height=YEnd-YStart;
-
-Img->Width=Width;
-Img->Height=Height;
-Img->Flags=1;
-Img->Data=malloc(Height*sizeof(char*));
-Img->XOffset=XStart-(Renderer->Width/2);
-Img->YOffset=YStart-(Renderer->Height/2);
-    for(y=0;y<Height;y++)
+//Compute new values of y_start and y_end
+GetEnclosedPixels(middleVertex.Y,bottomVertex.Y,&y_start,&y_end,&y_skip);
+//Compute new interpolation for the side that has changed
+u_step=1/(bottomVertex.Y-middleVertex.Y);
+    if(longest_side_right)
     {
-    Img->Data[y]=malloc(Width);
-        for(x=0;x<Width;x++)
+    leftPositionInterp=LinearInterpInit(middleVertex,bottomVertex,y_skip*u_step,u_step);
+    leftNormalInterp=LinearInterpInit(middleNormal,bottomNormal,y_skip*u_step,u_step);
+    }
+    else
+    {
+    rightPositionInterp=LinearInterpInit(middleVertex,bottomVertex,y_skip*u_step,u_step);
+    rightNormalInterp=LinearInterpInit(middleNormal,bottomNormal,y_skip*u_step,u_step);
+    }
+}
+
+}
+void TransformVectors(Matrix transform,Vector* source,Vector* dest,unsigned int num,float W)
+{
+int i;
+    for(i=0;i<num;i++)
+    {
+    dest[i].X=source[i].X*transform.Data[0]+source[i].Y*transform.Data[1]+source[i].Z*transform.Data[2]+W*transform.Data[3];
+    dest[i].Y=source[i].X*transform.Data[4]+source[i].Y*transform.Data[5]+source[i].Z*transform.Data[6]+W*transform.Data[7];
+    dest[i].Z=source[i].X*transform.Data[8]+source[i].Y*transform.Data[9]+source[i].Z*transform.Data[10]+W*transform.Data[11];
+    //printf("%f %f %f\n",dest[i].X,dest[i].Y,dest[i].Z);
+    }
+}
+void RenderModel(Model* model,Matrix modelView)
+{
+modelView=MatrixMultiply(modelView,model->transform);
+Matrix modelViewProjection=MatrixMultiply(projection,modelView);
+
+Vector* transformedVertices=malloc(model->NumVertices*sizeof(Vector));
+Vector* transformedNormals=malloc(model->NumNormals*sizeof(Vector));
+//Transform model into screen space
+TransformVectors(modelViewProjection,model->Vertices,transformedVertices,model->NumVertices,1.0);
+//Transform normals into world space (inverse transpose is broken but not actually needed)
+//Matrix normalTransform=MatrixTranspose(MatrixInverse(modelView));
+TransformVectors(modelView,model->Normals,transformedNormals,model->NumNormals,0.0);
+//Rasterize primitives TODO: Backface culling
+Primitive primitive;
+int i,j;
+    for(i=0;i<model->NumFaces;i++)
+    {
+    primitive.Color=model->Faces[i].Color;
+        for(j=0;j<3;j++)
         {
-        Img->Data[y][x]=Renderer->Data[((((y+YStart)*Renderer->Width)+(x+XStart))*3)];
+                switch(model->Faces[i].Flags)
+            {
+            case RECOLOR_GREEN:
+            primitive.Color=250;
+            break;
+            case RECOLOR_MAGENTA:
+            primitive.Color=209;
+            break;
+            default:
+            primitive.Color=model->Faces[i].Color;
+            break;
+            }
+        primitive.Vertices[j]=transformedVertices[model->Faces[i].Vertices[j]];
+        primitive.Normals[j]=transformedNormals[model->Faces[i].Normals[j]];
+        }
+    RasterizePrimitive(&primitive);
+    }
+    for(i=0;i<model->NumLines;i++)
+    {
+
+    primitive.Color=model->Lines[i].Color;
+    primitive.Vertices[0]=transformedVertices[model->Lines[i].Vertices[0]];
+    primitive.Vertices[1]=transformedVertices[model->Lines[i].Vertices[1]];
+    RasterizeLine(&primitive);
+    }
+free(transformedVertices);
+free(transformedNormals);
+}
+
+
+Vector ParseObjVertex()
+{
+Vector result;
+char* token;
+token=strtok(NULL," ");
+result.X=strtof(token,NULL);
+token=strtok(NULL," ");
+result.Y=strtof(token,NULL);
+token=strtok(NULL," ");
+result.Z=strtof(token,NULL);
+return result;
+}
+Line ParseObjLine(unsigned int curVertex)
+{
+Line line;
+line.Color=69;
+int i;
+    for(i=0;i<2;i++)
+    {
+    char* indices=strtok(NULL," ");
+    line.Vertices[i]=strtol(indices,NULL,10)-1;
+    }
+return line;
+}
+Face ParseObjFace(unsigned int curVertex,unsigned int curNormal)
+{
+Face face;
+//Initialize these with fixed values for now
+face.Flags=0;
+face.Color=16;
+
+int i;
+    for(i=0;i<3;i++)
+    {
+    char* indices=strtok(NULL," ");
+    face.Vertices[i]=strtol(indices,&indices,10)-1;
+    //Skip the slash
+    indices++;
+    //If the next char is not also a slash, there is a tex coord, which we ignore
+        if(*indices!='/')strtol(indices,&indices,10);
+    indices++;
+    face.Normals[i]=strtol(indices,&indices,10)-1;
+    face.Flags=RECOLOR_GREEN;
+    }
+return face;
+}
+Model* LoadObj(const char* filename)
+{
+//Buffer to read lines into
+char line[256];
+
+FILE* file=fopen(filename,"r");
+
+//In the first pass over the file, count the numbers of elements that will need to be allocated
+unsigned int numVertices=0;
+unsigned int numNormals=0;
+unsigned int numFaces=0;
+unsigned int numLines=0;
+    while(!feof(file))
+    {
+    //Read a line from the file
+    if(fgets(line,256,file)==NULL)break;
+    //Get the first token in the line
+    const char* type=strtok(line," ");
+        if(strcmp("v",type)==0)numVertices++;
+        else if(strcmp("vn",type)==0)numNormals++;
+        else if(strcmp("f",type)==0)numFaces++;
+        else if(strcmp("l",type)==0)numLines++;
+    }
+//Allocate model
+Model* model=malloc(sizeof(Model));
+model->transform=MatrixIdentity();
+model->NumVertices=numVertices;
+model->NumNormals=numNormals;
+model->NumFaces=numFaces;
+model->NumLines=numLines;
+model->Vertices=malloc(numVertices*sizeof(Vector));
+model->Normals=malloc(numNormals*sizeof(Vector));
+model->Faces=malloc(numFaces*sizeof(Face));
+model->Lines=malloc(numLines*sizeof(Line));
+//Need to keep track of indices
+int curVertex=0;
+int curNormal=0;
+int curFace=0;
+int curLine=0;
+
+//Seek back to start of file
+fseek(file,SEEK_SET,0);
+//Read file into model
+    while(!feof(file))
+    {
+    //Read a line from the file
+    if(fgets(line,256,file)==NULL)break;
+    //Get the first token in the line
+    const char* type=strtok(line," ");
+        if(strcmp("v",type)==0)model->Vertices[curVertex++]=ParseObjVertex();
+        else if(strcmp("vn",type)==0)model->Normals[curNormal++]=ParseObjVertex();
+        else if(strcmp("f",type)==0)model->Faces[curFace++]=ParseObjFace(curVertex,curNormal);
+        else if(strcmp("l",type)==0)model->Lines[curLine++]=ParseObjLine(curVertex);
+    }
+return model;
+}
+
+
+#define MIN(X,Y) ((X)<(Y)?(X):(Y))
+#define MAX(X,Y) ((X)>(Y)?(X):(Y))
+int IsInTriangle(Vector point,Vector t1,Vector t2,Vector t3,float* depth)
+{
+float denominator=((t2.Y-t3.Y)*(t1.X-t3.X)+(t3.X-t2.X)*(t1.Y-t3.Y));
+float a=((t2.Y-t3.Y)*(point.X-t3.X)+(t3.X-t2.X)*(point.Y-t3.Y))/denominator;
+float b=((t3.Y-t1.Y)*(point.X-t3.X)+(t1.X-t3.X)*(point.Y-t3.Y))/denominator;
+float c=1-a-b;
+    if(a>=0&&a<=1&&b>=0&&b<=1&&c>=0&&c<=1)
+    {
+    *depth=a*t1.Z+b*t2.Z+c*t3.Z;
+    return 1;
+    }
+return 0;
+}
+Face* GetFaceEnclosingPoint(Model* model,Matrix modelView,Vector coords)
+{
+//Transform model into screen space, reducing the test for intersection to a 2D problem
+Vector* transformedVertices=malloc(model->NumVertices*sizeof(Vector));
+modelView=MatrixMultiply(modelView,model->transform);
+Matrix modelViewProjection=MatrixMultiply(projection,modelView);
+TransformVectors(modelViewProjection,model->Vertices,transformedVertices,model->NumVertices,1.0);
+
+//Abbreviate variable name because it's used a lot
+#define TV transformedVertices
+
+float largestDepth=-INFINITY;
+Face* nearestFace=NULL;
+int i;
+    for(i=0;i<model->NumFaces;i++)
+    {
+    float depth;
+        if(IsInTriangle(coords,TV[model->Faces[i].Vertices[0]],TV[model->Faces[i].Vertices[1]],TV[model->Faces[i].Vertices[2]],&depth)&&depth>largestDepth)
+        {
+        largestDepth=depth;
+        nearestFace=model->Faces+i;
         }
     }
-return Img;
+free(transformedVertices);
+return nearestFace;
 }
-/*
-void SetModelView(Object* Obj)
-{
-if(Obj->Parent!=NULL)SetModelView(Obj->Parent);
-glTranslatef(Obj->Position.x,Obj->Position.y,Obj->Position.z);
-glRotatef(-Obj->Rotation.y,0.0,1.0,0.0);
-glRotatef(Obj->Rotation.x,1.0,0.0,0.0);
-glRotatef(Obj->Rotation.z,0.0,0.0,1.0);
-}
-*/
-void DrawObject(Object* Obj)
-{
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-//SetModelView(Obj);
-glBindBuffer(GL_ARRAY_BUFFER,Obj->VBO);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,Obj->IBO);
-glNormalPointer(GL_FLOAT,sizeof(Vertex),12);
-glColorPointer(3,GL_UNSIGNED_BYTE,sizeof(Vertex),24);
-glVertexPointer(3,GL_FLOAT,sizeof(Vertex),0);
-glDrawElements(GL_TRIANGLES,Obj->NumIndices,GL_UNSIGNED_INT,0);
-}
+
+
