@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include <jansson.h>
 #include "interface.h"
+#include "model.h"
 #include "palette.h"
 #include "image.h"
 #include "serialization.h"
@@ -11,9 +13,9 @@ static MainWindow* MainInterface;
 
 
 
-char* GetFilenameFromUser(char* Message)
+char* GetFilenameFromUser(char* Message,int action)
 {
-GtkWidget* FileDialog=gtk_file_chooser_dialog_new(Message,NULL,GTK_FILE_CHOOSER_ACTION_OPEN,GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,GTK_STOCK_OK,GTK_RESPONSE_OK,NULL);
+GtkWidget* FileDialog=gtk_file_chooser_dialog_new(Message,NULL,action,GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,GTK_STOCK_OK,GTK_RESPONSE_OK,NULL);
 char* Filename=NULL;
 if(gtk_dialog_run(GTK_DIALOG(FileDialog))==GTK_RESPONSE_OK)
     {
@@ -23,6 +25,30 @@ gtk_widget_destroy(FileDialog);
 return Filename;
 }
 
+
+static void EditModel(GtkWidget* widget,gpointer* data)
+{
+Model* model=(Model*)data;
+CreateModelDialog(model);
+gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->Name);
+}
+static void AddNewModel(GtkWidget* widget,gpointer* data)
+{
+//MainWindow* interface=(MainWindow*)data;
+char* filename=GetFilenameFromUser("Select model to load:",GTK_FILE_CHOOSER_ACTION_OPEN);
+    if(filename)
+    {
+    //Load model
+    Model* model=LoadObj(filename);
+    //Create model dialog
+    CreateModelDialog(model);
+    //Add model to menu
+    GtkWidget* modelMenuItem=gtk_menu_item_new_with_label(model->Name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),modelMenuItem);
+    g_signal_connect(modelMenuItem,"activate",G_CALLBACK(EditModel),model);
+    gtk_widget_show(modelMenuItem);
+    }
+}
 
 
 void ImageViewerUpdate(){
@@ -111,11 +137,32 @@ gtk_main_quit();
 }
 
 static void OpenFile(GtkWidget* widget,gpointer data){
+int i;
+char* filename=GetFilenameFromUser("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
+    if(filename==NULL)return;
+json_t* file=json_load_file(filename,0,NULL);
+//Load models
+json_t* models=json_object_get(file,"models");
+
+    for(i=0;i<json_array_size(models);i++)
+    {
+    Model* model=DeserializeModel(json_array_get(models,i));
+    AddModel(model);
+    //Add model to menu
+    GtkWidget* modelMenuItem=gtk_menu_item_new_with_label(model->Name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),modelMenuItem);
+    g_signal_connect(modelMenuItem,"activate",G_CALLBACK(EditModel),model);
+    gtk_widget_show(modelMenuItem);
+    }
 }
 static void SaveFile(GtkWidget* widget,gpointer data){
 int i;
 MainWindow* interface=(MainWindow*)data;
-json_t* file=json_object();
+
+char* filename=GetFilenameFromUser("Select filename",GTK_FILE_CHOOSER_ACTION_SAVE);
+    if(filename==NULL)return;
+
+json_t* json=json_object();
 json_t* models=json_array();
 int numModels=NumModels();
     for(i=0;i<numModels;i++)
@@ -123,13 +170,12 @@ int numModels=NumModels();
     json_t* model=SerializeModel(GetModelByIndex(i));
     json_array_append_new(models,model);
     }
-json_object_set_new(file,"models",models);
+json_object_set_new(json,"models",models);
 
-json_dumpf(file,stdout,JSON_INDENT(4));
-putchar('\n');
+json_dump_file(json,filename,0);
 }
 static void OpenDatFile(GtkWidget* widget,gpointer data){
-char* Filename=GetFilenameFromUser("Select file to open");
+char* Filename=GetFilenameFromUser("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
 if(Filename!=NULL)MainInterface->Dat=LoadDat(Filename);
 ImageViewerUpdate();
 StringHandlerLoad();
@@ -146,7 +192,7 @@ if(gtk_dialog_run(GTK_DIALOG(FileDialog))==GTK_RESPONSE_OK)
 gtk_widget_destroy(FileDialog);
 }
 static void OpenTemplateFile(GtkWidget* widget,gpointer data){
-char* Filename=GetFilenameFromUser("Select template file");
+char* Filename=GetFilenameFromUser("Select template file",GTK_FILE_CHOOSER_ACTION_OPEN);
 //if(Filename!=NULL)LoadTemplate(Filename);
 }
 
@@ -246,30 +292,6 @@ gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 */
 
-static void EditModel(GtkWidget* widget,gpointer* data)
-{
-Model* model=(Model*)data;
-CreateModelDialog(model);
-gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->Name);
-}
-
-static void AddNewModel(GtkWidget* widget,gpointer* data)
-{
-MainWindow* interface=(MainWindow*)data;
-char* filename=GetFilenameFromUser("Select model to load:");
-    if(filename)
-    {
-    //Load model
-    Model* model=LoadObj(filename);
-    //Create model dialog
-    CreateModelDialog(model);
-    //Add model to menu
-    GtkWidget* modelMenuItem=gtk_menu_item_new_with_label(model->Name);
-    gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),modelMenuItem);
-    g_signal_connect(modelMenuItem,"activate",G_CALLBACK(EditModel),model);
-    gtk_widget_show(modelMenuItem);
-    }
-}
 
 MainWindow* CreateInterface()
 {

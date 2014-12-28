@@ -39,5 +39,5 @@ GtkButton* AnimationRenderButton;
 }MainWindow;
 
 MainWindow* CreateInterface();
-char* GetFilenameFromUser(char* Message);
+char* GetFilenameFromUser(char* Message,int action);
 #endif // INTERFACE_H_INCLUDED
