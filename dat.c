@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "datastructures.h"
 #include "dat.h"
 
@@ -23,7 +24,7 @@ ChecksumLowerBits^=Byte;
 Checksum=ChecksumHigherBits|(int)ChecksumLowerBits;
 return (Checksum<<11)|(Checksum>>21);
 }
-char CountRepeatedBytes(char* Bytes,int Pos,int Size){
+char CountRepeatedBytes(uint8_t* Bytes,int Pos,int Size){
 char FirstChar=Bytes[Pos];
 char RepeatedBytes=1;
 Pos++;
@@ -110,10 +111,10 @@ int RowOffsetEnd=Bitmap->Height*2;
         XOffset+=NumToWrite;
         LastOne=Length&0x80;
         }
-    WriteBuffer(&RowDataStartOffset,2,GraphicData);
+    WriteBuffer((unsigned char*)&RowDataStartOffset,2,GraphicData);
     };
 int ScanDataSize=ScanBuffer->Pos;
-char* ScanData=FreeBuffer(ScanBuffer);
+unsigned char* ScanData=FreeBuffer(ScanBuffer);
 WriteBuffer(ScanData,ScanDataSize,GraphicData);
 free(ScanData);
 return StartAddress;
@@ -162,14 +163,14 @@ if(encodedBytes[0x10])
             {
             short numToCopy=(short)(encodedBytes[pos])+1;
             pos+=1;
-            WriteBuffer(encodedBytes+pos,numToCopy,decodedBytes);
+            WriteBuffer((unsigned char*)(encodedBytes+pos),numToCopy,decodedBytes);
             pos+=numToCopy;
             }
             else//Repeat bytes
             {
             char numToRepeat=1-encodedBytes[pos];
             pos++;
-            for(;numToRepeat>0;numToRepeat--)WriteBuffer(encodedBytes+pos,1,decodedBytes);
+            for(;numToRepeat>0;numToRepeat--)WriteBuffer((unsigned char*)(encodedBytes+pos),1,decodedBytes);
             pos++;
             }
         }
@@ -177,7 +178,7 @@ if(encodedBytes[0x10])
     else
     {
     //Data is not compressed, copy it to output
-    WriteBuffer(encodedBytes+HEADER_SIZE,fileSize-HEADER_SIZE,decodedBytes);
+    WriteBuffer((unsigned char*)(encodedBytes+HEADER_SIZE),fileSize-HEADER_SIZE,decodedBytes);
     }
 free(encodedBytes);
 uint8_t* bytes=(uint8_t*)FreeBuffer(decodedBytes);
@@ -539,7 +540,7 @@ unsigned char terminator=0xFF;
         {
         uint8_t language=(char)object->StringTables[i][stringNum]->Num;
         WriteBuffer(&language,1,decodedFile);
-        WriteBuffer(object->StringTables[i][stringNum]->Str,strlen(object->StringTables[i][stringNum]->Str)+1,decodedFile);
+        WriteBuffer((unsigned char*)object->StringTables[i][stringNum]->Str,strlen(object->StringTables[i][stringNum]->Str)+1,decodedFile);
         stringNum++;
         }
     WriteBuffer(&terminator,1,decodedFile);
@@ -565,13 +566,13 @@ WriteBuffer(&structures->NumStructures,1,decodedFile);
         else
         {
         uint8_t value=0xFFu;
-        WriteBuffer(&value,1,decodedFile);
-        WriteBuffer(&structures->PeepPositions[i].Num,2,decodedFile);
+        WriteBuffer((uint8_t*)&value,1,decodedFile);
+        WriteBuffer((uint8_t*)&structures->PeepPositions[i].Num,2,decodedFile);
         }
-    WriteBuffer(structures->PeepPositions[i].Positions,structures->PeepPositions[i].Num,decodedFile);
+    WriteBuffer((uint8_t*)structures->PeepPositions[i].Positions,structures->PeepPositions[i].Num,decodedFile);
     }
 
-WriteBuffer(&object->NumImages,4,decodedFile);
+WriteBuffer((uint8_t*)&object->NumImages,4,decodedFile);
 int graphicDataSizeOffset=decodedFile->Pos;
 ExpandBuffer(4,decodedFile);
 
@@ -585,25 +586,25 @@ DynamicBuffer* graphicData=CreateBuffer(512);
         if(image->Flags==1)startAddress=WriteSimpleBitmap(image,graphicData);
         else startAddress=WriteCompactBitmap(image,graphicData);
     //Write TGraphicRecord to file buffer
-    WriteBuffer(&startAddress,4,decodedFile);
-    WriteBuffer(&image->Width,2,decodedFile);
-    WriteBuffer(&image->Height,2,decodedFile);
-    WriteBuffer(&image->XOffset,2,decodedFile);
-    WriteBuffer(&image->YOffset,2,decodedFile);
-    WriteBuffer(&image->Flags,2,decodedFile);//TODO-Actually check if this is the case
+    WriteBuffer((unsigned char*)&startAddress,4,decodedFile);
+    WriteBuffer((unsigned char*)&image->Width,2,decodedFile);
+    WriteBuffer((unsigned char*)&image->Height,2,decodedFile);
+    WriteBuffer((unsigned char*)&image->XOffset,2,decodedFile);
+    WriteBuffer((unsigned char*)&image->YOffset,2,decodedFile);
+    WriteBuffer((unsigned char*)&image->Flags,2,decodedFile);//TODO-Actually check if this is the case
     ExpandBuffer(2,decodedFile);//Padding
     }
 //Write size of graphic data
 int graphicDataSize=graphicData->Pos;
 memcpy(decodedFile->Buffer+graphicDataSizeOffset,&graphicDataSize,4);
 //Write data buffer to file buffer
-char* graphicBytes=FreeBuffer(graphicData);
+unsigned char* graphicBytes=FreeBuffer(graphicData);
 WriteBuffer(graphicBytes,graphicDataSize,decodedFile);
 free(graphicBytes);
 
 //Finished writing decoded file
 int dataSize=decodedFile->Pos;
-char* bytes=FreeBuffer(decodedFile);
+unsigned char* bytes=FreeBuffer(decodedFile);
 
 /*
 FILE* decomp=fopen("DECOMPRESSED.DAT","w");
@@ -616,19 +617,19 @@ int pos=0;
 
     while(pos<dataSize)
     {
-    char repeatedBytes=CountRepeatedBytes(bytes,pos,dataSize);
+    int8_t repeatedBytes=CountRepeatedBytes(bytes,pos,dataSize);
         if(repeatedBytes>1)
         {
         //Bytes are repeated
-        char byteToWryte=1-repeatedBytes;
-        WriteBuffer(&byteToWryte,1,encodedBytes);//Number of bytes to repeat
-        WriteBuffer(bytes+pos,1,encodedBytes);//Byte to repeat
+        int8_t byteToWryte=1-repeatedBytes;
+        WriteBuffer((uint8_t*)&byteToWryte,1,encodedBytes);//Number of bytes to repeat
+        WriteBuffer((uint8_t*)(bytes+pos),1,encodedBytes);//Byte to repeat
         pos+=repeatedBytes;
         }
         else
         {
         int bytesToCopy=CountDifferingBytes(bytes,pos,dataSize);
-        char byteToWryte=bytesToCopy-1;
+        uint8_t byteToWryte=bytesToCopy-1;
         WriteBuffer(&byteToWryte,1,encodedBytes);//Number of bytes to copy
         WriteBuffer(bytes+pos,bytesToCopy,encodedBytes);//Byte to copy
         pos+=bytesToCopy;
@@ -649,7 +650,7 @@ header[0]=0x00;
 
 //Write filename in header
 memset(header+4,' ',8);
-strncpy(header+4,upperCaseFilename,strlen(upperCaseFilename));
+strncpy((char*)(header+4),upperCaseFilename,strlen(upperCaseFilename));
 
 //Specify that data is compressed
 header[0x10]=1;
@@ -677,7 +678,6 @@ checksumByte=(uint8_t)((checksum&0xFF000000)>>24);
 header[15]=checksumByte;
 
 //Write file size
-uint32_t fileSize=compressedDataSize+HEADER_SIZE;
 uint8_t fileSizeByte=(uint8_t)(compressedDataSize&0xFF);
 header[17]=fileSizeByte;
 fileSizeByte=(uint8_t)((compressedDataSize&0xFF00)>>8);
