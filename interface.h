@@ -8,7 +8,12 @@
 typedef struct
 {
 GtkWidget* Window;
+GtkWidget* MainMenu;
 GtkWidget* ModelMenu;
+GtkWidget* AnimationMenu;
+GtkWidget* MainVBox;
+GtkWidget* LeftVBox;
+GtkWidget* LowerHBox;
 ObjectFile* Dat;
 
 //Image display widgets

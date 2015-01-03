@@ -2,11 +2,13 @@
 #include <jansson.h>
 #include "interface.h"
 #include "model.h"
+#include "animation.h"
 #include "palette.h"
+#include "ridetypes.h"
 #include "image.h"
 #include "serialization.h"
 #include "modeldialog.h"
-//#include "animation.h"
+
 
 static MainWindow* MainInterface;
 
@@ -50,13 +52,32 @@ char* filename=GetFilenameFromUser("Select model to load:",GTK_FILE_CHOOSER_ACTI
     }
 }
 
+static void EditAnimation(GtkWidget* widget,gpointer* data)
+{
+Animation* animation=(Animation*)data;
+CreateAnimationDialog(animation);
+gtk_menu_item_set_label(GTK_MENU_ITEM(widget),animation->Name);
+}
+static void AddNewAnimation(GtkWidget* widget,gpointer* data)
+{
+Animation* animation=CreateAnimation();
+AddAnimation(animation);
+CreateAnimationDialog(animation);
+
+//Add animation to menu
+GtkWidget* animationMenuItem=gtk_menu_item_new_with_label(animation->Name);
+gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->AnimationMenu),animationMenuItem);
+g_signal_connect(animationMenuItem,"activate",G_CALLBACK(EditAnimation),animation);
+gtk_widget_show(animationMenuItem);
+}
+
 
 void ImageViewerUpdate(){
     if(MainInterface->Dat==NULL)return;
 int NumImages=MainInterface->Dat->NumImages;
     if(MainInterface->ImageDisplayCurrentImage>=NumImages)MainInterface->ImageDisplayCurrentImage=0;
 
-Image* RideImage=MainInterface->Dat->Images+MainInterface->ImageDisplayCurrentImage;
+Image* RideImage=MainInterface->Dat->Images[MainInterface->ImageDisplayCurrentImage];
 
 int rowstride=gdk_pixbuf_get_rowstride(MainInterface->ImageDisplayPixbuf);
 guchar* pixels=gdk_pixbuf_get_pixels(MainInterface->ImageDisplayPixbuf);
@@ -103,7 +124,7 @@ gtk_label_set_text(MainInterface->ImageDisplayPositionLabel,str);
 void ImageViewerNextImage(){
     if(MainInterface->Dat==NULL)return;
 //AnimationUpdateData();
-if(MainInterface->ImageDisplayCurrentImage+1<MainInterface->Dat->NumImages)MainInterface->ImageDisplayCurrentImage++;
+if(MainInterface->ImageDisplayCurrentImage+1<MainInterface->Dat->NumImages)MainInterface->ImageDisplayCurrentImage+=7;
 ImageViewerUpdate(MainInterface);
 //AnimationUpdateText();
 }
@@ -140,19 +161,26 @@ static void OpenFile(GtkWidget* widget,gpointer data){
 int i;
 char* filename=GetFilenameFromUser("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
     if(filename==NULL)return;
-json_t* file=json_load_file(filename,0,NULL);
-//Load models
-json_t* models=json_object_get(file,"models");
-
-    for(i=0;i<json_array_size(models);i++)
+DeserializeFile(filename);
+int numModels=NumModels();
+    for(i=0;i<numModels;i++)
     {
-    Model* model=DeserializeModel(json_array_get(models,i));
-    AddModel(model);
     //Add model to menu
+    Model* model=GetModelByIndex(i);
     GtkWidget* modelMenuItem=gtk_menu_item_new_with_label(model->Name);
     gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),modelMenuItem);
     g_signal_connect(modelMenuItem,"activate",G_CALLBACK(EditModel),model);
     gtk_widget_show(modelMenuItem);
+    }
+int numAnimations=NumAnimations();
+    for(i=0;i<numAnimations;i++)
+    {
+    //Add animation to menu
+    Animation* animation=GetAnimationByIndex(i);
+    GtkWidget* animationMenuItem=gtk_menu_item_new_with_label(animation->Name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->AnimationMenu),animationMenuItem);
+    g_signal_connect(animationMenuItem,"activate",G_CALLBACK(EditAnimation),animation);
+    gtk_widget_show(animationMenuItem);
     }
 }
 static void SaveFile(GtkWidget* widget,gpointer data){
@@ -172,7 +200,17 @@ int numModels=NumModels();
     }
 json_object_set_new(json,"models",models);
 
+json_t* animations=json_array();
+int numAnimations=NumAnimations();
+    for(i=0;i<numAnimations;i++)
+    {
+    json_t* animation=SerializeAnimation(GetAnimationByIndex(i));
+    json_array_append_new(animations,animation);
+    }
+json_object_set_new(json,"animations",animations);
+
 json_dump_file(json,filename,0);
+putchar('\n');
 }
 static void OpenDatFile(GtkWidget* widget,gpointer data){
 char* Filename=GetFilenameFromUser("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
@@ -241,6 +279,29 @@ static int UpdateCapacityString(GtkWidget* widget,gpointer data){
 return FALSE;
 }
 
+static int SetTrackStyle(GtkWidget* widget,gpointer data)
+{
+MainWindow* interface=(MainWindow*)data;
+ObjectFile* object=(ObjectFile*)(interface->Dat);
+RideHeader* header=(RideHeader*)(object->ObjectHeader);
+
+const char* text=gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+    if(text==NULL)return;
+int i;
+    for(i=0;i<NUM_RIDE_TYPES;i++)
+    {
+        if(strcmp(RideTypes[i].name,text)==0)
+        {
+        header->TrackStyle=RideTypes[i].id;
+        break;
+        }
+    }
+}
+static int RenderSprites(GtkWidget* widget,gpointer data)
+{
+
+}
+
 /*
 static int UpdateAnimationData(GtkWidget* widget,gpointer* data){
 //AnimationUpdateData();
@@ -293,23 +354,16 @@ gtk_widget_destroy(GTK_WIDGET(dialog));
 */
 
 
-MainWindow* CreateInterface()
+void BuildMenus(MainWindow* MainInterface)
 {
-MainInterface=malloc(sizeof(MainWindow));
-MainInterface->Dat=NULL;
-
-
-MainInterface->Window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-g_signal_connect(MainInterface->Window,"delete-event",G_CALLBACK(DeleteEvent),NULL);
-g_signal_connect(MainInterface->Window,"destroy",G_CALLBACK(Exit),NULL);
-
 //Set up the menus
-
-GtkWidget* mainMenu=gtk_menu_bar_new();
+MainInterface->MainMenu=gtk_menu_bar_new();
 GtkWidget* fileMenuItem=gtk_menu_item_new_with_label("File");
 GtkWidget* modelMenuItem=gtk_menu_item_new_with_label("Model");
-gtk_menu_shell_append(GTK_MENU_SHELL(mainMenu),fileMenuItem);
-gtk_menu_shell_append(GTK_MENU_SHELL(mainMenu),modelMenuItem);
+GtkWidget* animationMenuItem=gtk_menu_item_new_with_label("Animation");
+gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->MainMenu),fileMenuItem);
+gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->MainMenu),modelMenuItem);
+gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->MainMenu),animationMenuItem);
 
 GtkWidget* fileMenu=gtk_menu_new();
 GtkWidget* newMenuItem=gtk_menu_item_new_with_label("New from template");
@@ -327,9 +381,15 @@ MainInterface->ModelMenu=gtk_menu_new();
 GtkWidget* addModelMenuItem=gtk_menu_item_new_with_label("Add Model");
 gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->ModelMenu),addModelMenuItem);
 
+MainInterface->AnimationMenu=gtk_menu_new();
+GtkWidget* addAnimationMenuItem=gtk_menu_item_new_with_label("Add Animation");
+gtk_menu_shell_append(GTK_MENU_SHELL(MainInterface->AnimationMenu),addAnimationMenuItem);
+
 gtk_menu_item_set_submenu(fileMenuItem,fileMenu);
 gtk_menu_item_set_submenu(modelMenuItem,MainInterface->ModelMenu);
+gtk_menu_item_set_submenu(animationMenuItem,MainInterface->AnimationMenu);
 
+gtk_box_pack_start(GTK_BOX(MainInterface->MainVBox),MainInterface->MainMenu,FALSE,FALSE,0);
 //Set up callbacks for menu
 g_signal_connect(newMenuItem,"activate",G_CALLBACK(OpenTemplateFile),NULL);
 g_signal_connect(openMenuItem,"activate",G_CALLBACK(OpenFile),NULL);
@@ -337,9 +397,12 @@ g_signal_connect(saveMenuItem,"activate",G_CALLBACK(SaveFile),MainInterface);
 g_signal_connect(openDatMenuItem,"activate",G_CALLBACK(OpenDatFile),NULL);
 g_signal_connect(saveDatMenuItem,"activate",G_CALLBACK(SaveDatFile),NULL);
 g_signal_connect(addModelMenuItem,"activate",G_CALLBACK(AddNewModel),MainInterface);
+g_signal_connect(addAnimationMenuItem,"activate",G_CALLBACK(AddNewAnimation),MainInterface);
+}
 
+void BuildImageDisplay(MainWindow* MainInterface)
+{
 //Set up the image display interface
-
 MainInterface->ImageDisplayCurrentImage=0;
 MainInterface->ImageDisplayImage=gtk_image_new();
 MainInterface->ImageDisplayPixbuf=CreateBlankPixbuf();
@@ -359,10 +422,16 @@ gtk_box_pack_start(GTK_BOX(MainInterface->ImageDisplayVBox),MainInterface->Image
 
 MainInterface->ImageDisplayEventBox=gtk_event_box_new();
 gtk_container_add(GTK_CONTAINER(MainInterface->ImageDisplayEventBox),MainInterface->ImageDisplayVBox);
+gtk_box_pack_start(GTK_BOX(MainInterface->LowerHBox),MainInterface->ImageDisplayEventBox,FALSE,FALSE,0);
+//Set up callbacks for image viewer
+g_signal_connect(MainInterface->ImageDisplayNextButton,"clicked",G_CALLBACK(NextImage),NULL);
+g_signal_connect(MainInterface->ImageDisplayPrevButton,"clicked",G_CALLBACK(PrevImage),NULL);
+g_signal_connect(MainInterface->ImageDisplayEventBox,"scroll-event",G_CALLBACK(MouseImage),NULL);
+}
 
-
+void BuildStringHandler(MainWindow* MainInterface)
+{
 //Set up the string editing interface
-
 MainInterface->LanguageNum=0;
 MainInterface->RideNameLabel=gtk_label_new("Name:");
 MainInterface->RideNameEntry=gtk_entry_new();
@@ -392,29 +461,8 @@ gtk_table_attach_defaults(MainInterface->StringEditingTable,MainInterface->RideC
 gtk_table_attach_defaults(MainInterface->StringEditingTable,MainInterface->LanguageComboBox,0,2,3,4);
 
 
+gtk_box_pack_start(GTK_BOX(MainInterface->LeftVBox),MainInterface->StringEditingTable,FALSE,FALSE,0);
 
-GtkWidget* leftVBox=gtk_vbox_new(FALSE,5);
-gtk_box_pack_start(GTK_BOX(leftVBox),MainInterface->StringEditingTable,FALSE,FALSE,0);
-
-GtkWidget* lowerHBox=gtk_hbox_new(FALSE,5);
-gtk_box_pack_start(GTK_BOX(lowerHBox),leftVBox,TRUE,TRUE,0);
-gtk_box_pack_start(GTK_BOX(lowerHBox),MainInterface->ImageDisplayEventBox,FALSE,FALSE,0);
-
-
-GtkWidget* mainVBox=gtk_vbox_new(FALSE,5);
-gtk_box_pack_start(GTK_BOX(mainVBox),mainMenu,FALSE,FALSE,0);
-gtk_box_pack_start(GTK_BOX(mainVBox),lowerHBox,TRUE,TRUE,0);
-
-gtk_container_add(GTK_CONTAINER(MainInterface->Window),mainVBox);
-
-gtk_widget_show_all(MainInterface->Window);
-
-
-
-//Set up callbacks for image viewer
-g_signal_connect(MainInterface->ImageDisplayNextButton,"clicked",G_CALLBACK(NextImage),NULL);
-g_signal_connect(MainInterface->ImageDisplayPrevButton,"clicked",G_CALLBACK(PrevImage),NULL);
-g_signal_connect(MainInterface->ImageDisplayEventBox,"scroll-event",G_CALLBACK(MouseImage),NULL);
 
 //Set up callbacks for string handler
 g_signal_connect(MainInterface->LanguageComboBox,"changed",G_CALLBACK(UpdateNameString),NULL);
@@ -427,6 +475,52 @@ g_signal_connect(MainInterface->RideDescriptionEntry,"activate",G_CALLBACK(Updat
 g_signal_connect(MainInterface->RideDescriptionEntry,"focus-out-event",G_CALLBACK(UpdateDescriptionString),NULL);
 g_signal_connect(MainInterface->RideCapacityEntry,"activate",G_CALLBACK(UpdateCapacityString),NULL);
 g_signal_connect(MainInterface->RideCapacityEntry,"focus-out-event",G_CALLBACK(UpdateCapacityString),NULL);
+}
+
+void BuildHeaderEditor(MainWindow* interface)
+{
+int i;
+GtkWidget* rideTypeSelect=gtk_combo_box_text_new();
+    for(i=0;i<NUM_RIDE_TYPES;i++)
+    {
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(rideTypeSelect),RideTypes[i].name);
+    }
+g_signal_connect(rideTypeSelect,"changed",G_CALLBACK(SetTrackStyle),interface);
+gtk_box_pack_start(GTK_BOX(interface->LeftVBox),rideTypeSelect,FALSE,FALSE,2);
+}
+
+MainWindow* CreateInterface()
+{
+MainInterface=malloc(sizeof(MainWindow));
+MainInterface->Dat=NULL;
+
+
+MainInterface->Window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+g_signal_connect(MainInterface->Window,"delete-event",G_CALLBACK(DeleteEvent),NULL);
+g_signal_connect(MainInterface->Window,"destroy",G_CALLBACK(Exit),NULL);
+
+MainInterface->MainVBox=gtk_vbox_new(FALSE,5);
+MainInterface->LeftVBox=gtk_vbox_new(FALSE,5);
+MainInterface->LowerHBox=gtk_hbox_new(FALSE,5);
+
+BuildMenus(MainInterface);
+BuildStringHandler(MainInterface);
+BuildHeaderEditor(MainInterface);
+
+GtkWidget* renderButton=gtk_button_new_with_label("Render Sprites");
+
+gtk_box_pack_start(GTK_BOX(MainInterface->LowerHBox),MainInterface->LeftVBox,TRUE,TRUE,0);
+gtk_box_pack_start(GTK_BOX(MainInterface->MainVBox),MainInterface->LowerHBox,TRUE,TRUE,0);
+
+BuildImageDisplay(MainInterface);
+
+gtk_container_add(GTK_CONTAINER(MainInterface->Window),MainInterface->MainVBox);
+
+
+
+
+gtk_widget_show_all(MainInterface->Window);
+
 
 gtk_main();
 }

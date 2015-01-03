@@ -1,14 +1,132 @@
-#include "animation.h"
-#include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "datastructures.h"
-#include "interface.h"
-#include "backend.h"
-static Animation* Anim=NULL;
+#include <math.h>
+#include <assert.h>
+#include "renderer.h"
+#include "animation.h"
 
 
+Animation* CreateAnimation()
+{
+Animation* animation=malloc(sizeof(Animation));
+animation->Name=malloc(16);
+snprintf(animation->Name,16,"animation%d",AnimationList.NumAnimations);
+animation->NumFrames=1;
+animation->NumObjects=0;
+return animation;
+}
+void SetName(Animation* animation,const char* name)
+{
+animation->Name=realloc(animation->Name,strlen(name)+1);
+strcpy(animation->Name,name);
+}
+
+void SetNumFrames(Animation* animation,int frames)
+{
+int i,j;
+    if(frames>animation->NumFrames)
+    {
+        for(i=animation->NumFrames;i<frames;i++)
+        for(j=0;j<animation->NumObjects;j++)
+        {
+        animation->Frames[i][j]=animation->Frames[i-1][j];
+        }
+    }
+animation->NumFrames=frames;
+}
+int AddObject(Animation* animation,Model* model)
+{
+int i;
+animation->Objects[animation->NumObjects].model=model;
+animation->Objects[animation->NumObjects].parentIndex=-1;
+    for(i=0;i<animation->NumFrames;i++)
+    {
+    ObjectTransform* transform=&(animation->Frames[i][animation->NumObjects]);
+    transform->Position.X=0;
+    transform->Position.Y=0;
+    transform->Position.Z=0;
+    transform->Rotation.X=0;
+    transform->Rotation.Y=0;
+    transform->Rotation.Z=0;
+    transform->Transform=MatrixIdentity();
+    }
+return animation->NumObjects++;
+}
+void UpdateTransform(Animation* animation,int frame,int object,Vector position,Vector rotation)
+{
+ObjectTransform* transform=&(animation->Frames[frame][object]);
+transform->Position=position;
+transform->Rotation=rotation;
+
+Matrix rotateX=
+    {{
+    1.0,       0.0      ,        0.0      , 0.0,
+    0.0, cos(rotation.X), -sin(rotation.X), 0.0,
+    0.0, sin(rotation.X),  cos(rotation.X), 0.0,
+    0.0,       0.0      ,        0.0      , 1.0
+    }};
+Matrix rotateY=
+    {{
+     cos(rotation.Y), 0.0,  sin(rotation.Y), 0.0,
+           0.0      , 1.0,       0.0       , 0.0,
+    -sin(rotation.Y), 0.0,  cos(rotation.Y), 0.0,
+           0.0      , 0.0,       0.0       , 1.0
+    }};
+Matrix rotateZ=
+    {{
+    cos(rotation.Z), -sin(rotation.Z),0.0, 0.0,
+    sin(rotation.Z),  cos(rotation.Z),0.0, 0.0,
+          0.0      ,         0.0     ,1.0, 0.0,
+          0.0      ,         0.0     ,0.0, 1.0
+    }};
+
+transform->Transform=MatrixMultiply(rotateY,MatrixMultiply(rotateX,rotateZ));
+transform->Transform.Data[3]=position.X;
+transform->Transform.Data[7]=position.Y;
+transform->Transform.Data[11]=position.Z;
+}
+void UpdateParent(Animation* animation,int object,int parent)
+{
+    if(parent>=0&&parent<animation->NumObjects)animation->Objects[object].parentIndex=parent;
+    else animation->Objects[object].parentIndex=-1;
+}
+
+void RenderFrame(Animation* animation,int frame,Matrix modelView)
+{
+int i;
+ClearBuffers();
+    for(i=0;i<animation->NumObjects;i++)
+    {
+    Matrix transform=animation->Frames[frame][i].Transform;
+    int curObjectIndex=i;
+        while((curObjectIndex=animation->Objects[curObjectIndex].parentIndex)!=-1)
+        {
+        transform=MatrixMultiply(animation->Frames[frame][curObjectIndex].Transform,transform);
+        }
+    RenderModel(animation->Objects[i].model,MatrixMultiply(modelView,transform));
+    }
+}
+
+
+
+
+
+void AddAnimation(Animation* animation)
+{
+assert(AnimationList.NumAnimations<MAX_ANIMATIONS);
+AnimationList.Animations[AnimationList.NumAnimations++]=animation;
+}
+int NumAnimations()
+{
+return AnimationList.NumAnimations;
+}
+Animation* GetAnimationByIndex(int index)
+{
+    if(index>=AnimationList.NumAnimations)return NULL;
+return AnimationList.Animations[index];
+}
+/*
 char* ReadFileText(char* filename)
 {
 FILE* file=fopen(filename,"r");
@@ -22,8 +140,6 @@ Data[length]=0;
 fclose(file);
 return Data;
 }
-
-
 Object* LoadObject(char* name)
 {
 char text[64];
@@ -33,7 +149,6 @@ if(Filename==NULL)return NULL;
 Object* Obj=CreateObject(Filename,name);
 return Obj;
 }
-
 AnimObject* GetObjectByName(char* Name)
 {
 int i;
@@ -46,7 +161,6 @@ int i;
     }
 return NULL;
 }
-
 void ParseFrames(char* Str)
 {
 int FrameIndex=0;
@@ -78,9 +192,6 @@ char* Token;
 //    KeyFrame* Frame=GetKeyFrameByIndex(Obj,FrameIndex);
     }
 }
-
-
-/*
 char* GetTextFromFrame(AnimFrame* Frame)
 {
 DynamicBuffer* Text=CreateBuffer(256);
@@ -124,7 +235,6 @@ Str=malloc(1);
 }
 return Str;
 }
-*/
 AnimObject CreateAnimObject(Object* Obj)
 {
 AnimObject AnimObj;
@@ -134,14 +244,12 @@ AnimObj.Parent=NULL;
 AnimObj.Object=Obj;
 return AnimObj;
 }
-
 void AddObject(Object* Obj)
 {
 Anim->Objects=realloc(Anim->Objects,(Anim->NumObjects+1)*sizeof(AnimObject));
 Anim->Objects[Anim->NumObjects]=CreateAnimObject(Obj);
 Anim->NumObjects++;
 }
-
 void LoadTemplate(char* filename)
 {
 //if(Anim!=NULL)FreeAnimation();
@@ -199,8 +307,6 @@ if(Text!=NULL)
         }
 }
 }
-
-/*
 AnimFrame* GetAnimationFrame(int Index)
 {
 if(Anim==NULL)return NULL;
