@@ -22,15 +22,16 @@ LANGUAGE_ENGLISH_US=1
 };
 enum RideFlags
 {
-RIDE_WET=0x00010000u,
-RIDE_COVERED=0x00020000u
+RIDE_WET=0x00000100u,
+RIDE_COVERED=0x00000400u,
+RIDE_SEPERATE=0x00001000u
 };
 enum CarFlags
 {
 CAR_ENABLE_REMAP2=0x01000000u,
 CAR_ENABLE_REMAP3=0x00800000u,
-CAR_IS_SPINNING=0x02000000u,
-CAR_IS_SWINGING=0x04000000u,
+CAR_IS_SWINGING=0x02000000u,
+CAR_IS_SPINNING=0x04000000u,
 CAR_IS_POWERED=0x08000000u,
 CAR_NO_UPSTOPS=0x00000400u
 };
@@ -62,6 +63,7 @@ int16_t Xoffset;
 int16_t Yoffset;
 uint16_t Flags;
 }GraphicRecord;
+
 typedef struct
 {
 short Width;
@@ -71,6 +73,8 @@ short YOffset;
 short Flags;
 unsigned char** Data;
 }Image;
+
+
 typedef struct
 {
 char Num;
@@ -78,12 +82,10 @@ char* Str;
 }String;
 
 
-
-
 typedef struct
 {
 uint32_t Flags;
-uint16_t Unknown[7];
+uint16_t Unknown[8];
 uint8_t HighestRotationIndex;
 uint8_t Spacing;
 uint8_t RiderPairs;
@@ -137,9 +139,8 @@ void* ObjectHeader;
 String** StringTables[3];
 void* Optional;
 
+Image** Images;
 int NumImages;
-int GraphicBytes;
-Image* Images;
 }ObjectFile;
 
 

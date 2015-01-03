@@ -121,132 +121,79 @@ return StartAddress;
 }
 
 
-#define HEADER_SIZE 21
-ObjectFile* LoadDat(char* filename)//TODO-check that the file is actually a ride
+
+
+unsigned char* DecompressData(char* encodedBytes,int numBytes)
 {
-int i;
-ObjectFile* object=malloc(sizeof(ObjectFile));
-
-FILE* file=fopen(filename,"r");
-    if(file==NULL)
-    {
-    printf("Cannot open file\n");
-    return NULL;
-    }
-
-//Get file size
-fseek(file,0,SEEK_END);
-int fileSize=ftell(file);
-fseek(file,SEEK_SET,0);
-
-//Allocate object
-object=malloc(sizeof(ObjectFile));
-
-//Read data into temp array
-char* encodedBytes=malloc(fileSize);
-fread(encodedBytes,fileSize,1,file);
-
-fclose(file);
-
-
 //Allocate buffer to store decoded data
 DynamicBuffer* decodedBytes=CreateBuffer(512);
-
-//Check the header to see if the remaining data is compressed
-if(encodedBytes[0x10])
-    {
     //Decode RLE data
-    int pos=HEADER_SIZE;
-    while(pos<fileSize)
+    int pos=0;
+    while(pos<numBytes)
     {
-            if(encodedBytes[pos]>=0)//Copy bytes
-            {
-            short numToCopy=(short)(encodedBytes[pos])+1;
-            pos+=1;
-            WriteBuffer((unsigned char*)(encodedBytes+pos),numToCopy,decodedBytes);
-            pos+=numToCopy;
-            }
-            else//Repeat bytes
-            {
-            char numToRepeat=1-encodedBytes[pos];
-            pos++;
+        if(encodedBytes[pos]>=0)//Copy bytes
+        {
+        short numToCopy=(short)(encodedBytes[pos])+1;
+        pos+=1;
+        WriteBuffer((unsigned char*)(encodedBytes+pos),numToCopy,decodedBytes);
+        pos+=numToCopy;
+        }
+        else//Repeat bytes
+        {
+        char numToRepeat=1-encodedBytes[pos];
+        pos++;
             for(;numToRepeat>0;numToRepeat--)WriteBuffer((unsigned char*)(encodedBytes+pos),1,decodedBytes);
-            pos++;
-            }
+        pos++;
         }
     }
-    else
-    {
-    //Data is not compressed, copy it to output
-    WriteBuffer((unsigned char*)(encodedBytes+HEADER_SIZE),fileSize-HEADER_SIZE,decodedBytes);
-    }
-free(encodedBytes);
-uint8_t* bytes=(uint8_t*)FreeBuffer(decodedBytes);
+return FreeBuffer(decodedBytes);
+}
 
-
-
-//Check checksum
-/*
-unsigned int Checksum = 0xF369A75B;
-Checksum=ChecksumProcessByte(Checksum,RideData->Header[0]);//Do first byte
-    for(i=4;i<12;i++)Checksum=ChecksumProcessByte(Checksum,RideData->Header[i]);//Do filename
-    for(i=0;i<DecodedFileSize;i++)Checksum=ChecksumProcessByte(Checksum,Bytes[i]);//Checksum rest file;
-//printf("Calculated checksum: %x\n",Checksum);
-//printf("Actual checksum: %x\n",ReadLittleEndianInt(RideData->Header+12));
-    if(Checksum!=ReadLittleEndianInt(RideData->Header+12))
-    {
-    //printf("Checksum does not match\n");
-    return RideData;
-    }
-*/
-
-
-//Load object header
-uint8_t* objectHeader=bytes;
-
+RideHeader* LoadRideHeader(unsigned char* bytes)
+{
+int i;
 RideHeader* rideHeader=malloc(sizeof(RideHeader));
 //Read flags
-rideHeader->Flags=*((uint32_t*)(objectHeader+8));
+rideHeader->Flags=*((uint32_t*)(bytes+8));
 //Read track style & preview index
 rideHeader->PreviewIndex=0;
     for(i=12;i<=14;i++)
     {
-        if(objectHeader[i]!=0xFFu)
+        if(bytes[i]!=0xFFu)
         {
-        rideHeader->TrackStyle=objectHeader[i];
+        rideHeader->TrackStyle=bytes[i];
         break;
         }
     rideHeader->PreviewIndex++;
     }
 
-rideHeader->Unknown=*((uint16_t*)(objectHeader+18));
+rideHeader->Unknown=*((uint16_t*)(bytes+18));
 //Read minimum and maximum car length
-rideHeader->MinimumCars=objectHeader[15];
-rideHeader->MaximumCars=objectHeader[16];
+rideHeader->MinimumCars=bytes[15];
+rideHeader->MaximumCars=bytes[16];
 //Read track sections
-rideHeader->TrackSections=*((uint64_t*)(objectHeader+438));
+rideHeader->TrackSections=*((uint64_t*)(bytes+438));
 
-rideHeader->Excitement=objectHeader[434];
-rideHeader->Intensity=objectHeader[435];
-rideHeader->Nausea=objectHeader[436];
-rideHeader->MaxHeight=objectHeader[437];
+rideHeader->Excitement=bytes[434];
+rideHeader->Intensity=bytes[435];
+rideHeader->Nausea=bytes[436];
+rideHeader->MaxHeight=bytes[437];
 //Read categories
-rideHeader->Categories[0]=objectHeader[446];
-rideHeader->Categories[1]=objectHeader[447];
+rideHeader->Categories[0]=bytes[446];
+rideHeader->Categories[1]=bytes[447];
 
 //Read car type information
-rideHeader->CarTypes[CAR_INDEX_DEFAULT]=objectHeader[20];
-rideHeader->CarTypes[CAR_INDEX_FRONT]=objectHeader[21];
-rideHeader->CarTypes[CAR_INDEX_SECOND]=objectHeader[22];
-rideHeader->CarTypes[CAR_INDEX_REAR]=objectHeader[23];
-rideHeader->CarTypes[CAR_INDEX_THIRD]=objectHeader[24];
+rideHeader->CarTypes[CAR_INDEX_DEFAULT]=bytes[20];
+rideHeader->CarTypes[CAR_INDEX_FRONT]=bytes[21];
+rideHeader->CarTypes[CAR_INDEX_SECOND]=bytes[22];
+rideHeader->CarTypes[CAR_INDEX_REAR]=bytes[23];
+rideHeader->CarTypes[CAR_INDEX_THIRD]=bytes[24];
 
 //Read car types
-uint8_t* carData=objectHeader+26;
+uint8_t* carData=bytes+26;
     for(i=0;i<NUM_CARS;i++)
     {
     Car* car=rideHeader->Cars+i;
-
     car->HighestRotationIndex=carData[0];
     //Load spacing
     car->Spacing=carData[6];
@@ -271,16 +218,124 @@ uint8_t* carData=objectHeader+26;
     car->Unknown[4]=*((uint16_t*)(carData+89));
     car->Unknown[5]=*((uint16_t*)(carData+92));
     car->Unknown[6]=(uint16_t)carData[94];
-
+    car->Unknown[7]=*((uint16_t*)(carData+96));
     carData+=101;
     }
+return rideHeader;
+}
 
-object->ObjectHeader=rideHeader;
+RideStructures* LoadUnknownStructures(unsigned char* bytes,int* pos_ptr)
+{
+int i;
+int pos=*pos_ptr;
+RideStructures* structures=malloc(sizeof(RideStructures));
+//Sequence of 3 byte structures; I don't know why -1 means 32
+structures->NumStructures=bytes[pos]==0xFF?32:bytes[pos];
+structures->Structures=malloc(structures->NumStructures*sizeof(struct3byte));
+pos++;
 
+	for(i=0;i<structures->NumStructures;i++)
+    {
+    structures->Structures[i].a=bytes[pos];
+    structures->Structures[i].b=bytes[pos+1];
+    structures->Structures[i].c=bytes[pos+2];
+    pos+=3;
+    }
+
+    //Four variable length structures
+    for (i=0;i<4;i++)
+    {
+    uint16_t len=bytes[pos];
+    pos++;
+        //If the length can't fit in a byte, the length is instead stored in the two bytes following
+        if (len==0xFF)
+        {
+        len=*((uint16_t*)(bytes+pos));
+        pos+=2;
+        }
+    structures->PeepPositions[i].Num=len;
+    structures->PeepPositions[i].Positions=malloc(structures->PeepPositions[i].Num);
+    int j;
+        for(j=0;j<len;j++)
+        {
+        structures->PeepPositions[i].Positions[j]=bytes[pos];
+        pos++;
+        }
+    }
+*pos_ptr=pos;
+return structures;
+}
+
+
+#define HEADER_SIZE 21
+ObjectFile* LoadDat(char* filename)//TODO-check that the file is actually a ride
+{
+int i;
+FILE* file=fopen(filename,"r");
+    if(file==NULL)
+    {
+    printf("Cannot open file\n");
+    return NULL;
+    }
+//Get file size
+fseek(file,0,SEEK_END);
+int fileSize=ftell(file);
+fseek(file,SEEK_SET,0);
+    if(fileSize<=0)
+    {
+    //printf("File is empty %s\n",filename);
+    return NULL;
+    }
+//Read data into temp array
+char* encodedBytes=malloc(fileSize);
+fread(encodedBytes,fileSize,1,file);
+fclose(file);
+
+//Check that this is a ride
+    if((encodedBytes[0]&0xF)!=0)
+    {
+    printf("Not a ride\n");
+    free(encodedBytes);
+    return NULL;
+    }
+
+//Allocate object
+ObjectFile* object=malloc(sizeof(ObjectFile));
+
+//Check the header to see if the remaining data is compressed
+unsigned char* bytes;
+if(encodedBytes[0x10])
+    {
+    bytes=DecompressData(encodedBytes+HEADER_SIZE,fileSize-HEADER_SIZE);
+    }
+    else
+    {
+    //Data is not compressed, copy it to output
+    bytes=malloc(fileSize-HEADER_SIZE);
+    memcpy(bytes,encodedBytes+HEADER_SIZE,fileSize-HEADER_SIZE);
+    }
+free(encodedBytes);
+
+//Check checksum
+/*
+unsigned int Checksum = 0xF369A75B;
+Checksum=ChecksumProcessByte(Checksum,RideData->Header[0]);//Do first byte
+    for(i=4;i<12;i++)Checksum=ChecksumProcessByte(Checksum,RideData->Header[i]);//Do filename
+    for(i=0;i<DecodedFileSize;i++)Checksum=ChecksumProcessByte(Checksum,Bytes[i]);//Checksum rest file;
+//printf("Calculated checksum: %x\n",Checksum);
+//printf("Actual checksum: %x\n",ReadLittleEndianInt(RideData->Header+12));
+    if(Checksum!=ReadLittleEndianInt(RideData->Header+12))
+    {
+    printf("Checksum does not match\n");
+    return NULL;
+    }
+*/
+
+//Load object header
+object->ObjectHeader=LoadRideHeader(bytes);
 
 //Load string tables
 int pos=0x1C2;
-
     for(i=0;i<NUM_STRING_TABLES;i++)
     {
     object->StringTables[i]=NULL;
@@ -310,46 +365,8 @@ int pos=0x1C2;
     pos++;
     }
 
-
-
 //Read unknown strutures
-RideStructures* structures=malloc(sizeof(RideStructures));
-//Sequence of 3 byte structures; I don't know why -1 means 32
-structures->NumStructures=bytes[pos]==0xFF?32:bytes[pos];
-structures->Structures=malloc(structures->NumStructures*sizeof(struct3byte));
-pos++;
-
-	for(i=0;i<structures->NumStructures;i++)
-    {
-    structures->Structures[i].a=bytes[pos];
-    structures->Structures[i].b=bytes[pos+1];
-    structures->Structures[i].c=bytes[pos+2];
-    pos+=3;
-    }
-
-    //Four variable length structures
-    for (i=0;i<4;i++)
-    {
-    uint16_t len=bytes[pos];
-    pos++;
-        //If the length can't fit in a byte, the length is instead stored in the two bytes following
-        if (len==0xFF)
-        {
-        pos++;
-        len=*((uint16_t*)(bytes+pos));
-        pos+=2;
-        }
-    structures->PeepPositions[i].Num=len;
-    structures->PeepPositions[i].Positions=malloc(structures->PeepPositions[i].Num);
-    int j;
-        for(j=0;j<len;j++)
-        {
-        structures->PeepPositions[i].Positions[j]=bytes[pos];
-        pos++;
-        }
-    }
-object->Optional=structures;
-
+object->Optional=LoadUnknownStructures(bytes,&pos);
 
 //Load images
 //Get number of images
@@ -357,7 +374,7 @@ object->NumImages=*((uint32_t*)(bytes+pos));
 //printf("There are %d Images\n",RideData->NumImages);
 pos+=4;
 //Get size of graphic data
-object->GraphicBytes=*((uint32_t*)(bytes+pos));
+//object->GraphicBytes=*((uint32_t*)(bytes+pos));
 pos+=4;
 object->Images=malloc(object->NumImages*sizeof(Image));
 
@@ -365,7 +382,8 @@ int bitmapBase=pos+(object->NumImages*16);
 
     for(i=0;i<object->NumImages;i++)
     {
-    Image* image=object->Images+i;
+    object->Images[i]=malloc(sizeof(Image));
+    Image* image=object->Images[i];
     uint32_t startAddress=*((uint32_t*)(bytes+pos));
     image->Width=*((uint16_t*)(bytes+pos+4));
     image->Height=*((uint16_t*)(bytes+pos+6));
@@ -373,7 +391,7 @@ int bitmapBase=pos+(object->NumImages*16);
     image->YOffset=*((uint16_t*)(bytes+pos+10));
     image->Flags=*((uint16_t*)(bytes+pos+12));
     pos+=16;
-		if (object->Images[i].Flags== 1) // Simple bitmap.
+		if (object->Images[i]->Flags== 1) // Simple bitmap.
 		{
         int j;
         image->Data=malloc(image->Height*sizeof(char*));
@@ -397,37 +415,38 @@ int bitmapBase=pos+(object->NumImages*16);
 
 			for (j=0;j<image->Height;j++)
 			{
-                int k;
-                image->Data[j]=malloc(image->Width);
-                for(k=0;k<image->Width;k++)image->Data[j][k]=0;//Set row to transparency
-				int rowOffset=offset+*((uint16_t*)(bytes+offset+(j*2)));
-                uint8_t lastOne;
+            int k;
+            image->Data[j]=malloc(image->Width);
+                    for(k=0;k<image->Width;k++)image->Data[j][k]=0;//Set row to transparency
+
+            int rowOffset=offset+*((uint16_t*)(bytes+offset+(j*2)));
+            uint8_t lastOne;
 				do
 				{
-					//First byte stores the length of the element
-					uint8_t length = bytes[rowOffset];
-                    rowOffset++;
-                    //Next byte stores distance from start of scanline
-					uint8_t xOffset=bytes[rowOffset];
-					rowOffset++;
-					//The most significant bit of the length is set only if this is the last element
-					lastOne=length&0x80;
-					length=length&0x7F;
-                        if(xOffset+length>image->Width)
-                        {
-                        printf("File contains invalid bitmaps\n");
-                        return NULL;
-                        }
+                //First byte stores the length of the element
+                uint8_t length=bytes[rowOffset];
+                rowOffset++;
+                //Next byte stores distance from start of scanline
+                uint8_t xOffset=bytes[rowOffset];
+                rowOffset++;
+                //The most significant bit of the length is set only if this is the last element
+                lastOne=length&0x80;
+                length=length&0x7F;
+                    if(xOffset+length>image->Width)
+                    {
+                    printf("File contains invalid bitmaps\n");
+                    return NULL;
+                    }
                     for(k=0;k<length;k++)
                     {
                     if(xOffset+k<image->Width)image->Data[j][xOffset+k]=bytes[rowOffset];
                     rowOffset++;
                     }
-				} while (!lastOne);
+				}while (!lastOne);
 			}
 		}
-
     }
+free(bytes);
 return object;
 }
 void SaveDat(ObjectFile* object,char* filename)
@@ -451,7 +470,7 @@ upperCaseFilename[endIndex-startIndex+1]=0;
 //Check filename length
     if(strlen(upperCaseFilename)>8)
     {
-    printf("Filename too long (8 characters not including extension)\n");
+    printf("Filename too long (8 characte0x0100000rs not including extension)\n");
     return;
     }
 
@@ -527,6 +546,7 @@ uint8_t* carData=objectHeader+26;
     *((uint16_t*)(carData+89))=car->Unknown[4];
     *((uint16_t*)(carData+92))=car->Unknown[5];
     carData[94]=(uint8_t)car->Unknown[6];
+    *((uint16_t*)(carData+96))=car->Unknown[7];
 
     carData+=101;
     }
@@ -580,18 +600,18 @@ DynamicBuffer* graphicData=CreateBuffer(512);
 
     for(i=0;i<object->NumImages;i++)
     {
-    Image* image=object->Images+i;
+    Image* image=object->Images[i];
     //Write data to data buffer
     int startAddress;
         if(image->Flags==1)startAddress=WriteSimpleBitmap(image,graphicData);
         else startAddress=WriteCompactBitmap(image,graphicData);
     //Write TGraphicRecord to file buffer
-    WriteBuffer((unsigned char*)&startAddress,4,decodedFile);
-    WriteBuffer((unsigned char*)&image->Width,2,decodedFile);
-    WriteBuffer((unsigned char*)&image->Height,2,decodedFile);
-    WriteBuffer((unsigned char*)&image->XOffset,2,decodedFile);
-    WriteBuffer((unsigned char*)&image->YOffset,2,decodedFile);
-    WriteBuffer((unsigned char*)&image->Flags,2,decodedFile);//TODO-Actually check if this is the case
+    WriteBuffer((unsigned char*)&(startAddress),4,decodedFile);
+    WriteBuffer((unsigned char*)&(image->Width),2,decodedFile);
+    WriteBuffer((unsigned char*)&(image->Height),2,decodedFile);
+    WriteBuffer((unsigned char*)&(image->XOffset),2,decodedFile);
+    WriteBuffer((unsigned char*)&(image->YOffset),2,decodedFile);
+    WriteBuffer((unsigned char*)&(image->Flags),2,decodedFile);//TODO-Actually check if this is the case
     ExpandBuffer(2,decodedFile);//Padding
     }
 //Write size of graphic data
@@ -606,6 +626,9 @@ free(graphicBytes);
 int dataSize=decodedFile->Pos;
 unsigned char* bytes=FreeBuffer(decodedFile);
 
+FILE* dump=fopen("/home/edward/RCT2 Reversing/Object DATs/Test/OUTPUT.DAT","w");
+fwrite(bytes,1,dataSize,dump);
+fclose(dump);
 /*
 FILE* decomp=fopen("DECOMPRESSED.DAT","w");
 fwrite(Bytes,FileSize,1,decomp);
@@ -719,7 +742,6 @@ String* Str=SearchStrings(RideData,TableNum,Language);
 if(Str==NULL)return NULL;
 return Str->Str;
 }
-
 void SetString(ObjectFile* RideData,int TableNum,int Language,char* NewStr)
 {
 String* Str=SearchStrings(RideData,TableNum,Language);
@@ -737,8 +759,20 @@ free(image->Data);
 free(image);
 }
 
+void FreeRideStructures(RideStructures* structures)
+{
+int i;
+free(structures->Structures);
+    for(i=0;i<4;i++)free(structures->PeepPositions[i].Positions);
+free(structures);
+}
 void FreeDat(ObjectFile* file)
 {
+//Free object header
+free(file->ObjectHeader);
+//Free optional
+FreeRideStructures((RideStructures*)file->Optional);
+
 //Free string tables
 int i,j;
     for(i=0;i<3;i++)
@@ -756,13 +790,13 @@ int i,j;
 //Free images
     for(i=0;i<file->NumImages;i++)
     {
-        if(file->Images[i].Data!=NULL)
+        if(file->Images[i]->Data!=NULL)
         {
-            for(j=0;j<file->Images[i].Height;j++)
+            for(j=0;j<file->Images[i]->Height;j++)
             {
-            if(file->Images[i].Data[j]!=NULL)free(file->Images[i].Data[j]);
+            if(file->Images[i]->Data[j]!=NULL)free(file->Images[i]->Data[j]);
             }
-        free(file->Images[i].Data);
+        free(file->Images[i]->Data);
         }
     }
 free(file->Images);
