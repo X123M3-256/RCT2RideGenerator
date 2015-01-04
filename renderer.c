@@ -10,12 +10,12 @@
 //3 metres per tile
 #define S (64.0/(3.0*sqrt(3.0)))
 //Dimetric projection
-const Matrix projection={
+const Matrix projection={{
       M_SQRT1_2*S  ,       0.0      ,   -M_SQRT1_2*S  , FRAME_BUFFER_SIZE/2.0,
     0.5*M_SQRT1_2*S, sqrt(3.0)/2.0*S,  0.5*M_SQRT1_2*S, FRAME_BUFFER_SIZE/2.0,
     sqrt(6.0)/4.0*S,   -1.0/2.0*S   ,  sqrt(6.0)/4.0*S,          0.0         ,
            0.0     ,       0.0      ,        0.0      ,          1.0
-    };
+    }};
 
 unsigned char FrameBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 float DepthBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
@@ -23,20 +23,20 @@ float DepthBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
 
 
-Image ImageFromFrameBuffer()
+Image* ImageFromFrameBuffer()
 {
-Image image;
-image.Width=FRAME_BUFFER_SIZE;
-image.Height=FRAME_BUFFER_SIZE;
-image.XOffset=-FRAME_BUFFER_SIZE/2;
-image.YOffset=-FRAME_BUFFER_SIZE/2;
-image.Data=malloc(FRAME_BUFFER_SIZE*sizeof(char*));
-image.Flags=5;
+Image* image=malloc(sizeof(Image));
+image->Width=FRAME_BUFFER_SIZE;
+image->Height=FRAME_BUFFER_SIZE;
+image->XOffset=-FRAME_BUFFER_SIZE/2;
+image->YOffset=-FRAME_BUFFER_SIZE/2;
+image->Data=malloc(FRAME_BUFFER_SIZE*sizeof(char*));
+image->Flags=5;
 int x,y;
     for(y=0;y<FRAME_BUFFER_SIZE;y++)
     {
-    image.Data[y]=malloc(FRAME_BUFFER_SIZE);
-        for(x=0;x<FRAME_BUFFER_SIZE;x++)image.Data[y][x]=FrameBuffer[x][y];
+    image->Data[y]=malloc(FRAME_BUFFER_SIZE);
+        for(x=0;x<FRAME_BUFFER_SIZE;x++)image->Data[y][x]=FrameBuffer[x][y];
     }
 return image;
 }

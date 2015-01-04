@@ -35,9 +35,21 @@ assert(json_array_size(json)==4);
 return matrix;
 }
 
-json_t* SerializeDat(ObjectFile* dat)
+json_t* SerializeVector(Vector vector)
 {
-json_t* root=json_object();
+json_t* components=json_array();
+json_array_append_new(components,json_real(vector.X));
+json_array_append_new(components,json_real(vector.Y));
+json_array_append_new(components,json_real(vector.Z));
+return components;
+}
+Vector DeserializeVector(json_t* components)
+{
+Vector vector;
+vector.X=json_real_value(json_array_get(components,0));
+vector.Y=json_real_value(json_array_get(components,1));
+vector.Z=json_real_value(json_array_get(components,2));
+return vector;
 }
 
 json_t* SerializeModel(Model* model)
@@ -95,7 +107,6 @@ json_object_set_new(root,"faces",faces);
 json_object_set_new(root,"transform",SerializeMatrix(model->transform));
 return root;
 }
-
 Model* DeserializeModel(json_t* json)
 {
 int i,j;
@@ -115,7 +126,8 @@ model->Vertices=malloc(model->NumVertices*sizeof(Vector));
 model->Normals=malloc(model->NumNormals*sizeof(Vector));
 model->Faces=malloc(model->NumFaces*sizeof(Face));
 model->transform=DeserializeMatrix(transform);
-
+model->NumLines=0;
+model->Lines=NULL;
     for(i=0;i<model->NumVertices;i++)
     {
     json_t* vertex=json_array_get(vertices,i);
@@ -146,4 +158,104 @@ model->transform=DeserializeMatrix(transform);
         }
     }
 return model;
+}
+
+json_t* SerializeAnimation(Animation* animation)
+{
+int i,j;
+json_t* root=json_object();
+//Serialize name
+json_t* name=json_string(animation->Name);
+json_object_set(root,"name",name);
+
+
+//Serialize model list
+json_t* objects=json_array();
+    for(i=0;i<animation->NumObjects;i++)
+    {
+    json_t* objectData=json_array();
+    int index=GetModelIndexFromPointer(animation->Objects[i].model);
+    json_array_append_new(objectData,json_integer(index));
+    json_array_append_new(objectData,json_integer(animation->Objects[i].parentIndex));
+    json_array_append_new(objects,objectData);
+    }
+json_object_set(root,"objects",objects);
+
+//Serialize frames
+json_t* frames=json_array();
+    for(i=0;i<animation->NumFrames;i++)
+    {
+    json_t* frame=json_array();
+        for(j=0;j<animation->NumObjects;j++)
+        {
+        json_t* transform=json_array();
+        json_array_append_new(transform,SerializeVector(animation->Frames[i][j].Position));
+        json_array_append_new(transform,SerializeVector(animation->Frames[i][j].Rotation));
+        json_array_append_new(frame,transform);
+        }
+    json_array_append(frames,frame);
+    }
+json_object_set(root,"frames",frames);
+return root;
+}
+
+Animation* DeserializeAnimation(json_t* json)
+{
+int i,j;
+Animation* animation=CreateAnimation();
+//Deserialize name
+SetName(animation,json_string_value(json_object_get(json,"name")));
+
+
+//Deserialize model list
+json_t* objects=json_object_get(json,"objects");
+    for(i=0;i<json_array_size(objects);i++)
+    {
+    json_t* objectData=json_array_get(objects,i);
+    int index=json_integer_value(json_array_get(objectData,0));
+    int object=AddObject(animation,GetModelByIndex(index));
+    int parent=json_integer_value(json_array_get(objectData,1));
+    animation->Objects[object].parentIndex=parent;
+    }
+
+//Deserialize frames
+json_t* frames=json_object_get(json,"frames");
+SetNumFrames(animation,json_array_size(frames));
+    for(i=0;i<animation->NumFrames;i++)
+    {
+    json_t* frame=json_array_get(frames,i);
+        for(j=0;j<animation->NumObjects;j++)
+        {
+        json_t* transform=json_array_get(frame,j);
+        Vector position=DeserializeVector(json_array_get(transform,0));
+        Vector rotation=DeserializeVector(json_array_get(transform,1));
+        UpdateTransform(animation,i,j,position,rotation);
+        }
+    }
+return animation;
+}
+
+Animation* SerializeFile()
+{
+
+}
+
+void DeserializeFile(const char* filename)
+{
+int i;
+json_t* file=json_load_file(filename,0,NULL);
+//Load models
+json_t* models=json_object_get(file,"models");
+    for(i=0;i<json_array_size(models);i++)
+    {
+    Model* model=DeserializeModel(json_array_get(models,i));
+    AddModel(model);
+    }
+//Load animations
+json_t* animations=json_object_get(file,"animations");
+    for(i=0;i<json_array_size(animations);i++)
+    {
+    Animation* animation=DeserializeAnimation(json_array_get(animations,i));
+    AddAnimation(animation);
+    }
 }

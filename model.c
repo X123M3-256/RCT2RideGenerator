@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<assert.h>
 #include "model.h"
 
 
@@ -46,7 +47,7 @@ int i;
         if(*indices!='/')strtol(indices,&indices,10);
     indices++;
     face.Normals[i]=strtol(indices,&indices,10)-1;
-    face.Flags=RECOLOR_GREEN;
+    //face.Flags=RECOLOR_GREEN;
     }
 return face;
 }
@@ -117,13 +118,75 @@ ModelList.Models[ModelList.NumModels++]=model;
 return model;
 }
 
+#define GRID_TILES 20
+#define GRID_SIZE (3.3*(GRID_TILES-1))
+#define HALF_GRID_SIZE (GRID_SIZE/2.0)
+Model* GetGridModel()
+{
+static Vector vertices[4*GRID_TILES];
+static Line lines[2*GRID_TILES];
+static Model previewGrid;
+static int initialised=0;
+    if(!initialised)
+    {
+    previewGrid.transform=MatrixIdentity();
+    previewGrid.NumFaces=0;
+    previewGrid.NumNormals=0;
+    previewGrid.NumVertices=4*GRID_TILES;
+    previewGrid.NumLines=2*GRID_TILES;
+    previewGrid.Vertices=vertices;
+    previewGrid.Lines=lines;
+
+    int i;
+    Vector* top=vertices;
+    Vector* left=top+GRID_TILES;
+    Vector* bottom=left+GRID_TILES;
+    Vector* right=bottom+GRID_TILES;
+        for(i=0;i<GRID_TILES;i++)
+        {
+        top[i].X=3.3*i-HALF_GRID_SIZE;
+        top[i].Y=0.0;
+        top[i].Z=HALF_GRID_SIZE;
+        bottom[i]=top[i];
+        bottom[i].Z-=GRID_SIZE;
+
+        left[i].X=-HALF_GRID_SIZE;
+        left[i].Y=0.0;
+        left[i].Z=3.3*i-HALF_GRID_SIZE;
+        right[i]=left[i];
+        right[i].X+=GRID_SIZE;
+        lines[i].Color=134;
+        lines[i].Vertices[0]=i;
+        lines[i].Vertices[1]=i+2*GRID_TILES;
+        lines[i+GRID_TILES].Color=134;
+        lines[i+GRID_TILES].Vertices[0]=i+GRID_TILES;
+        lines[i+GRID_TILES].Vertices[1]=i+3*GRID_TILES;
+        }
+    }
+return &previewGrid;
+}
+
 
 int NumModels()
 {
 return ModelList.NumModels;
 }
+void AddModel(Model* model)
+{
+assert(ModelList.NumModels<MAX_MODELS);
+ModelList.Models[ModelList.NumModels++]=model;
+}
 Model* GetModelByIndex(int index)
 {
     if(index>=ModelList.NumModels)return NULL;
 return ModelList.Models[index];
+}
+int GetModelIndexFromPointer(Model* model)
+{
+int i;
+    for(i=0;i<ModelList.NumModels;i++)
+    {
+        if(ModelList.Models[i]==model)return i;
+    }
+return -1;
 }

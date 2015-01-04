@@ -34,7 +34,6 @@ int i,j;
         }
     pixels+=rowstride;
     }
-
 //Draw new image to pixbuf
 int XOffset=128+RideImage->XOffset;//Draw image in centre of screen
 int YOffset=128+RideImage->YOffset;
@@ -46,8 +45,6 @@ Color curcol;
     {
         for(j=0;j<RideImage->Width;j++)
         {
-        //int index=RideImage->Data[i][j];
-        //if(index!=0)printf("Index %d\n",(unsigned char)index);
         curcol=GetColorFromPalette(RideImage->Data[i][j]);
         int pixelindex=(j+XOffset)*3;
         pixels[pixelindex]=curcol.Red;
@@ -59,5 +56,4 @@ Color curcol;
         }
     pixels+=rowstride;
     }
-
 }

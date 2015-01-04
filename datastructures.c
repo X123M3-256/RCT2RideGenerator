@@ -35,7 +35,7 @@ Buffer->Buffer=malloc(Step);
 return Buffer;
 };
 //Writes bytes into buffer
-void WriteBuffer(char* Source,int Num,DynamicBuffer* Buffer)
+void WriteBuffer(unsigned char* Source,int Num,DynamicBuffer* Buffer)
 {
 while(Buffer->Pos+Num>=Buffer->Size)
     {
@@ -57,9 +57,9 @@ memset(Buffer->Buffer+Buffer->Pos,0,Size);
 Buffer->Pos+=Size;
 }
 //Frees the buffer and returns the underlying char array, resized to the right size
-char* FreeBuffer(DynamicBuffer* Buffer)
+unsigned char* FreeBuffer(DynamicBuffer* Buffer)
 {
-char* Bytes=realloc(Buffer->Buffer,Buffer->Pos);
+unsigned char* Bytes=realloc(Buffer->Buffer,Buffer->Pos);
 free(Buffer);
 return Bytes;
 }

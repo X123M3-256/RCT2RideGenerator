@@ -16,6 +16,6 @@ Vector Normals[3];
 void ClearBuffers();
 void RenderModel(Model* model,Matrix modelview);
 Face* GetFaceEnclosingPoint(Model* model,Matrix modelView,Vector coords);
-Image ImageFromFrameBuffer();
+Image* ImageFromFrameBuffer();
 
 #endif // RENDERER_H_INCLUDED

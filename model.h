@@ -47,7 +47,10 @@ struct
     }ModelList;
 
 int NumModels();
+void AddModel(Model* model);
+Model* LoadObj(const char* filename);
+Model* GetGridModel();
 Model* GetModelByIndex(int index);
-Model* GetModelByName(const char* name);
+int GetModelIndexFromPointer(Model* model);
 
 #endif // MODEL_H_INCLUDED
