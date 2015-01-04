@@ -1,20 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <ctype.h>
 #include "datastructures.h"
 #include "dat.h"
 
-
-void show_header(unsigned char* header)
-{
-int i;
-    for(i=0;i<0x1C2;i++)
-    {
-    printf("%x ",header[i]);
-        if(i%32==31)putchar('\n');
-    }
-}
 
 
 int ChecksumProcessByte(unsigned int Checksum,unsigned char Byte){
@@ -199,8 +190,14 @@ uint8_t* carData=bytes+26;
     car->Spacing=carData[6];
     //Load riders
     car->RiderPairs=carData[11]&0x80;
-    car->RiderSprites=carData[84];
     car->Riders=carData[11]&0x7F;
+
+    //Load sprite flags
+    car->Sprites=*((uint16_t*)(carData+12));
+
+    //Load rider sprites
+    car->RiderSprites=carData[84];
+
     //Load flags
     car->Flags=*((uint32_t*)(carData+17));
     //Load parameters
@@ -213,12 +210,11 @@ uint8_t* carData=bytes+26;
     //Read unknown fields
     car->Unknown[0]=*((uint16_t*)(carData+4));
     car->Unknown[1]=*((uint16_t*)(carData+8));
-    car->Unknown[2]=*((uint16_t*)(carData+12));
-    car->Unknown[3]=*((uint16_t*)(carData+87));
-    car->Unknown[4]=*((uint16_t*)(carData+89));
-    car->Unknown[5]=*((uint16_t*)(carData+92));
-    car->Unknown[6]=(uint16_t)carData[94];
-    car->Unknown[7]=*((uint16_t*)(carData+96));
+    car->Unknown[2]=*((uint16_t*)(carData+87));
+    car->Unknown[3]=*((uint16_t*)(carData+89));
+    car->Unknown[4]=*((uint16_t*)(carData+92));
+    car->Unknown[5]=(uint16_t)carData[94];
+    car->Unknown[6]=*((uint16_t*)(carData+96));
     carData+=101;
     }
 return rideHeader;
@@ -528,6 +524,8 @@ uint8_t* carData=objectHeader+26;
     carData[6]=car->Spacing;
     //Write riders
     carData[11]=car->RiderPairs|car->Riders;
+    *((uint16_t*)(carData+12))=car->Sprites;
+    //Write rider sprites
     carData[84]=car->RiderSprites;
     //Write flags
     *((uint32_t*)(carData+17))=car->Flags;
@@ -541,12 +539,11 @@ uint8_t* carData=objectHeader+26;
     //Write unknown fields
     *((uint16_t*)(carData+4))=car->Unknown[0];
     *((uint16_t*)(carData+8))=car->Unknown[1];
-    *((uint16_t*)(carData+12))=car->Unknown[2];
-    *((uint16_t*)(carData+87))=car->Unknown[3];
-    *((uint16_t*)(carData+89))=car->Unknown[4];
-    *((uint16_t*)(carData+92))=car->Unknown[5];
-    carData[94]=(uint8_t)car->Unknown[6];
-    *((uint16_t*)(carData+96))=car->Unknown[7];
+    *((uint16_t*)(carData+87))=car->Unknown[2];
+    *((uint16_t*)(carData+89))=car->Unknown[3];
+    *((uint16_t*)(carData+92))=car->Unknown[4];
+    carData[94]=(uint8_t)car->Unknown[5];
+    *((uint16_t*)(carData+96))=car->Unknown[6];
 
     carData+=101;
     }
@@ -750,7 +747,6 @@ free(Str->Str);
 Str->Str=malloc(strlen(NewStr)+1);
 strcpy(Str->Str,NewStr);
 }
-
 void FreeImage(Image* image)
 {
 int i;
@@ -758,6 +754,215 @@ int i;
 free(image->Data);
 free(image);
 }
+void SetNumImages(ObjectFile* file,int numImages)
+{
+
+}
+void SetImage(ObjectFile* file,Image* image,int index)
+{
+FreeImage(file->Images[index]);
+file->Images[index]=image;
+}
+
+
+void RenderFrames(ObjectFile* object,Animation* animation,int* frame_ptr,int numFrames,double pitch,double roll,double yaw)
+{
+int i,j;
+int frame=*frame_ptr;
+Matrix pitchMatrix=MatrixIdentity();
+pitchMatrix.Data[5]=cos(pitch);
+pitchMatrix.Data[6]=sin(pitch);
+pitchMatrix.Data[9]=-sin(pitch);
+pitchMatrix.Data[10]=cos(pitch);
+
+Matrix rollMatrix=MatrixIdentity();
+rollMatrix.Data[0]=cos(roll);
+rollMatrix.Data[1]=sin(roll);
+rollMatrix.Data[4]=-sin(roll);
+rollMatrix.Data[5]=cos(roll);
+
+Matrix yawMatrix=MatrixIdentity();
+yawMatrix.Data[0]=cos(yaw);
+yawMatrix.Data[2]=-sin(yaw);
+yawMatrix.Data[8]=sin(yaw);
+yawMatrix.Data[10]=cos(yaw);
+
+Matrix transformMatrix=MatrixMultiply(yawMatrix,MatrixMultiply(pitchMatrix,rollMatrix));
+
+double rotation=0;
+double step=2*M_PI/numFrames;
+    for(j=0;j<numFrames;j++)
+    {
+    //FreeImage(&object->Images[i]);
+    ClearBuffers();
+    Matrix rotationMatrix=MatrixIdentity();
+    rotationMatrix.Data[0]=cos(rotation);
+    rotationMatrix.Data[2]=-sin(rotation);
+    rotationMatrix.Data[8]=sin(rotation);
+    rotationMatrix.Data[10]=cos(rotation);
+    int animindex=0;//(int)((2*(yaw+rotation)+pitch)*16.0/M_PI)%32;
+        //for(animindex=0;animindex<32;animindex++)
+        {
+        RenderFrame(animation,animindex,MatrixMultiply(rotationMatrix,transformMatrix));
+        object->Images[frame]=ImageFromFrameBuffer();
+        frame++;
+        }
+    rotation+=step;
+    }
+*frame_ptr=frame;
+}
+void RenderLoading(ObjectFile* object,Animation* animation,int* frame_ptr)
+{
+int i,j;
+int frame=*frame_ptr;
+Matrix rotationMatrix=MatrixIdentity();
+Matrix yawMatrix=MatrixIdentity();
+yawMatrix.Data[0]=0;
+yawMatrix.Data[2]=-1;
+yawMatrix.Data[8]=1;
+yawMatrix.Data[10]=0;
+    for(i=0;i<animation->NumFrames;i++)
+    {
+        for(j=0;j<4;j++)
+        {
+        RenderFrame(animation,i,rotationMatrix);
+        object->Images[frame]=ImageFromFrameBuffer();
+        frame++;
+        rotationMatrix=MatrixMultiply(rotationMatrix,yawMatrix);
+        }
+    }
+*frame_ptr=frame;
+}
+void RenderSprites(ObjectFile* file,Animation* animations[5])
+{
+int i;
+RideHeader* header=(RideHeader*)(file->ObjectHeader);
+
+int numSprites=3;
+//Compute number of sprites
+    for(i=0;i<NUM_CARS;i++)
+    {
+    uint16_t sprites=header->Cars[0].Sprites;
+        if(sprites&SPRITE_FLAT_SLOPE)numSprites+=32;
+        if(sprites&SPRITE_GENTLE_SLOPE)numSprites+=72;
+        if(sprites&SPRITE_STEEP_SLOPE)numSprites+=80;
+        if(sprites&SPRITE_VERTICAL_SLOPE)numSprites+=116;//These also include loop sprites by default
+        if(sprites&SPRITE_DIAGONAL_SLOPE)numSprites+=24;
+        if(sprites&SPRITE_BANKING)numSprites+=80;
+        if(sprites&SPRITE_SLOPE_BANK_TRANSITION)numSprites+=128;
+        if(sprites&SPRITE_DIAGONAL_BANK_TRANSITION)numSprites+=16;
+        if(sprites&SPRITE_SLOPED_BANK_TRANSITION)numSprites+=16;
+        if(sprites&SPRITE_SLOPED_BANKED_TURN)numSprites+=128;
+        if(sprites&SPRITE_BANKED_SLOPE_TRANSITION)numSprites+=16;
+        if(sprites&SPRITE_RESTRAINT_ANIMATION)numSprites+=80;
+    }
+
+//Reallocate images
+file->Images=realloc(file->Images,sizeof(Image*)*numSprites);
+file->NumImages=numSprites;
+
+//Render sprites
+int frame=3;
+    for(i=0;i<NUM_CARS;i++)
+    {
+    uint16_t sprites=header->Cars[i].Sprites;
+    Animation* animation=animations[i];
+        if(sprites&SPRITE_FLAT_SLOPE)
+        {
+        RenderFrames(file,animation,&frame,32,FLAT,0,0);
+        }
+        if(sprites&SPRITE_GENTLE_SLOPE)
+        {
+        RenderFrames(file,animation,&frame,4,FG_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,4,-FG_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,32,GENTLE,0,0);//Why the fuck does this become a 4 frame rotation with spinning enabled?
+        RenderFrames(file,animation,&frame,32,-GENTLE,0,0);
+        }
+        if(sprites&SPRITE_STEEP_SLOPE)
+        {
+        RenderFrames(file,animation,&frame,8,GS_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,8,-GS_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,32,STEEP,0,0);
+        RenderFrames(file,animation,&frame,32,-STEEP,0,0);
+        }
+        if(sprites&SPRITE_VERTICAL_SLOPE)
+        {
+        RenderFrames(file,animation,&frame,4,SV_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,4,-SV_TRANSITION,0,0);
+        RenderFrames(file,animation,&frame,32,VERTICAL,0,0);
+        RenderFrames(file,animation,&frame,32,-VERTICAL,0,0);
+        //Loop sprites
+        RenderFrames(file,animation,&frame,4,VERTICAL+PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,-VERTICAL-PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,VERTICAL+2*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,-VERTICAL-2*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,VERTICAL+3*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,-VERTICAL-3*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,VERTICAL+4*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,-VERTICAL-4*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,VERTICAL+5*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,-VERTICAL-5*PI_12,0,0);
+        RenderFrames(file,animation,&frame,4,M_PI,0,0);
+        }
+        if(sprites&SPRITE_DIAGONAL_SLOPE)
+        {
+        RenderFrames(file,animation,&frame,4,FG_TRANSITION_DIAGONAL,0,M_PI_4);
+        RenderFrames(file,animation,&frame,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4);
+        RenderFrames(file,animation,&frame,4,GENTLE_DIAGONAL,0,M_PI_4);
+        RenderFrames(file,animation,&frame,4,-GENTLE_DIAGONAL,0,M_PI_4);
+        RenderFrames(file,animation,&frame,4,STEEP_DIAGONAL,0,M_PI_4);
+        RenderFrames(file,animation,&frame,4,-STEEP_DIAGONAL,0,M_PI_4);
+        }
+        if(sprites&SPRITE_BANKING)
+        {
+        RenderFrames(file,animation,&frame,8,FLAT,BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,8,FLAT,-BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,32,FLAT,BANK,0);
+        RenderFrames(file,animation,&frame,32,FLAT,-BANK,0);
+        }
+        if(sprites&SPRITE_SLOPE_BANK_TRANSITION)
+        {
+        RenderFrames(file,animation,&frame,32,FG_TRANSITION,BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,32,FG_TRANSITION,-BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,32,-FG_TRANSITION,BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,32,-FG_TRANSITION,-BANK_TRANSITION,0);
+        }
+        if(sprites&SPRITE_DIAGONAL_BANK_TRANSITION)
+        {
+        RenderFrames(file,animation,&frame,4,GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
+        RenderFrames(file,animation,&frame,4,GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
+        RenderFrames(file,animation,&frame,4,-GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
+        RenderFrames(file,animation,&frame,4,-GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
+        }
+        if(sprites&SPRITE_SLOPED_BANK_TRANSITION)
+        {
+        RenderFrames(file,animation,&frame,4,GENTLE,BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,4,GENTLE,-BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,4,-GENTLE,BANK_TRANSITION,0);
+        RenderFrames(file,animation,&frame,4,-GENTLE,-BANK_TRANSITION,0);
+        }
+        if(sprites&SPRITE_SLOPED_BANKED_TURN)
+        {
+        RenderFrames(file,animation,&frame,32,GENTLE,BANK,0);
+        RenderFrames(file,animation,&frame,32,GENTLE,-BANK,0);
+        RenderFrames(file,animation,&frame,32,-GENTLE,BANK,0);
+        RenderFrames(file,animation,&frame,32,-GENTLE,-BANK,0);
+        }
+        if(sprites&SPRITE_BANKED_SLOPE_TRANSITION)
+        {
+        RenderFrames(file,animation,&frame,4,FG_TRANSITION,BANK,0);
+        RenderFrames(file,animation,&frame,4,FG_TRANSITION,-BANK,0);
+        RenderFrames(file,animation,&frame,4,-FG_TRANSITION,BANK,0);
+        RenderFrames(file,animation,&frame,4,-FG_TRANSITION,-BANK,0);
+        }
+        if(sprites&SPRITE_RESTRAINT_ANIMATION)
+        {
+        RenderLoading(file,animations[4],&frame);
+        }
+    }
+
+}
+
 
 void FreeRideStructures(RideStructures* structures)
 {
