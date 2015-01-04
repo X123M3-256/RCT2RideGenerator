@@ -124,7 +124,7 @@ gtk_label_set_text(MainInterface->ImageDisplayPositionLabel,str);
 void ImageViewerNextImage(){
     if(MainInterface->Dat==NULL)return;
 //AnimationUpdateData();
-if(MainInterface->ImageDisplayCurrentImage+1<MainInterface->Dat->NumImages)MainInterface->ImageDisplayCurrentImage+=7;
+if(MainInterface->ImageDisplayCurrentImage+1<MainInterface->Dat->NumImages)MainInterface->ImageDisplayCurrentImage++;
 ImageViewerUpdate(MainInterface);
 //AnimationUpdateText();
 }
@@ -297,61 +297,7 @@ int i;
         }
     }
 }
-static int RenderSprites(GtkWidget* widget,gpointer data)
-{
 
-}
-
-/*
-static int UpdateAnimationData(GtkWidget* widget,gpointer* data){
-//AnimationUpdateData();
-return FALSE;
-}
-static void RenderFrame(GtkWidget* widget,gpointer* data){
-//RenderAnimation();
-ImageViewerUpdate();
-}
-*/
-/*
-static void GetObjectFilename(GtkWidget* widget,gpointer* data)
-{
-GtkEntry* Entry=(GtkEntry*)data;
-char* Filename=GetFilenameFromUser("Select object model:");
-if(Filename!=NULL)gtk_entry_set_text(Entry,Filename);
-}
-static void AddNewObject(GtkWidget* widget,gpointer* data)
-{
-GtkLabel* NameLabel=gtk_label_new("Enter name for the object:");
-GtkEntry* NameEntry=gtk_entry_new();
-GtkLabel* FileLabel=gtk_label_new("Enter filename of model:");
-GtkEntry* FileEntry=gtk_entry_new();
-GtkButton* FileButton=gtk_button_new_with_label("Browse");
-GtkHBox* FileHBox=gtk_hbox_new(FALSE,2);
-gtk_box_pack_start(GTK_BOX(FileHBox),FileEntry,FALSE,FALSE,2);
-gtk_box_pack_start(GTK_BOX(FileHBox),FileButton,FALSE,FALSE,2);
-
-g_signal_connect(FileButton,"clicked",G_CALLBACK(GetObjectFilename),FileEntry);
-
-GtkDialog* dialog=gtk_dialog_new_with_buttons("Add object",NULL,GTK_DIALOG_DESTROY_WITH_PARENT,"Ok",GTK_RESPONSE_OK,"Cancel",GTK_RESPONSE_CANCEL,NULL);
-GtkBox* ContentBox=GTK_BOX(gtk_dialog_get_content_area(dialog));
-gtk_box_pack_start(ContentBox,NameLabel,FALSE,FALSE,2);
-gtk_box_pack_start(ContentBox,NameEntry,FALSE,FALSE,2);
-gtk_box_pack_start(ContentBox,FileLabel,FALSE,FALSE,2);
-gtk_box_pack_start(ContentBox,FileHBox,FALSE,FALSE,2);
-gtk_widget_show_all(dialog);
-    if(gtk_dialog_run(dialog)==GTK_RESPONSE_OK)
-    {
-     char* Name=gtk_entry_get_text(NameEntry);
-     char* Filename=gtk_entry_get_text(FileEntry);
-        if(strlen(Name)>0&&strlen(Filename)>0)
-        {
-//        Object* Obj=CreateObject(Filename,Name);
-//        AddObject(Obj);
-        }
-    }
-gtk_widget_destroy(GTK_WIDGET(dialog));
-}
-*/
 
 
 void BuildMenus(MainWindow* MainInterface)
@@ -399,7 +345,6 @@ g_signal_connect(saveDatMenuItem,"activate",G_CALLBACK(SaveDatFile),NULL);
 g_signal_connect(addModelMenuItem,"activate",G_CALLBACK(AddNewModel),MainInterface);
 g_signal_connect(addAnimationMenuItem,"activate",G_CALLBACK(AddNewAnimation),MainInterface);
 }
-
 void BuildImageDisplay(MainWindow* MainInterface)
 {
 //Set up the image display interface
@@ -428,7 +373,6 @@ g_signal_connect(MainInterface->ImageDisplayNextButton,"clicked",G_CALLBACK(Next
 g_signal_connect(MainInterface->ImageDisplayPrevButton,"clicked",G_CALLBACK(PrevImage),NULL);
 g_signal_connect(MainInterface->ImageDisplayEventBox,"scroll-event",G_CALLBACK(MouseImage),NULL);
 }
-
 void BuildStringHandler(MainWindow* MainInterface)
 {
 //Set up the string editing interface
@@ -476,7 +420,6 @@ g_signal_connect(MainInterface->RideDescriptionEntry,"focus-out-event",G_CALLBAC
 g_signal_connect(MainInterface->RideCapacityEntry,"activate",G_CALLBACK(UpdateCapacityString),NULL);
 g_signal_connect(MainInterface->RideCapacityEntry,"focus-out-event",G_CALLBACK(UpdateCapacityString),NULL);
 }
-
 void BuildHeaderEditor(MainWindow* interface)
 {
 int i;
@@ -487,6 +430,91 @@ GtkWidget* rideTypeSelect=gtk_combo_box_text_new();
     }
 g_signal_connect(rideTypeSelect,"changed",G_CALLBACK(SetTrackStyle),interface);
 gtk_box_pack_start(GTK_BOX(interface->LeftVBox),rideTypeSelect,FALSE,FALSE,2);
+
+//Create flags editor
+GtkWidget* flagsFrame=gtk_frame_new("Flags");
+GtkWidget* flagsTable=gtk_table_new(3,2,FALSE);
+GtkWidget* seperateLabel=gtk_label_new("Show as seperate ride");
+GtkWidget* coveredLabel=gtk_label_new("Ride is covered");
+GtkWidget* wetLabel=gtk_label_new("Guests get wet");
+GtkWidget* seperateCheckbox=gtk_check_button_new();
+GtkWidget* coveredCheckbox=gtk_check_button_new();
+GtkWidget* wetCheckbox=gtk_check_button_new();
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),seperateLabel,0,1,0,1);
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),coveredLabel,0,1,1,2);
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),wetLabel,0,1,2,3);
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),seperateCheckbox,1,2,0,1);
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),coveredCheckbox,1,2,1,2);
+gtk_table_attach_defaults(GTK_TABLE(flagsTable),wetCheckbox,1,2,2,3);
+gtk_container_add(GTK_CONTAINER(flagsFrame),flagsTable);
+gtk_box_pack_start(GTK_BOX(interface->LeftVBox),flagsFrame,FALSE,FALSE,2);
+
+//Create flags editor
+GtkWidget* carsFrame=gtk_frame_new("Cars");
+GtkWidget* carsTable=gtk_table_new(5,2,FALSE);
+GtkWidget* defaultLabel=gtk_label_new("Default car");
+GtkWidget* frontLabel=gtk_label_new("Front car");
+GtkWidget* secondLabel=gtk_label_new("Second car");
+GtkWidget* thirdLabel=gtk_label_new("Third car");
+GtkWidget* rearLabel=gtk_label_new("Rear car");
+GtkWidget* defaultSelect=gtk_combo_box_text_new();
+GtkWidget* frontSelect=gtk_combo_box_text_new();
+GtkWidget* secondSelect=gtk_combo_box_text_new();
+GtkWidget* thirdSelect=gtk_combo_box_text_new();
+GtkWidget* rearSelect=gtk_combo_box_text_new();
+    for(i=0;i<NUM_CARS;i++)
+    {
+    char optionText[256];
+    sprintf(optionText,"Car %d",i);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(defaultSelect),optionText);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(frontSelect),optionText);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(secondSelect),optionText);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(thirdSelect),optionText);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(rearSelect),optionText);
+    }
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(frontSelect),"Default");
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(secondSelect),"Default");
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(thirdSelect),"Default");
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(rearSelect),"Default");
+gtk_table_attach_defaults(GTK_TABLE(carsTable),defaultLabel,0,1,0,1);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),frontLabel,0,1,1,2);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),secondLabel,0,1,2,3);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),thirdLabel,0,1,3,4);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),rearLabel,0,1,4,5);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),defaultSelect,1,2,0,1);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),frontSelect,1,2,1,2);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),secondSelect,1,2,2,3);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),thirdSelect,1,2,3,4);
+gtk_table_attach_defaults(GTK_TABLE(carsTable),rearSelect,1,2,4,5);
+gtk_container_add(GTK_CONTAINER(carsFrame),carsTable);
+gtk_box_pack_start(GTK_BOX(interface->LeftVBox),carsFrame,FALSE,FALSE,2);
+
+
+GtkNotebook* cars=gtk_notebook_new();
+
+    for(i=0;i<NUM_CARS;i++)
+    {
+    char labelText[256];
+    sprintf(labelText,"Car %d",i);
+    GtkWidget* pageLabel=gtk_label_new(labelText);
+
+    GtkWidget* pageVBox=gtk_vbox_new(FALSE,2);
+
+    gtk_notebook_append_page(GTK_NOTEBOOK(cars),pageVBox,pageLabel);
+    }
+gtk_box_pack_start(GTK_BOX(interface->LeftVBox),cars,FALSE,FALSE,2);
+/*
+//Edit sprite
+GtkWidget* spriteFrame=gtk_frame_new("Sprite settings");
+GtkWidget* spriteTable=gtk_table_new(2,2,FALSE);
+GtkLabel* slopeLabel=gtk_label_new("Slopes");
+GtkLabel* diagonalLabel=gtk_label_new("Diagonal slopes");
+GtkLabel* restraintLabel=gtk_label_new("Restraint animation");
+GtkLabel* bankingLabel=gtk_label_new("Banking");
+GtkLabel* bankedLabel=gtk_label_new("");
+GtkLabel* Label=gtk_label_new("");
+GtkLabel* Label=gtk_label_new("");
+*/
 }
 
 MainWindow* CreateInterface()
