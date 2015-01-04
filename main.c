@@ -1,57 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <dirent.h>
+#include <jansson.h>
 #include <math.h>
 #include "palette.h"
 #include "interface.h"
+#include "model.h"
+#include "animation.h"
 #include "dat.h"
 
-/*
-void dump_header(RideFile* file)
+//These methods are used to dump various bits of information for reversing purposes
+uint32_t flags;
+
+void or_flags(ObjectFile* file)
 {
-#define DST_DIR "/home/edward/RCT2 Reversing/Header Dumps/"
-char dest_path[256]=DST_DIR;
-strcat(dest_path,GetString(file,STRING_TABLE_NAME,0));
-FILE* dump=fopen(dest_path,"w");
-fwrite(file->Unknown,1,0x1C2,dump);
+flags|=((RideHeader*)file->ObjectHeader)->Flags;
+}
+
+void dump_track_types(ObjectFile* object)
+{
+FILE* dump=fopen("ridetypes.txt","a");
+fprintf(dump,"%x %s\n",((RideHeader*)object->ObjectHeader)->TrackStyle,GetString(object,STRING_TABLE_NAME,0));
 fclose(dump);
 }
 
-unsigned char header[0x1C2];
-
-void or_headers(RideFile* file)
+void test_flags(ObjectFile* object)
 {
-int i;
-    for(i=0;i<0x1C2;i++)header[i]|=file->Unknown[i];
+RideHeader* header=(RideHeader*)object->ObjectHeader;
+    if(header->Cars[0].Flags&flags)printf("%s\n",GetString(object,STRING_TABLE_NAME,0));
 }
-
-
-void list_track_type(RideFile* file)
+#define SRC_DIR "/home/edward/RCT2\ Reversing/Object DATs/"
+void iterate_files(void (subroutine)(ObjectFile* file))
 {
-#define LIST_FILE "/home/edward/RCT2 Reversing/track_types.txt"
-FILE* track_types=fopen(LIST_FILE,"a+");
-fprintf(track_types,"%s:  %x %x\n",GetString(file,STRING_TABLE_NAME,0),HEADER_BYTE(file,0xC),HEADER_BYTE(file,0xD));
-fclose(track_types);
-}
-
-void show_nonzero(RideFile* file)
-{
-    if(file->Unknown[39]!=0)printf("%s\n",GetString(file,STRING_TABLE_NAME,0));
-}
-
-
-void dump_structures(RideFile* file)
-{
-#define DST_DIR "/home/edward/RCT2 Reversing/Other Dumps/"
-char dest_path[256]=DST_DIR;
-strcat(dest_path,GetString(file,STRING_TABLE_NAME,0));
-FILE* dump=fopen(dest_path,"w");
-fwrite(file->UnknownStructures,file->UnknownStructureSize,1,dump);
-fclose(dump);
-}
-
-void iterate_files(void (subroutine)(RideFile* file))
-{
-#define SRC_DIR "/home/edward/.wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2 Clean/ObjData/"
 DIR           *dir;
 struct dirent *entity;
 dir=opendir(SRC_DIR);
@@ -59,7 +40,7 @@ dir=opendir(SRC_DIR);
     {
     char path[256]=SRC_DIR;
     strcat(path,entity->d_name);
-    RideFile* file=LoadDat(path);
+    ObjectFile* file=LoadDat(path);
         if(file)
         {
         subroutine(file);
@@ -68,7 +49,35 @@ dir=opendir(SRC_DIR);
     }
 closedir(dir);
 }
+void run_rename()
+{
+#define RAW_DIR "/home/edward/RCT2\ Reversing/Object DATs/Raw/"
+#define DEST_DIR "/home/edward/RCT2\ Reversing/Object DATs/"
 
+int i;
+DIR* dir;
+struct dirent *entity;
+
+dir=opendir(RAW_DIR);
+    while ((entity = readdir(dir)) != NULL)
+    {
+    char path[512]=RAW_DIR;
+    strcat(path,entity->d_name);
+    printf("%s\n",path);
+
+    ObjectFile* file=LoadDat(path);
+        if(file)
+        {
+        char destpath[512]=DEST_DIR;
+        strcat(destpath,GetString(file,STRING_TABLE_NAME,0));
+        char cmd[512];
+        sprintf(cmd,"cp \'%s\' \'%s\'",path,destpath);
+        system(cmd);
+        FreeDat(file);
+        }
+    }
+closedir(dir);
+}
 void isolate_relevant()
 {
 #define POS_DIR "/home/edward/RCT2\ Reversing/Object DATs/Positive/"
@@ -78,39 +87,39 @@ int i;
 DIR* dir;
 struct dirent *entity;
 
-memset(header,0xFF,0x1C2);
+flags=0xFFFFFFFF;
 
 dir=opendir(POS_DIR);
     while ((entity = readdir(dir)) != NULL)
     {
     char path[256]=SRC_DIR;
     strcat(path,entity->d_name);
-    RideFile* file=LoadDat(path);
+
+    ObjectFile* file=LoadDat(path);
         if(file)
         {
-            for(i=0;i<0x1C2;i++)header[i]&=file->Unknown[i];
+        flags&=((RideHeader*)file->ObjectHeader)->Unknown;
+        printf("%s %x\n",entity->d_name,((RideHeader*)file->ObjectHeader)->Unknown);
         FreeDat(file);
         }
     }
 closedir(dir);
-
-
 dir=opendir(NEG_DIR);
     while ((entity = readdir(dir)) != NULL)
     {
     char path[256]=NEG_DIR;
     strcat(path,entity->d_name);
-    RideFile* file=LoadDat(path);
+    ObjectFile* file=LoadDat(path);
         if(file)
         {
-            for(i=0;i<0x1C2;i++)header[i]&=~file->Unknown[i];
+        flags&=~((RideHeader*)file->ObjectHeader)->Flags;
         FreeDat(file);
         }
     }
 closedir(dir);
-show_header();
+printf("%x\n",flags);
 }
-
+/*
 void show_header()
 {
 int i;
@@ -157,168 +166,68 @@ int i;
 
 }
 
-Model* model;
 
-#define TILE_SLOPE (1/sqrt(6))
 
-#define FLAT 0
-#define GENTLE (atan(TILE_SLOPE))
-#define STEEP (atan(4*TILE_SLOPE))
-#define VERTICAL M_PI_2
-#define FG_TRANSITION ((FLAT+GENTLE)/2)
-#define GS_TRANSITION ((GENTLE+STEEP)/2)
-#define SV_TRANSITION ((STEEP+VERTICAL)/2)
 
-#define GENTLE_DIAGONAL (atan(TILE_SLOPE*M_SQRT1_2))
-#define STEEP_DIAGONAL (atan(4*TILE_SLOPE*M_SQRT1_2))
-#define FG_TRANSITION_DIAGONAL ((FLAT+GENTLE_DIAGONAL)/2)
-
-#define BANK M_PI_4
-#define BANK_TRANSITION (M_PI_4/2)
-
-void DrawFrames(ObjectFile* object,int frame,int numFrames,double pitch,double roll,double yaw)
+void MakeRide()
 {
-int i,j;
-
-Matrix pitchMatrix=MatrixIdentity();
-pitchMatrix.Data[5]=cos(pitch);
-pitchMatrix.Data[6]=sin(pitch);
-pitchMatrix.Data[9]=-sin(pitch);
-pitchMatrix.Data[10]=cos(pitch);
-
-Matrix rollMatrix=MatrixIdentity();
-rollMatrix.Data[0]=cos(roll);
-rollMatrix.Data[1]=sin(roll);
-rollMatrix.Data[4]=-sin(roll);
-rollMatrix.Data[5]=cos(roll);
-
-Matrix yawMatrix=MatrixIdentity();
-yawMatrix.Data[0]=cos(yaw);
-yawMatrix.Data[2]=-sin(yaw);
-yawMatrix.Data[8]=sin(yaw);
-yawMatrix.Data[10]=cos(yaw);
-
-Matrix transformMatrix=MatrixMultiply(yawMatrix,MatrixMultiply(pitchMatrix,rollMatrix));
-
-double rotation=0;
-double step=2*M_PI/numFrames;
-    for(j=0;j<numFrames;j++)
-    {
-    //FreeImage(&object->Images[i]);
-    ClearBuffers();
-    Matrix rotationMatrix=MatrixIdentity();
-    rotationMatrix.Data[0]=cos(rotation);
-    rotationMatrix.Data[2]=-sin(rotation);
-    rotationMatrix.Data[8]=sin(rotation);
-    rotationMatrix.Data[10]=cos(rotation);
-    RenderModel(model,MatrixMultiply(rotationMatrix,transformMatrix));
-    object->Images[frame]=ImageFromFrameBuffer();
-    rotation+=step;
-    frame++;
-    }
-}
-
-int main(int argc,char**argv)
-{
-//Test code to create a ride based on the mini coaster
-/*
 int i;
-model=LoadObj("model.obj");
-model->transform.Data[5]=-1;
-ObjectFile* file=LoadDat("/path/to/WCATC.DAT");
+DeserializeFile("msspinner9.rgen");
+
+ObjectFile* file=LoadDat("RCT2 Reversing/Object DATs/Raw/BMFL.DAT");
+
 RideHeader* header=file->ObjectHeader;
+header->Flags|=RIDE_SEPERATE;
+//header->TrackSections=0xFFFFFFFFFFFFFFFFl;
 header->MinimumCars=1;
-header->MaximumCars=1;
+header->MaximumCars=8;
+header->Cars[0].Sprites=0xF|SPRITE_BANKING;
 header->CarTypes[CAR_INDEX_DEFAULT]=0;
 header->CarTypes[CAR_INDEX_REAR]=0xFF;
 header->CarTypes[CAR_INDEX_FRONT]=0xFF;
-header->Cars[0].Spacing=6;
-SetString(file,STRING_TABLE_NAME,1,"Name_Of_Ride");
+header->Cars[0].RiderPairs=0;
+header->Cars[0].Riders=0;
+header->Cars[0].RiderSprites=0;
+header->Cars[0].Spacing=2;
 
-int frame=3;
-DrawFrames(file,frame,32,FLAT,0,0);
-frame+=32;
-DrawFrames(file,frame,4,FG_TRANSITION,0,0);
-frame+=4;
-DrawFrames(file,frame,4,-FG_TRANSITION,0,0);
-frame+=4;
-DrawFrames(file,frame,32,GENTLE,0,0);
-frame+=32;
-DrawFrames(file,frame,32,-GENTLE,0,0);
-frame+=32;
-DrawFrames(file,frame,8,GS_TRANSITION,0,0);
-frame+=8;
-DrawFrames(file,frame,8,-GS_TRANSITION,0,0);
-frame+=8;
-DrawFrames(file,frame,32,STEEP,0,0);
-frame+=32;
-DrawFrames(file,frame,32,-STEEP,0,0);
-frame+=32;
+header->Cars[1].Sprites=0;
+header->Cars[2].Sprites=0;
+header->Cars[3].Sprites=0;
+
+SetString(file,STRING_TABLE_NAME,1,"AAAAAAA");
+
+Animation* animations[5];
+animations[0]=GetAnimationByIndex(0);
+animations[1]=NULL;
+animations[2]=NULL;
+animations[3]=NULL;
+animations[4]=GetAnimationByIndex(1);
+RenderSprites(file,animations);
+
+SaveDat(file,".wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjData/TEST.DAT");
+}
 
 
-DrawFrames(file,frame,4,FG_TRANSITION_DIAGONAL,0,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,GENTLE_DIAGONAL,0,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,-GENTLE_DIAGONAL,0,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,STEEP_DIAGONAL,0,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,-STEEP_DIAGONAL,0,M_PI_4);
-frame+=4;
 
-DrawFrames(file,frame,8,FLAT,BANK_TRANSITION,0);
-frame+=8;
-DrawFrames(file,frame,8,FLAT,-BANK_TRANSITION,0);
-frame+=8;
-DrawFrames(file,frame,32,FLAT,BANK,0);
-frame+=32;
-DrawFrames(file,frame,32,FLAT,-BANK,0);
-frame+=32;
 
-DrawFrames(file,frame,32,FG_TRANSITION,BANK_TRANSITION,0);
-frame+=32;
-DrawFrames(file,frame,32,FG_TRANSITION,-BANK_TRANSITION,0);
-frame+=32;
-DrawFrames(file,frame,32,-FG_TRANSITION,BANK_TRANSITION,0);
-frame+=32;
-DrawFrames(file,frame,32,-FG_TRANSITION,-BANK_TRANSITION,0);
-frame+=32;
-DrawFrames(file,frame,4,GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,-GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,-GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
-frame+=4;
-DrawFrames(file,frame,4,GENTLE,BANK_TRANSITION,0);
-frame+=4;
-DrawFrames(file,frame,4,GENTLE,-BANK_TRANSITION,0);
-frame+=4;
-DrawFrames(file,frame,4,-GENTLE,BANK_TRANSITION,0);
-frame+=4;
-DrawFrames(file,frame,4,-GENTLE,-BANK_TRANSITION,0);
-frame+=4;
-DrawFrames(file,frame,32,GENTLE,BANK,0);
-frame+=32;
-DrawFrames(file,frame,32,GENTLE,-BANK,0);
-frame+=32;
-DrawFrames(file,frame,32,-GENTLE,BANK,0);
-frame+=32;
-DrawFrames(file,frame,32,-GENTLE,-BANK,0);
-frame+=32;
-DrawFrames(file,frame,4,FG_TRANSITION,BANK,0);
-frame+=4;
-DrawFrames(file,frame,4,FG_TRANSITION,-BANK,0);
-frame+=4;
-DrawFrames(file,frame,4,-FG_TRANSITION,BANK,0);
-frame+=4;
-DrawFrames(file,frame,4,-FG_TRANSITION,-BANK,0);
-frame+=4;
-SaveDat(file,"/home/edward/.wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjData/TEST.DAT");
+int main(int argc,char**argv)
+{
+//Alters an existing DAT for testing purposes
+/*
+ObjectFile* object=LoadDat("RCT2 Reversing/Object DATs/Canoes");
+SetString(object,STRING_TABLE_NAME,1,"5 Sprite Canoes");
+//RideHeader* sourceheader=(RideHeader*)source->ObjectHeader;
+RideHeader* header=(RideHeader*)object->ObjectHeader;
+//header->Flags=0;
+header->Cars[0].RiderSprites=5;
+//header->CarTypes[CAR_INDEX_FRONT]=0;
+//header->CarTypes[CAR_INDEX_REAR]=0
+//header->Cars[0].Unknown[2]=0x200F;
+
+
+//header->Cars[0].Unknown[2]=0;
+//header->Cars[0].Unknown[6]=0;
+SaveDat(object,"/home/edward/.wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjData/TEST.DAT");
 */
 
 
@@ -327,6 +236,7 @@ InitializePalette();
 gtk_init(&argc,&argv);
 //Create main interface
 MainWindow* MainInterface=CreateInterface();
+
 
 return 0;
 }
