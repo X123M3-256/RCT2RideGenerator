@@ -1,67 +1,21 @@
 #include<math.h>
+#include<string.h>
 #include "modeldialog.h"
 #include "image.h"
 #include "renderer.h"
 #include "types.h"
 
-#define GRID_TILES 20
-#define GRID_SIZE (3.3*(GRID_TILES-1))
-#define HALF_GRID_SIZE (GRID_SIZE/2.0)
 
-Model* GetGridModel()
-{
-static Vector vertices[4*GRID_TILES];
-static Line lines[2*GRID_TILES];
-static Model previewGrid;
-static int initialised=0;
-    if(!initialised)
-    {
-    previewGrid.transform=MatrixIdentity();
-    previewGrid.NumFaces=0;
-    previewGrid.NumNormals=0;
-    previewGrid.NumVertices=4*GRID_TILES;
-    previewGrid.NumLines=2*GRID_TILES;
-    previewGrid.Vertices=vertices;
-    previewGrid.Lines=lines;
-
-    int i;
-    Vector* top=vertices;
-    Vector* left=top+GRID_TILES;
-    Vector* bottom=left+GRID_TILES;
-    Vector* right=bottom+GRID_TILES;
-        for(i=0;i<GRID_TILES;i++)
-        {
-        top[i].X=3.3*i-HALF_GRID_SIZE;
-        top[i].Y=0.0;
-        top[i].Z=HALF_GRID_SIZE;
-        bottom[i]=top[i];
-        bottom[i].Z-=GRID_SIZE;
-
-        left[i].X=-HALF_GRID_SIZE;
-        left[i].Y=0.0;
-        left[i].Z=3.3*i-HALF_GRID_SIZE;
-        right[i]=left[i];
-        right[i].X+=GRID_SIZE;
-        lines[i].Color=134;
-        lines[i].Vertices[0]=i;
-        lines[i].Vertices[1]=i+2*GRID_TILES;
-        lines[i+GRID_TILES].Color=134;
-        lines[i+GRID_TILES].Vertices[0]=i+GRID_TILES;
-        lines[i+GRID_TILES].Vertices[1]=i+3*GRID_TILES;
-        }
-    }
-return &previewGrid;
-}
 
 void RenderPreview(ModelDialog* dialog)
 {
 ClearBuffers();
 RenderModel(dialog->model,dialog->modelView);
 RenderModel(GetGridModel(),dialog->modelView);
-Image image=ImageFromFrameBuffer();
+Image* image=ImageFromFrameBuffer();
 ShowImageInPixbuf(dialog->pixbuf,&image);
+FreeImage(image);
 gtk_image_set_from_pixbuf(GTK_IMAGE(dialog->preview),dialog->pixbuf);
-//FreeImage(image);
 }
 
 static void FlipX(GtkCheckButton* checkbox,gpointer user_data)
@@ -94,12 +48,12 @@ static void RotateViewLeft(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
      cos(M_PI/12.0),      0.0,      sin(M_PI/12.0), 0.0,
           0.0      ,      1.0,          0.0       , 0.0,
     -sin(M_PI/12.0),      0.0,      cos(M_PI/12.0), 0.0,
           0.0      ,      0.0,          0.0       , 1.0
-    };
+    }};
 
 dialog->modelView=MatrixMultiply(dialog->modelView,rotation);
 RenderPreview(dialog);
@@ -109,12 +63,12 @@ static void RotateViewRight(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
     cos(M_PI/12.0),      0.0,      -sin(M_PI/12.0), 0.0,
           0.0     ,      1.0,          0.0        , 0.0,
     sin(M_PI/12.0),      0.0,       cos(M_PI/12.0), 0.0,
           0.0     ,      0.0,          0.0        , 1.0
-    };
+    }};
 
 dialog->modelView=MatrixMultiply(dialog->modelView,rotation);
 RenderPreview(dialog);
@@ -124,12 +78,12 @@ static void RotateViewUp(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
        0.5*(cos(M_PI/12.0)+1), -sin(M_PI/12.0)/M_SQRT2,  0.5*(cos(M_PI/12.0)-1)  , 0.0,
        sin(M_PI/12.0)/M_SQRT2,      cos(M_PI/12.0)    ,    sin(M_PI/12.0)/M_SQRT2, 0.0,
        0.5*(cos(M_PI/12.0)-1), -sin(M_PI/12.0)/M_SQRT2,  0.5*(cos(M_PI/12.0)+1)  , 0.0,
                 0.0          ,            0.0         ,           0.0            , 1.0
-    };
+    }};
 
 dialog->modelView=MatrixMultiply(rotation,dialog->modelView);
 RenderPreview(dialog);
@@ -139,12 +93,12 @@ static void RotateViewDown(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
        0.5*(cos(M_PI/12.0)+1), sin(M_PI/12.0)/M_SQRT2,  0.5*(cos(M_PI/12.0)-1), 0.0,
       -sin(M_PI/12.0)/M_SQRT2,     cos(M_PI/12.0)    , -sin(M_PI/12.0)/M_SQRT2, 0.0,
        0.5*(cos(M_PI/12.0)-1), sin(M_PI/12.0)/M_SQRT2,  0.5*(cos(M_PI/12.0)+1), 0.0,
                 0.0          ,           0.0         ,           0.0          , 1.0
-    };
+    }};
 
 dialog->modelView=MatrixMultiply(rotation,dialog->modelView);
 RenderPreview(dialog);
@@ -154,12 +108,12 @@ static void ZoomViewIn(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
     1.1, 0.0, 0.0, 0.0,
     0.0, 1.1, 0.0, 0.0,
     0.0, 0.0, 1.1, 0.0,
     0.0, 0.0, 0.0, 1.0
-    };
+    }};
 dialog->modelView=MatrixMultiply(rotation,dialog->modelView);
 RenderPreview(dialog);
 }
@@ -168,12 +122,12 @@ static void ZoomViewOut(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 
 const Matrix rotation=
-    {
+    {{
     1.0/1.1,   0.0  ,   0.0  , 0.0,
       0.0  , 1.0/1.1,   0.0  , 0.0,
       0.0  ,   0.0  , 1.0/1.1, 0.0,
       0.0  ,   0.0  ,   0.0  , 1.0
-    };
+    }};
 dialog->modelView=MatrixMultiply(rotation,dialog->modelView);
 RenderPreview(dialog);
 }
@@ -231,26 +185,38 @@ coords.Y=event->y;
 Face* face=GetFaceEnclosingPoint(dialog->model,dialog->modelView,coords);
     if(face!=NULL)
     {
-    int nextFlags;
-        switch(dialog->paintState)
+        if(dialog->paintState<0)
         {
-        case RECOLORABLE_1:
-        nextFlags=RECOLOR_GREEN;
-        break;
-        case RECOLORABLE_2:
-        nextFlags=RECOLOR_MAGENTA;
-        break;
-        case RECOLORABLE_3:
-        nextFlags=RECOLOR_YELLOW;
-        break;
-        case NON_RECOLORABLE:
-        nextFlags=0;
-        break;
+        int nextFlags;
+            switch(dialog->paintState)
+            {
+            case RECOLORABLE_1:
+            nextFlags=RECOLOR_GREEN;
+            break;
+            case RECOLORABLE_2:
+            nextFlags=RECOLOR_MAGENTA;
+            break;
+            case RECOLORABLE_3:
+            nextFlags=RECOLOR_YELLOW;
+            break;
+            case NON_RECOLORABLE:
+            nextFlags=0;
+            break;
+            }
+            if(face->Flags!=nextFlags)
+            {
+            face->Flags=nextFlags;
+            RenderPreview(dialog);
+            }
         }
-        if(face->Flags!=nextFlags)
+        else
         {
-        face->Flags=nextFlags;
-        RenderPreview(dialog);
+            if(face->Color!=dialog->paintState)
+            {
+            face->Flags=0;
+            face->Color=dialog->paintState;
+            RenderPreview(dialog);
+            }
         }
     }
 
@@ -276,7 +242,11 @@ static void NonColorClicked(GtkButton* button,gpointer user_data)
 ModelDialog* dialog=(ModelDialog*)user_data;
 dialog->paintState=NON_RECOLORABLE;
 }
-
+static void SelectColorClicked(GtkButton* button,gpointer user_data)
+{
+ModelDialog* dialog=(ModelDialog*)user_data;
+dialog->paintState=19;
+}
 static void UpdateName(GtkWidget* widget,gpointer user_data)
 {
 Model* model=(Model*)user_data;
@@ -291,6 +261,7 @@ ModelDialog modelDialog;
 modelDialog.model=model;
 modelDialog.modelView=MatrixIdentity();
 modelDialog.painting=0;
+modelDialog.paintState=RECOLORABLE_1;
 
 GtkWidget* dialog=gtk_dialog_new_with_buttons("Model Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
 GtkWidget* contentArea=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
@@ -379,6 +350,7 @@ g_signal_connect(recolorable1,"clicked",G_CALLBACK(Recolor1Clicked),&modelDialog
 g_signal_connect(recolorable2,"clicked",G_CALLBACK(Recolor2Clicked),&modelDialog);
 g_signal_connect(recolorable3,"clicked",G_CALLBACK(Recolor3Clicked),&modelDialog);
 g_signal_connect(nonColorable,"clicked",G_CALLBACK(NonColorClicked),&modelDialog);
+g_signal_connect(selectColor,"clicked",G_CALLBACK(SelectColorClicked),&modelDialog);
 gtk_box_pack_start(GTK_BOX(previewVBox),paintLabel,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(previewVBox),recolorable1,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(previewVBox),recolorable2,FALSE,FALSE,2);
