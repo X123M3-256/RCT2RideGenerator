@@ -4,25 +4,44 @@
 #include<string.h>
 #include "renderer.h"
 #include "linearalgebra.h"
-#define FRAME_BUFFER_SIZE 256
+#define FRAME_BUFFER_SIZE 255
 
 
 //3 metres per tile
-#define S (64.0/(3.0*sqrt(3.0)))
+#define SQRT1_2 0.707106781
+#define SQRT_3 1.73205080757
+#define SQRT_6 2.44948974278
+#define S (64.0/(3.0*SQRT_3))
 //Dimetric projection
 const Matrix projection={{
-      M_SQRT1_2*S  ,       0.0      ,   -M_SQRT1_2*S  , FRAME_BUFFER_SIZE/2.0,
-    0.5*M_SQRT1_2*S, sqrt(3.0)/2.0*S,  0.5*M_SQRT1_2*S, FRAME_BUFFER_SIZE/2.0,
-    sqrt(6.0)/4.0*S,   -1.0/2.0*S   ,  sqrt(6.0)/4.0*S,          0.0         ,
-           0.0     ,       0.0      ,        0.0      ,          1.0
+        SQRT1_2*S  ,       0.0     ,   -SQRT1_2*S  , FRAME_BUFFER_SIZE/2.0,
+      0.5*SQRT1_2*S,  SQRT_3/2.0*S , 0.5*SQRT1_2*S , FRAME_BUFFER_SIZE/2.0,
+       SQRT_6/4.0*S,   -1.0/2.0*S  ,  SQRT_6/4.0*S ,         0.0          ,
+           0.0     ,       0.0     ,       0.0     ,         1.0
     }};
 
-unsigned char FrameBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
-float DepthBuffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+unsigned char frame_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
+image_t* renderer_get_image()
+{
+image_t* image=malloc(sizeof(image_t));
+image->width=FRAME_BUFFER_SIZE;
+image->height=FRAME_BUFFER_SIZE;
+image->x_offset=-FRAME_BUFFER_SIZE/2;
+image->y_offset=-FRAME_BUFFER_SIZE/2;
+image->data=malloc(FRAME_BUFFER_SIZE*sizeof(char*));
+image->flags=5;
+int x,y;
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+    image->data[y]=malloc(FRAME_BUFFER_SIZE);
+        for(x=0;x<FRAME_BUFFER_SIZE;x++)image->data[y][x]=frame_buffer[x][y];
+    }
+return image;
+}
 
-
-
+/*
 Image* ImageFromFrameBuffer()
 {
 Image* image=malloc(sizeof(Image));
@@ -40,25 +59,27 @@ int x,y;
     }
 return image;
 }
+*/
 
 
-void ClearBuffers()
+void renderer_clear_buffers()
 {
 int x,y;
     for(x=0;x<FRAME_BUFFER_SIZE;x++)
     for(y=0;y<FRAME_BUFFER_SIZE;y++)
     {
-    FrameBuffer[x][y]=0;
-    DepthBuffer[x][y]=-INFINITY;
+    frame_buffer[x][y]=0;
+    depth_buffer[x][y]=-INFINITY;
     }
 }
 
+
 //Fragment shader
-char ShadeFragment(Vector normal)
+char shade_fragment(Vector normal)
 {
 //printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
-const Vector lightDirection={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
-float lambert=VectorDotProduct(normal,lightDirection);
+const Vector light_direction={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
+float lambert=VectorDotProduct(normal,light_direction);
 if(lambert<0.0)lambert=0.0;
 return (int)(lambert*8.0)-4;
 }
@@ -69,16 +90,16 @@ typedef struct
 {
 Vector current;
 Vector step;
-}LinearInterp;
-inline LinearInterp LinearInterpInit(Vector x1,Vector x2,float u_start,float u_step)
+}linear_interp_t;
+linear_interp_t linear_interp_init(Vector x1,Vector x2,float u_start,float u_step)
 {
-LinearInterp interp;
+linear_interp_t interp;
 Vector diff=VectorSubtract(x2,x1);
 interp.current=VectorAdd(x1,VectorMultiply(diff,u_start));
 interp.step=VectorMultiply(diff,u_step);
 return interp;
 }
-inline Vector LinearInterpStep(LinearInterp* interp)
+Vector linear_interp_step(linear_interp_t* interp)
 {
 interp->current=VectorAdd(interp->current,interp->step);
 return interp->current;
@@ -86,7 +107,7 @@ return interp->current;
 
 /*Returns the indices of the first and last pixel enclosed int the range start-end.
 The value of skip is distance from the start of the range to the centre of the first pixel*/
-void GetEnclosedPixels(float start,float end,int* first,int* last,float* skip)
+void get_enclosed_pixels(float start,float end,int* first,int* last,float* skip)
 {
 *first=(int)floor(start+0.5);
 *last=(int)floor(end-0.5);
@@ -99,13 +120,12 @@ void GetEnclosedPixels(float start,float end,int* first,int* last,float* skip)
     }
     if(*last>=FRAME_BUFFER_SIZE)*last=FRAME_BUFFER_SIZE-1;
 }
-
-inline float lerp(float x1,float x2,float u)
+float lerp(float x1,float x2,float u)
 {
 return x1+u*(x2-x1);
 }
 
-
+/*
 //Rasterizes a line from the first two vertices in the supplied primitive; others are ignored
 #define ABS(X) ((X)>0?(X):-(X))
 void RasterizeLine(Primitive* primitive)
@@ -170,176 +190,177 @@ int i;
     LinearInterpStep(&positionInterp);
     }
 }
+*/
 //DWISOTT
-void RasterizePrimitive(Primitive* primitive)
+void rasterize_primitive(primitive_t* primitive)
 {
-Vector topVertex,middleVertex,bottomVertex,topNormal,middleNormal,bottomNormal;
+Vector top_vertex,middle_vertex,bottom_vertex,top_normal,middle_normal,bottom_normal;
 
 //Sort the vertices
 //Table of possible permutations. 0 values are not used
 const unsigned char permutations[8]={36,0,24,18,33,9,0,6};
 unsigned char bits=0;
     //Three comparisons are sufficient to enumerate all 6 permutations
-    if(primitive->Vertices[0].Y<primitive->Vertices[1].Y)bits|=4;
-    if(primitive->Vertices[1].Y<primitive->Vertices[2].Y)bits|=2;
-    if(primitive->Vertices[0].Y<primitive->Vertices[2].Y)bits|=1;
+    if(primitive->vertices[0].Y<primitive->vertices[1].Y)bits|=4;
+    if(primitive->vertices[1].Y<primitive->vertices[2].Y)bits|=2;
+    if(primitive->vertices[0].Y<primitive->vertices[2].Y)bits|=1;
 unsigned char permutation=permutations[bits];
 //printf("Permutation %d bits %d\n",permutation,bits);
-topVertex=primitive->Vertices[(permutation>>4)&3];
-topNormal=primitive->Normals[(permutation>>4)&3];
-middleVertex=primitive->Vertices[(permutation>>2)&3];
-middleNormal= primitive->Normals[(permutation>>2)&3];
-bottomVertex=primitive->Vertices[permutation&3];
-bottomNormal= primitive->Normals[permutation&3];
+top_vertex=primitive->vertices[(permutation>>4)&3];
+top_normal=primitive->normals[(permutation>>4)&3];
+middle_vertex=primitive->vertices[(permutation>>2)&3];
+middle_normal= primitive->normals[(permutation>>2)&3];
+bottom_vertex=primitive->vertices[permutation&3];
+bottom_normal= primitive->normals[permutation&3];
 //printf("%f %f %f\n",topVertex.Y,middleVertex.Y,bottomVertex.Y);
 
+//Is the longest side on the right?
+int longest_side_right=middle_vertex.X<lerp(top_vertex.X,bottom_vertex.X,(middle_vertex.Y-top_vertex.Y)/(bottom_vertex.Y-top_vertex.Y));
 
-int longest_side_right=middleVertex.X<lerp(topVertex.X,bottomVertex.X,(middleVertex.Y-topVertex.Y)/(bottomVertex.Y-topVertex.Y));
 //Actually rasterize triangle
-
 int x_start=0,x_end=0;
 int y_start,y_end;
 float x_skip,y_skip;
 
-GetEnclosedPixels(topVertex.Y,middleVertex.Y,&y_start,&y_end,&y_skip);
+//Determine the vertical range of pixels covered by this triangle
+get_enclosed_pixels(top_vertex.Y,middle_vertex.Y,&y_start,&y_end,&y_skip);
 
 
 //Draw top triangle
 //Assume longest side is on the left
-float u_step=1/(middleVertex.Y-topVertex.Y);
-LinearInterp rightPositionInterp=LinearInterpInit(topVertex,middleVertex,y_skip*u_step,u_step);
-LinearInterp rightNormalInterp=LinearInterpInit(topNormal,middleNormal,y_skip*u_step,u_step);
+float u_step=1/(middle_vertex.Y-top_vertex.Y);
+linear_interp_t right_position_interp=linear_interp_init(top_vertex,middle_vertex,y_skip*u_step,u_step);
+linear_interp_t right_normal_interp=linear_interp_init(top_normal,middle_normal,y_skip*u_step,u_step);
 
-u_step=1/(bottomVertex.Y-topVertex.Y);
-LinearInterp leftPositionInterp=LinearInterpInit(topVertex,bottomVertex,y_skip*u_step,u_step);
-LinearInterp leftNormalInterp=LinearInterpInit(topNormal,bottomNormal,y_skip*u_step,u_step);
-
-
+u_step=1/(bottom_vertex.Y-top_vertex.Y);
+linear_interp_t left_position_interp=linear_interp_init(top_vertex,bottom_vertex,y_skip*u_step,u_step);
+linear_interp_t left_normal_interp=linear_interp_init(top_normal,bottom_normal,y_skip*u_step,u_step);
 
 //Swap if that isn't the case
     if(longest_side_right)
     {
-    LinearInterp temp=leftPositionInterp;
-    leftPositionInterp=rightPositionInterp;
-    rightPositionInterp=temp;
-    temp=leftNormalInterp;
-    leftNormalInterp=rightNormalInterp;
-    rightNormalInterp=temp;
+    linear_interp_t temp=left_position_interp;
+    left_position_interp=right_position_interp;
+    right_position_interp=temp;
+    temp=left_normal_interp;
+    left_normal_interp=right_normal_interp;
+    right_normal_interp=temp;
     }
 //Rasterize the primitive
 int i;
 //Loop twice: One to draw the top half and then again for the bottom half
-for(i=0;i<2;i++)
-{
-int x,y;
-    for(y=y_start;y<=y_end;y++)
+    for(i=0;i<2;i++)
     {
-    //Interpolate values
-    Vector leftPosition=leftPositionInterp.current;
-    Vector rightPosition=rightPositionInterp.current;
-    Vector leftNormal=leftNormalInterp.current;
-    Vector rightNormal=rightNormalInterp.current;
-    //printf("%f %f\n",leftPosition.X,rightPosition);
-    //Get pixel range to use
-    GetEnclosedPixels(leftPosition.X,rightPosition.X,&x_start,&x_end,&x_skip);
-    u_step=1/(rightPosition.X-leftPosition.X);
-    LinearInterp curPositionInterp=LinearInterpInit(leftPosition,rightPosition,x_skip*u_step,u_step);
-    LinearInterp curNormalInterp=LinearInterpInit(leftNormal,rightNormal,x_skip*u_step,u_step);
-        for(x=x_start;x<=x_end;x++)
+    int x,y;
+        for(y=y_start;y<=y_end;y++)
         {
-        Vector curPosition=curPositionInterp.current;
-        Vector curNormal=VectorNormalize(curNormalInterp.current);
-            if(curPosition.Z>DepthBuffer[x][y])
+        //Interpolate values
+        Vector left_position=left_position_interp.current;
+        Vector right_position=right_position_interp.current;
+        Vector left_normal=left_normal_interp.current;
+        Vector right_normal=right_normal_interp.current;
+        //printf("%f %f\n",leftPosition.X,rightPosition);
+        //Get pixel range to use
+        get_enclosed_pixels(left_position.X,right_position.X,&x_start,&x_end,&x_skip);
+        u_step=1/(right_position.X-left_position.X);
+        linear_interp_t cur_position_interp=linear_interp_init(left_position,right_position,x_skip*u_step,u_step);
+        linear_interp_t cur_normal_interp=linear_interp_init(left_normal,right_normal,x_skip*u_step,u_step);
+            for(x=x_start;x<=x_end;x++)
             {
-            FrameBuffer[x][y]=primitive->Color+ShadeFragment(curNormal);
-            DepthBuffer[x][y]=curPosition.Z;
+            Vector cur_position=cur_position_interp.current;
+            Vector cur_normal=VectorNormalize(cur_normal_interp.current);
+                if(cur_position.Z>depth_buffer[x][y])
+                {
+                frame_buffer[x][y]=primitive->color+shade_fragment(cur_normal);
+                depth_buffer[x][y]=cur_position.Z;
+                }
+            linear_interp_step(&cur_position_interp);
+            linear_interp_step(&cur_normal_interp);
             }
-        LinearInterpStep(&curPositionInterp);
-        LinearInterpStep(&curNormalInterp);
+        linear_interp_step(&left_position_interp);
+        linear_interp_step(&right_position_interp);
+        linear_interp_step(&left_normal_interp);
+        linear_interp_step(&right_normal_interp);
         }
-    LinearInterpStep(&leftPositionInterp);
-    LinearInterpStep(&rightPositionInterp);
-    LinearInterpStep(&leftNormalInterp);
-    LinearInterpStep(&rightNormalInterp);
-    }
-//Compute new values of y_start and y_end
-GetEnclosedPixels(middleVertex.Y,bottomVertex.Y,&y_start,&y_end,&y_skip);
-//Compute new interpolation for the side that has changed
-u_step=1/(bottomVertex.Y-middleVertex.Y);
-    if(longest_side_right)
-    {
-    leftPositionInterp=LinearInterpInit(middleVertex,bottomVertex,y_skip*u_step,u_step);
-    leftNormalInterp=LinearInterpInit(middleNormal,bottomNormal,y_skip*u_step,u_step);
-    }
-    else
-    {
-    rightPositionInterp=LinearInterpInit(middleVertex,bottomVertex,y_skip*u_step,u_step);
-    rightNormalInterp=LinearInterpInit(middleNormal,bottomNormal,y_skip*u_step,u_step);
+    //Compute new values of y_start and y_end
+    get_enclosed_pixels(middle_vertex.Y,bottom_vertex.Y,&y_start,&y_end,&y_skip);
+    //Compute new interpolation for the side that has changed
+    u_step=1/(bottom_vertex.Y-middle_vertex.Y);
+        if(longest_side_right)
+        {
+        left_position_interp=linear_interp_init(middle_vertex,bottom_vertex,y_skip*u_step,u_step);
+        left_normal_interp=linear_interp_init(middle_normal,bottom_normal,y_skip*u_step,u_step);
+        }
+        else
+        {
+        right_position_interp=linear_interp_init(middle_vertex,bottom_vertex,y_skip*u_step,u_step);
+        right_normal_interp=linear_interp_init(middle_normal,bottom_normal,y_skip*u_step,u_step);
+        }
     }
 }
-
-}
-void TransformVectors(Matrix transform,Vector* source,Vector* dest,unsigned int num,float W)
+void transform_vectors(Matrix transform,Vector* source,Vector* dest,unsigned int num,float w)
 {
 int i;
     for(i=0;i<num;i++)
     {
-    dest[i].X=source[i].X*transform.Data[0]+source[i].Y*transform.Data[1]+source[i].Z*transform.Data[2]+W*transform.Data[3];
-    dest[i].Y=source[i].X*transform.Data[4]+source[i].Y*transform.Data[5]+source[i].Z*transform.Data[6]+W*transform.Data[7];
-    dest[i].Z=source[i].X*transform.Data[8]+source[i].Y*transform.Data[9]+source[i].Z*transform.Data[10]+W*transform.Data[11];
+    dest[i].X=source[i].X*transform.Data[0]+source[i].Y*transform.Data[1]+source[i].Z*transform.Data[2]+w*transform.Data[3];
+    dest[i].Y=source[i].X*transform.Data[4]+source[i].Y*transform.Data[5]+source[i].Z*transform.Data[6]+w*transform.Data[7];
+    dest[i].Z=source[i].X*transform.Data[8]+source[i].Y*transform.Data[9]+source[i].Z*transform.Data[10]+w*transform.Data[11];
     //printf("%f %f %f\n",dest[i].X,dest[i].Y,dest[i].Z);
     }
 }
-void RenderModel(Model* model,Matrix modelView)
-{
-modelView=MatrixMultiply(modelView,model->transform);
-Matrix modelViewProjection=MatrixMultiply(projection,modelView);
 
-Vector* transformedVertices=malloc(model->NumVertices*sizeof(Vector));
-Vector* transformedNormals=malloc(model->NumNormals*sizeof(Vector));
+void renderer_render_model(model_t* model,Matrix model_view)
+{
+model_view=MatrixMultiply(model_view,model->transform);
+Matrix model_view_projection=MatrixMultiply(projection,model_view);
+//Allocate space for transformed vectors
+Vector* transformed_vertices=malloc(model->num_vertices*sizeof(Vector));
+Vector* transformed_normals=malloc(model->num_normals*sizeof(Vector));
 //Transform model into screen space
-TransformVectors(modelViewProjection,model->Vertices,transformedVertices,model->NumVertices,1.0);
+transform_vectors(model_view_projection,model->vertices,transformed_vertices,model->num_vertices,1.0);
 //Transform normals into world space (inverse transpose is broken but not actually needed)
 //Matrix normalTransform=MatrixTranspose(MatrixInverse(modelView));
-TransformVectors(modelView,model->Normals,transformedNormals,model->NumNormals,0.0);
+transform_vectors(model_view,model->normals,transformed_normals,model->num_normals,0.0);
+
 //Rasterize primitives TODO: Backface culling
-Primitive primitive;
+primitive_t primitive;
 int i,j;
-    for(i=0;i<model->NumFaces;i++)
+    for(i=0;i<model->num_faces;i++)
     {
-    primitive.Color=model->Faces[i].Color;
+    switch(model->faces[i].flags)
+        {
+        case RECOLOR_GREEN:
+        primitive.color=250;
+        break;
+        case RECOLOR_MAGENTA:
+        primitive.color=209;
+        break;
+        default:
+        primitive.color=model->faces[i].color;
+        break;
+        }
         for(j=0;j<3;j++)
         {
-                switch(model->Faces[i].Flags)
-            {
-            case RECOLOR_GREEN:
-            primitive.Color=250;
-            break;
-            case RECOLOR_MAGENTA:
-            primitive.Color=209;
-            break;
-            default:
-            primitive.Color=model->Faces[i].Color;
-            break;
-            }
-        primitive.Vertices[j]=transformedVertices[model->Faces[i].Vertices[j]];
-        primitive.Normals[j]=transformedNormals[model->Faces[i].Normals[j]];
+        primitive.vertices[j]=transformed_vertices[model->faces[i].vertices[j]];
+        primitive.normals[j]=transformed_normals[model->faces[i].normals[j]];
         }
-    RasterizePrimitive(&primitive);
+    rasterize_primitive(&primitive);
     }
+    /*
     for(i=0;i<model->NumLines;i++)
     {
-
     primitive.Color=model->Lines[i].Color;
     primitive.Vertices[0]=transformedVertices[model->Lines[i].Vertices[0]];
     primitive.Vertices[1]=transformedVertices[model->Lines[i].Vertices[1]];
     RasterizeLine(&primitive);
     }
-free(transformedVertices);
-free(transformedNormals);
+    */
+free(transformed_vertices);
+free(transformed_normals);
 }
 
-
+/*
 #define MIN(X,Y) ((X)<(Y)?(X):(Y))
 #define MAX(X,Y) ((X)>(Y)?(X):(Y))
 int IsInTriangle(Vector point,Vector t1,Vector t2,Vector t3,float* depth)
@@ -382,4 +403,4 @@ free(transformedVertices);
 return nearestFace;
 }
 
-
+*/

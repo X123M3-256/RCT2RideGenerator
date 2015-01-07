@@ -1,21 +1,22 @@
 #ifndef RENDERER_H_INCLUDED
 #define RENDERER_H_INCLUDED
-
-#include "dat.h"
 #include "linearalgebra.h"
 #include "model.h"
+#include "image.h"
 
 typedef struct
 {
-unsigned char Color;
-Vector Vertices[3];
-Vector Normals[3];
-}Primitive;
+unsigned char color;
+Vector vertices[3];
+Vector normals[3];
+}primitive_t;
 
 
-void ClearBuffers();
-void RenderModel(Model* model,Matrix modelview);
-Face* GetFaceEnclosingPoint(Model* model,Matrix modelView,Vector coords);
-Image* ImageFromFrameBuffer();
+void renderer_clear_buffers();
+image_t* renderer_get_image();
+void renderer_render_model(model_t* model,Matrix modelview);
+//image_t* renderer_get_image();
+//face_t* renderer_get_face_enclosing_point(Model* model,Matrix modelView,Vector coords);
+
 
 #endif // RENDERER_H_INCLUDED

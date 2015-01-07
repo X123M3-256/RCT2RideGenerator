@@ -7,73 +7,71 @@
 #include "animation.h"
 
 
-Animation* CreateAnimation()
+animation_t* animation_new()
 {
-Animation* animation=malloc(sizeof(Animation));
-animation->Name=malloc(16);
-snprintf(animation->Name,16,"animation%d",AnimationList.NumAnimations);
-animation->NumFrames=1;
-animation->NumObjects=0;
+animation_t* animation=malloc(sizeof(animation_t));
+animation->name=NULL;
+animation->num_frames=1;
+animation->num_objects=0;
 return animation;
 }
-void SetName(Animation* animation,const char* name)
+void animation_set_name(animation_t* animation,const char* name)
 {
-animation->Name=realloc(animation->Name,strlen(name)+1);
-strcpy(animation->Name,name);
+animation->name=realloc(animation->name,strlen(name)+1);
+strcpy(animation->name,name);
 }
-
-void SetNumFrames(Animation* animation,int frames)
+void animation_set_num_frames(animation_t* animation,int frames)
 {
 int i,j;
-    if(frames>animation->NumFrames)
+    if(frames>animation->num_frames)
     {
-        for(i=animation->NumFrames;i<frames;i++)
-        for(j=0;j<animation->NumObjects;j++)
+        for(i=animation->num_frames;i<frames;i++)
+        for(j=0;j<animation->num_objects;j++)
         {
-        animation->Frames[i][j]=animation->Frames[i-1][j];
+        animation->frames[i][j]=animation->frames[i-1][j];
         }
     }
-animation->NumFrames=frames;
+animation->num_frames=frames;
 }
-int AddObject(Animation* animation,Model* model)
+int animation_add_object(animation_t* animation,model_t* model)
 {
 int i;
-animation->Objects[animation->NumObjects].model=model;
-animation->Objects[animation->NumObjects].parentIndex=-1;
-    for(i=0;i<animation->NumFrames;i++)
+animation->objects[animation->num_objects].model=model;
+animation->objects[animation->num_objects].parent_index=-1;
+    for(i=0;i<animation->num_frames;i++)
     {
-    ObjectTransform* transform=&(animation->Frames[i][animation->NumObjects]);
-    transform->Position.X=0;
-    transform->Position.Y=0;
-    transform->Position.Z=0;
-    transform->Rotation.X=0;
-    transform->Rotation.Y=0;
-    transform->Rotation.Z=0;
-    transform->Transform=MatrixIdentity();
+    object_transform_t* transform=&(animation->frames[i][animation->num_objects]);
+    transform->position.X=0;
+    transform->position.Y=0;
+    transform->position.Z=0;
+    transform->rotation.X=0;
+    transform->rotation.Y=0;
+    transform->rotation.Z=0;
+    transform->transform=MatrixIdentity();
     }
-return animation->NumObjects++;
+return animation->num_objects++;
 }
-void UpdateTransform(Animation* animation,int frame,int object,Vector position,Vector rotation)
+void animation_update_transform(animation_t* animation,int frame,int object,Vector position,Vector rotation)
 {
-ObjectTransform* transform=&(animation->Frames[frame][object]);
-transform->Position=position;
-transform->Rotation=rotation;
+object_transform_t* transform=&(animation->frames[frame][object]);
+transform->position=position;
+transform->rotation=rotation;
 
-Matrix rotateX=
+Matrix rotate_x=
     {{
     1.0,       0.0      ,        0.0      , 0.0,
     0.0, cos(rotation.X), -sin(rotation.X), 0.0,
     0.0, sin(rotation.X),  cos(rotation.X), 0.0,
     0.0,       0.0      ,        0.0      , 1.0
     }};
-Matrix rotateY=
+Matrix rotate_y=
     {{
      cos(rotation.Y), 0.0,  sin(rotation.Y), 0.0,
            0.0      , 1.0,       0.0       , 0.0,
     -sin(rotation.Y), 0.0,  cos(rotation.Y), 0.0,
            0.0      , 0.0,       0.0       , 1.0
     }};
-Matrix rotateZ=
+Matrix rotate_z=
     {{
     cos(rotation.Z), -sin(rotation.Z),0.0, 0.0,
     sin(rotation.Z),  cos(rotation.Z),0.0, 0.0,
@@ -81,51 +79,38 @@ Matrix rotateZ=
           0.0      ,         0.0     ,0.0, 1.0
     }};
 
-transform->Transform=MatrixMultiply(rotateY,MatrixMultiply(rotateX,rotateZ));
-transform->Transform.Data[3]=position.X;
-transform->Transform.Data[7]=position.Y;
-transform->Transform.Data[11]=position.Z;
+transform->transform=MatrixMultiply(rotate_y,MatrixMultiply(rotate_x,rotate_z));
+transform->transform.Data[3]=position.X;
+transform->transform.Data[7]=position.Y;
+transform->transform.Data[11]=position.Z;
 }
-void UpdateParent(Animation* animation,int object,int parent)
+void animation_update_parent(animation_t* animation,int object,int parent)
 {
-    if(parent>=0&&parent<animation->NumObjects)animation->Objects[object].parentIndex=parent;
-    else animation->Objects[object].parentIndex=-1;
+    if(parent>=0&&parent<animation->num_objects)animation->objects[object].parent_index=parent;
+    else animation->objects[object].parent_index=-1;
 }
-
-void RenderFrame(Animation* animation,int frame,Matrix modelView)
+void animation_render_frame(animation_t* animation,int frame,Matrix model_view)
 {
 int i;
-ClearBuffers();
-    for(i=0;i<animation->NumObjects;i++)
+renderer_clear_buffers();
+    for(i=0;i<animation->num_objects;i++)
     {
-    Matrix transform=animation->Frames[frame][i].Transform;
-    int curObjectIndex=i;
-        while((curObjectIndex=animation->Objects[curObjectIndex].parentIndex)!=-1)
+    Matrix transform=animation->frames[frame][i].transform;
+    int cur_object_index=i;
+        while((cur_object_index=animation->objects[cur_object_index].parent_index)!=-1)
         {
-        transform=MatrixMultiply(animation->Frames[frame][curObjectIndex].Transform,transform);
+        transform=MatrixMultiply(animation->frames[frame][cur_object_index].transform,transform);
         }
-    RenderModel(animation->Objects[i].model,MatrixMultiply(modelView,transform));
+    renderer_render_model(animation->objects[i].model,MatrixMultiply(model_view,transform));
     }
 }
-
-
-
-
-
-void AddAnimation(Animation* animation)
+void animation_free(animation_t* animation)
 {
-assert(AnimationList.NumAnimations<MAX_ANIMATIONS);
-AnimationList.Animations[AnimationList.NumAnimations++]=animation;
+free(animation->name);
+free(animation);
 }
-int NumAnimations()
-{
-return AnimationList.NumAnimations;
-}
-Animation* GetAnimationByIndex(int index)
-{
-    if(index>=AnimationList.NumAnimations)return NULL;
-return AnimationList.Animations[index];
-}
+
+
 /*
 char* ReadFileText(char* filename)
 {
