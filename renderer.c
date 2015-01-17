@@ -20,7 +20,7 @@ const Matrix projection={{
            0.0     ,       0.0     ,       0.0     ,         1.0
     }};
 
-unsigned char frame_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+uint8_t frame_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
 image_t* renderer_get_image()
@@ -75,13 +75,13 @@ int x,y;
 
 
 //Fragment shader
-char shade_fragment(Vector normal)
+uint8_t shade_fragment(Vector normal)
 {
 //printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
 const Vector light_direction={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
 float lambert=VectorDotProduct(normal,light_direction);
 if(lambert<0.0)lambert=0.0;
-return (int)(lambert*8.0)-4;
+return (uint8_t)(lambert*8.0)+3;
 }
 
 
@@ -271,7 +271,7 @@ int i;
             Vector cur_normal=VectorNormalize(cur_normal_interp.current);
                 if(cur_position.Z>depth_buffer[x][y])
                 {
-                frame_buffer[x][y]=primitive->color+shade_fragment(cur_normal);
+                frame_buffer[x][y]=palette_remap_section_index(primitive->color,shade_fragment(cur_normal));
                 depth_buffer[x][y]=cur_position.Z;
                 }
             linear_interp_step(&cur_position_interp);
@@ -328,18 +328,7 @@ primitive_t primitive;
 int i,j;
     for(i=0;i<model->num_faces;i++)
     {
-    switch(model->faces[i].flags)
-        {
-        case RECOLOR_GREEN:
-        primitive.color=250;
-        break;
-        case RECOLOR_MAGENTA:
-        primitive.color=209;
-        break;
-        default:
-        primitive.color=model->faces[i].color;
-        break;
-        }
+    primitive.color=model->faces[i].color;
         for(j=0;j<3;j++)
         {
         primitive.vertices[j]=transformed_vertices[model->faces[i].vertices[j]];

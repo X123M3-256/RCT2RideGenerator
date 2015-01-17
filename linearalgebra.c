@@ -3,79 +3,13 @@
 #include<math.h>
 #include "linearalgebra.h"
 
-
-Quaternion QuaternionConjugate(Quaternion Quat)
+Vector VectorFromComponents(float x,float y,float z)
 {
-Quaternion Conjugate;
-Conjugate.W=Quat.W;
-Conjugate.I=-Quat.I;
-Conjugate.J=-Quat.J;
-Conjugate.K=-Quat.K;
-return Conjugate;
-}
-
-Quaternion QuaternionMultiply(Quaternion A,Quaternion B)
-{
-Quaternion Result;
-Result.W=(A.W*B.W)-(A.I*B.I)-(A.J*B.J)-(A.K*B.K);
-Result.I=(A.W*B.I)+(A.I*B.W)+(A.J*B.K)-(A.K*B.J);
-Result.J=(A.W*B.J)-(A.I*B.K)+(A.J*B.W)+(A.K*B.I);
-Result.K=(A.W*B.K)+(A.I*B.J)-(A.J*B.I)+(A.K*B.W);
-return Result;
-}
-
-Vector QuaternionTransformVector(Quaternion Quat,Vector Vec)
-{
-Vector Result;
-//Multiply quaternion conjugate by vector
-Quaternion QV;
-QV.W=(Quat.I*Vec.X)+(Quat.J*Vec.Y)+(Quat.K*Vec.Z);
-QV.I=(Quat.W*Vec.X)-(Quat.J*Vec.Z)+(Quat.K*Vec.Y);
-QV.J=(Quat.W*Vec.Y)+(Quat.I*Vec.Z)-(Quat.K*Vec.X);
-QV.K=(Quat.W*Vec.Z)-(Quat.I*Vec.Y)+(Quat.J*Vec.X);
-
-//Multiply result by quaternion again
-
-Result.X=(QV.W*Quat.I)+(QV.I*Quat.W)+(QV.J*Quat.K)-(QV.K*Quat.J);
-Result.Y=(QV.W*Quat.J)-(QV.I*Quat.K)+(QV.J*Quat.W)+(QV.K*Quat.I);
-Result.Z=(QV.W*Quat.K)+(QV.I*Quat.J)-(QV.J*Quat.I)+(QV.K*Quat.W);
-
-return Result;
-}
-
-#define SQ(A) (A*A)
-Matrix MatrixFromQuaternion(Quaternion Qtr)
-{
-Matrix RotationMatrix;
-float IJ=Qtr.I*Qtr.J;
-float KW=Qtr.K*Qtr.W;
-float IK=Qtr.I*Qtr.K;
-float JW=Qtr.J*Qtr.W;
-float JK=Qtr.J*Qtr.K;
-float IW=Qtr.I*Qtr.W;
-
-RotationMatrix.Data[0]=1-2*(SQ(Qtr.J)+SQ(Qtr.K));
-RotationMatrix.Data[1]=2*(IJ-KW);
-RotationMatrix.Data[2]=2*(IK+JW);
-RotationMatrix.Data[3]=0;
-
-RotationMatrix.Data[4]=2*(IJ+KW);
-RotationMatrix.Data[5]=1-2*(SQ(Qtr.I)+SQ(Qtr.K));
-RotationMatrix.Data[6]=2*(JK-IW);
-RotationMatrix.Data[7]=0;
-
-RotationMatrix.Data[8]=2*(IK-JW);
-RotationMatrix.Data[9]=2*(JK+IW);
-RotationMatrix.Data[10]=1-2*(SQ(Qtr.I)+SQ(Qtr.J));
-RotationMatrix.Data[11]=0;
-
-
-RotationMatrix.Data[12]=0;
-RotationMatrix.Data[13]=0;
-RotationMatrix.Data[14]=0;
-RotationMatrix.Data[15]=1;
-
-return RotationMatrix;
+Vector a;
+a.X=x;
+a.Y=y;
+a.Z=z;
+return a;
 }
 
 Vector VectorNormalize(Vector A)
@@ -274,6 +208,32 @@ matrix.Data[11]-=displacement.Z;
 return matrix;
 }
 
+Matrix MatrixFromEulerAngles(Vector rotation)
+{
+Matrix rotate_x=
+    {{
+    1.0,       0.0      ,        0.0      , 0.0,
+    0.0, cos(rotation.X), -sin(rotation.X), 0.0,
+    0.0, sin(rotation.X),  cos(rotation.X), 0.0,
+    0.0,       0.0      ,        0.0      , 1.0
+    }};
+Matrix rotate_y=
+    {{
+     cos(rotation.Y), 0.0,  sin(rotation.Y), 0.0,
+           0.0      , 1.0,       0.0       , 0.0,
+    -sin(rotation.Y), 0.0,  cos(rotation.Y), 0.0,
+           0.0      , 0.0,       0.0       , 1.0
+    }};
+Matrix rotate_z=
+    {{
+    cos(rotation.Z), -sin(rotation.Z),0.0, 0.0,
+    sin(rotation.Z),  cos(rotation.Z),0.0, 0.0,
+          0.0      ,         0.0     ,1.0, 0.0,
+          0.0      ,         0.0     ,0.0, 1.0
+    }};
+return MatrixMultiply(rotate_y,MatrixMultiply(rotate_x,rotate_z));
+}
+
 Matrix ProjectionMatrix(float left,float right,float bottom,float top,float near,float far)
 {
 Matrix matrix;
@@ -300,7 +260,6 @@ matrix.Data[15]=0;
 
 return matrix;
 }
-
 
 
 #endif // LINEARALGEBRA_C_INCLUDED

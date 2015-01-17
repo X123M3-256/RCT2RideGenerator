@@ -4,16 +4,7 @@
 #include "animationdialog.h"
 #include "image.h"
 
-
-void RenderFramePreview(AnimationDialog* dialog)
-{
-RenderFrame(dialog->animation,dialog->frame,MatrixIdentity());
-RenderModel(dialog->gridModel,MatrixIdentity());
-Image* image=ImageFromFrameBuffer();
-ShowImageInPixbuf(dialog->pixbuf,image);
-FreeImage(image);
-gtk_image_set_from_pixbuf(GTK_IMAGE(dialog->preview),dialog->pixbuf);
-}
+/*
 
 static void UpdateObject(GtkWidget* widget,gpointer user_data)
 {
@@ -36,47 +27,7 @@ int parent=gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 UpdateParent(editor->dialog->animation,editor->index,parent==0?-1:parent-1);
 }
 
-void SetCurrentFrame(AnimationDialog* dialog,int frame)
-{
-int i;
-dialog->frame=frame;
 
-    if(dialog->frame==0)gtk_widget_set_sensitive(dialog->prevFrame,FALSE);
-    else gtk_widget_set_sensitive(dialog->prevFrame,TRUE);
-
-    if(dialog->frame==dialog->animation->NumFrames-1)gtk_widget_set_sensitive(dialog->nextFrame,FALSE);
-    else gtk_widget_set_sensitive(dialog->nextFrame,TRUE);
-
-//Update object editors with new values
-    for(i=0;i<dialog->numObjects;i++)
-    {
-    ObjectEditor* editor=dialog->ObjectEditors[i];
-    Vector position=dialog->animation->Frames[frame][editor->index].Position;
-    Vector rotation=dialog->animation->Frames[frame][editor->index].Rotation;
-    //Disconnect signal handlers so it won't try to update the object
-    g_signal_handlers_disconnect_by_func(editor->positionXSpin,UpdateObject,editor);
-    g_signal_handlers_disconnect_by_func(editor->positionYSpin,UpdateObject,editor);
-    g_signal_handlers_disconnect_by_func(editor->positionZSpin,UpdateObject,editor);
-    g_signal_handlers_disconnect_by_func(editor->rotationXSpin,UpdateObject,editor);
-    g_signal_handlers_disconnect_by_func(editor->rotationYSpin,UpdateObject,editor);
-    g_signal_handlers_disconnect_by_func(editor->rotationZSpin,UpdateObject,editor);
-    //Update buttons with new values
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionXSpin),position.X);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionYSpin),position.Y);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionZSpin),position.Z);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationXSpin),rotation.X*180/M_PI);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationYSpin),rotation.Y*180/M_PI);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationZSpin),rotation.Z*180/M_PI);
-    //Reconnect signal handlers
-    g_signal_connect(editor->positionXSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    g_signal_connect(editor->positionYSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    g_signal_connect(editor->positionZSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    g_signal_connect(editor->rotationXSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    g_signal_connect(editor->rotationYSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    g_signal_connect(editor->rotationZSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
-    }
-RenderFramePreview(dialog);
-}
 
 void AddObjectEditor(AnimationDialog* dialog,int index)
 {
@@ -159,20 +110,7 @@ const char* name=gtk_entry_get_text(GTK_ENTRY(widget));
 animation->Name=realloc(animation->Name,strlen(name)+1);
 strcpy(animation->Name,name);
 }
-static void CurFrameChanged(GtkWidget* widget,gpointer user_data){
-AnimationDialog* dialog=(AnimationDialog*)user_data;
-int frame=(int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
-SetCurrentFrame(dialog,frame);
-}
-static void PrevFrame(GtkWidget* widget,gpointer user_data){
-AnimationDialog* dialog=(AnimationDialog*)user_data;
-    if(dialog->frame<dialog->animation->NumFrames-1)gtk_spin_button_set_value(GTK_SPIN_BUTTON(dialog->curFrameSpin),dialog->frame-1);
-}
-static void NextFrame(GtkWidget* widget,gpointer user_data)
-{
-AnimationDialog* dialog=(AnimationDialog*)user_data;
-    if(dialog->frame<dialog->animation->NumFrames-1)gtk_spin_button_set_value(GTK_SPIN_BUTTON(dialog->curFrameSpin),dialog->frame+1);
-}
+
 
 static void AddFrameModel(GtkWidget* widget,gpointer user_data)
 {
@@ -183,20 +121,200 @@ RenderFramePreview(dialog);
 AddObjectEditor(dialog,objectIndex);
 gtk_widget_show_all(dialog->objectTable);
 }
-
-void CreateAnimationDialog(Animation* animation)
+*/
+void animation_viewer_update(animation_viewer_t* viewer)
+{
+renderer_clear_buffers();
+    if(viewer->animation!=NULL)animation_render_frame(viewer->animation,viewer->frame,MatrixIdentity());
+renderer_render_model(viewer->grid_model,MatrixIdentity());
+image_t* image=renderer_get_image();
+image_viewer_set_image(viewer->image_viewer,image);
+image_free(image);
+}
+void animation_viewer_set_frame(animation_viewer_t* viewer,int frame)
 {
 int i;
-AnimationDialog animationDialog;
-animationDialog.animation=animation;
-animationDialog.numObjects=0;
-animationDialog.frame=0;
-animationDialog.gridModel=GetGridModel();
+    if(viewer->animation==NULL)return;
+viewer->frame=frame;
+    if(viewer->frame==0)gtk_widget_set_sensitive(viewer->prev_frame,FALSE);
+    else gtk_widget_set_sensitive(viewer->prev_frame,TRUE);
 
-GtkWidget* dialog=gtk_dialog_new_with_buttons("Animation Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
-GtkWidget* contentArea=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-animationDialog.dialog=dialog;
+    if(viewer->frame==viewer->animation->num_frames-1)gtk_widget_set_sensitive(viewer->next_frame,FALSE);
+    else gtk_widget_set_sensitive(viewer->next_frame,TRUE);
+animation_viewer_update(viewer);
+/*
+//Update object editors with new values
+    for(i=0;i<dialog->numObjects;i++)
+    {
+    ObjectEditor* editor=dialog->ObjectEditors[i];
+    Vector position=dialog->animation->Frames[frame][editor->index].Position;
+    Vector rotation=dialog->animation->Frames[frame][editor->index].Rotation;
+    //Disconnect signal handlers so it won't try to update the object
+    g_signal_handlers_disconnect_by_func(editor->positionXSpin,UpdateObject,editor);
+    g_signal_handlers_disconnect_by_func(editor->positionYSpin,UpdateObject,editor);
+    g_signal_handlers_disconnect_by_func(editor->positionZSpin,UpdateObject,editor);
+    g_signal_handlers_disconnect_by_func(editor->rotationXSpin,UpdateObject,editor);
+    g_signal_handlers_disconnect_by_func(editor->rotationYSpin,UpdateObject,editor);
+    g_signal_handlers_disconnect_by_func(editor->rotationZSpin,UpdateObject,editor);
+    //Update buttons with new values
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionXSpin),position.X);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionYSpin),position.Y);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->positionZSpin),position.Z);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationXSpin),rotation.X*180/M_PI);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationYSpin),rotation.Y*180/M_PI);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->rotationZSpin),rotation.Z*180/M_PI);
+    //Reconnect signal handlers
+    g_signal_connect(editor->positionXSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    g_signal_connect(editor->positionYSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    g_signal_connect(editor->positionZSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    g_signal_connect(editor->rotationXSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    g_signal_connect(editor->rotationYSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    g_signal_connect(editor->rotationZSpin,"value-changed",G_CALLBACK(UpdateObject),editor);
+    }
+*/
+}
+static void animation_viewer_frame_changed(GtkWidget* widget,gpointer user_data)
+{
+animation_viewer_t* viewer=(animation_viewer_t*)user_data;
+int frame=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(viewer->frame_spin));
+animation_viewer_set_frame(viewer,frame);
+}
+static void animation_viewer_prev_frame(GtkWidget* widget,gpointer user_data)
+{
+animation_viewer_t* viewer=(animation_viewer_t*)user_data;
+    if(viewer->frame>0)gtk_spin_button_set_value(GTK_SPIN_BUTTON(viewer->frame_spin),viewer->frame-1);
+}
+static void animation_viewer_next_frame(GtkWidget* widget,gpointer user_data)
+{
+animation_viewer_t* viewer=(animation_viewer_t*)user_data;
+    if(viewer->frame<viewer->animation->num_frames-1)gtk_spin_button_set_value(GTK_SPIN_BUTTON(viewer->frame_spin),viewer->frame+1);
+}
+animation_viewer_t* animation_viewer_new()
+{
+animation_viewer_t* viewer=malloc(sizeof(animation_viewer_t));
+viewer->animation=NULL;
+viewer->frame=0;
+viewer->grid_model=model_new_grid();
+viewer->image_viewer=image_viewer_new();
+viewer->container=gtk_vbox_new(FALSE,1);
+gtk_box_pack_start(GTK_BOX(viewer->container),viewer->image_viewer->container,FALSE,FALSE,2);
 
+
+//Frame selection
+viewer->next_frame=gtk_button_new();
+viewer->prev_frame=gtk_button_new();
+GtkWidget* image=gtk_image_new_from_stock(GTK_STOCK_GO_FORWARD,GTK_ICON_SIZE_BUTTON);
+gtk_container_add(GTK_CONTAINER(viewer->next_frame),image);
+image=gtk_image_new_from_stock(GTK_STOCK_GO_BACK,GTK_ICON_SIZE_BUTTON);
+gtk_container_add(GTK_CONTAINER(viewer->prev_frame),image);
+gtk_widget_set_sensitive(viewer->next_frame,FALSE);
+gtk_widget_set_sensitive(viewer->prev_frame,FALSE);
+g_signal_connect(viewer->next_frame,"clicked",G_CALLBACK(animation_viewer_next_frame),viewer);
+g_signal_connect(viewer->prev_frame,"clicked",G_CALLBACK(animation_viewer_prev_frame),viewer);
+
+viewer->frame_spin=gtk_spin_button_new_with_range(0,0,1);
+g_signal_connect(viewer->frame_spin,"value-changed",G_CALLBACK(animation_viewer_frame_changed),viewer);
+
+viewer->lower_hbox=gtk_hbox_new(FALSE,1);
+gtk_box_pack_start(GTK_BOX(viewer->lower_hbox),viewer->prev_frame,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(viewer->lower_hbox),viewer->frame_spin,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(viewer->lower_hbox),viewer->next_frame,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(viewer->container),viewer->lower_hbox,FALSE,FALSE,2);
+
+animation_viewer_update(viewer);
+return viewer;
+}
+void animation_viewer_set_animation(animation_viewer_t* viewer,animation_t* animation)
+{
+viewer->animation=animation;
+    if(viewer->frame>=animation->num_frames)animation_viewer_set_frame(viewer,animation->num_frames-1);
+    else if(viewer->frame==animation->num_frames-1)gtk_widget_set_sensitive(viewer->next_frame,FALSE);
+    else gtk_widget_set_sensitive(viewer->next_frame,TRUE);
+gtk_spin_button_set_range(GTK_SPIN_BUTTON(viewer->frame_spin),0,animation->num_frames-1);
+animation_viewer_update(viewer);
+}
+
+vector_editor_t* vector_editor_new(const char* label,float min,float max,float step)
+{
+vector_editor_t* editor=malloc(sizeof(vector_editor_t));
+editor->vector=NULL;
+editor->container=gtk_hbox_new(FALSE,1);
+editor->label=gtk_label_new(label);
+editor->x=gtk_spin_button_new_with_range(min,max,step);
+editor->y=gtk_spin_button_new_with_range(min,max,step);
+editor->z=gtk_spin_button_new_with_range(min,max,step);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->x,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->y,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->z,FALSE,FALSE,1);
+return editor;
+}
+
+object_transform_editor_t* object_transform_editor_new()
+{
+object_transform_editor_t* editor=malloc(sizeof(object_transform_editor_t));
+editor->container=gtk_vbox_new(TRUE,1);
+editor->position_editor=vector_editor_new("Position",-10,10,0.1);
+editor->rotation_editor=vector_editor_new("Rotation",0,360,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->position_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->rotation_editor->container,FALSE,FALSE,2);
+return editor;
+}
+
+
+model_selector_t* model_selector_new(model_t** models,int num_models)
+{
+int i;
+model_selector_t* selector=malloc(sizeof(model_selector_t));
+selector->models=models;
+selector->num_models=num_models;
+selector->container=gtk_combo_box_text_new();
+    for(i=0;i<num_models;i++)
+    {
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(selector->container),models[i]->name);
+    }
+return selector;
+}
+
+
+static void animation_dialog_preview_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+int i;
+animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+int frame=dialog->animation_viewer->frame;
+    for(i=0;i<dialog->animation->num_objects;i++)
+    {
+    //model_t* model=dialog->animation->objects[i]->model;
+    //renderer_get_face_by_point(dialog->animation->frames[frame][i]->)
+    }
+}
+animation_dialog_t* animation_dialog_new(animation_t* animation)
+{
+int i;
+animation_dialog_t* dialog=malloc(sizeof(animation_dialog_t));
+dialog->animation=animation;
+//animationDialog.numObjects=0;
+
+dialog->dialog=gtk_dialog_new_with_buttons("Animation Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
+GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog->dialog));
+
+
+dialog->name_editor=string_editor_new("Name");
+string_editor_set_string(dialog->name_editor,&(dialog->animation->name));
+gtk_box_pack_start(GTK_BOX(content_area),dialog->name_editor->container,FALSE,FALSE,2);
+
+dialog->animation_viewer=animation_viewer_new();
+animation_viewer_set_animation(dialog->animation_viewer,animation);
+g_signal_connect(dialog->animation_viewer->image_viewer->container,"button_press_event",G_CALLBACK(animation_dialog_preview_pressed),dialog);
+gtk_box_pack_start(GTK_BOX(content_area),dialog->animation_viewer->container,FALSE,FALSE,2);
+
+dialog->transform_editor=object_transform_editor_new();
+gtk_box_pack_start(GTK_BOX(content_area),dialog->transform_editor->container,FALSE,FALSE,2);
+
+gtk_widget_show_all(content_area);
+return dialog;
+
+/*
 //Name
 GtkWidget* nameBox=gtk_hbox_new(FALSE,1);
 GtkWidget* nameLabel=gtk_label_new("Name:");
@@ -215,24 +333,7 @@ gtk_spin_button_set_value(GTK_SPIN_BUTTON(framesSpin),animation->NumFrames);
 g_signal_connect(framesSpin,"value-changed",G_CALLBACK(FramesChanged),&animationDialog);
 gtk_box_pack_start(GTK_BOX(animationHBox),framesLabel,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(animationHBox),framesSpin,TRUE,TRUE,2);
-//Frame selection
-GtkWidget* image=gtk_image_new_from_stock(GTK_STOCK_GO_BACK,GTK_ICON_SIZE_BUTTON);
-animationDialog.prevFrame=gtk_button_new();
-gtk_container_add(GTK_CONTAINER(animationDialog.prevFrame),image);
-gtk_widget_set_sensitive(animationDialog.prevFrame,FALSE);
-g_signal_connect(animationDialog.prevFrame,"clicked",G_CALLBACK(PrevFrame),&animationDialog);
-image=gtk_image_new_from_stock(GTK_STOCK_GO_FORWARD,GTK_ICON_SIZE_BUTTON);
-animationDialog.nextFrame=gtk_button_new();
-gtk_container_add(GTK_CONTAINER(animationDialog.nextFrame),image);
-    if(animation->NumFrames<=1)gtk_widget_set_sensitive(animationDialog.nextFrame,FALSE);
-g_signal_connect(animationDialog.nextFrame,"clicked",G_CALLBACK(NextFrame),&animationDialog);
-animationDialog.curFrameSpin=gtk_spin_button_new_with_range(0,animation->NumFrames-1,1);
-gtk_spin_button_set_value(GTK_SPIN_BUTTON(animationDialog.curFrameSpin),0);
-g_signal_connect(animationDialog.curFrameSpin,"value-changed",G_CALLBACK(CurFrameChanged),&animationDialog);
-gtk_box_pack_start(GTK_BOX(animationHBox),animationDialog.prevFrame,FALSE,FALSE,2);
-gtk_box_pack_start(GTK_BOX(animationHBox),animationDialog.curFrameSpin,FALSE,FALSE,2);
-gtk_box_pack_start(GTK_BOX(animationHBox),animationDialog.nextFrame,FALSE,FALSE,2);
-gtk_box_pack_start(GTK_BOX(contentArea),animationHBox,FALSE,FALSE,2);
+
 
 //Model addition bar
 GtkWidget* modelHBox=gtk_hbox_new(FALSE,1);
@@ -256,16 +357,6 @@ gtk_box_pack_start(GTK_BOX(modelHBox),animationDialog.modelSelect,TRUE,TRUE,2);
 gtk_box_pack_start(GTK_BOX(modelHBox),addModel,TRUE,TRUE,2);
 gtk_box_pack_start(GTK_BOX(contentArea),modelHBox,FALSE,FALSE,2);
 
-
-//Preview
-animationDialog.preview=gtk_image_new();
-GtkWidget* eventBox=gtk_event_box_new();
-gtk_widget_set_events(eventBox,GDK_POINTER_MOTION_MASK);
-gtk_container_add(GTK_CONTAINER(eventBox),animationDialog.preview);
-animationDialog.pixbuf=CreateBlankPixbuf();
-gtk_image_set_from_pixbuf(GTK_IMAGE(animationDialog.preview),animationDialog.pixbuf);
-gtk_box_pack_start(GTK_BOX(contentArea),eventBox,TRUE,TRUE,2);
-RenderFramePreview(&animationDialog);
 
 
 //Object editing
@@ -314,9 +405,14 @@ seperator=gtk_vseparator_new();
 gtk_table_attach_defaults(GTK_TABLE(animationDialog.objectTable),seperator,11,12,2,3);
 gtk_box_pack_start(GTK_BOX(contentArea),animationDialog.objectTable,TRUE,TRUE,2);
     for(i=0;i<animation->NumObjects;i++)AddObjectEditor(&animationDialog,i);
-
-gtk_widget_show_all(contentArea);
-
-gtk_dialog_run(GTK_DIALOG(animationDialog.dialog));
-gtk_widget_destroy(animationDialog.dialog);
+*/
+}
+void animation_dialog_run(animation_dialog_t* dialog)
+{
+gtk_dialog_run(GTK_DIALOG(dialog->dialog));
+}
+void animation_dialog_free(animation_dialog_t* dialog)
+{
+gtk_widget_destroy(dialog->dialog);
+free(dialog);
 }

@@ -10,7 +10,8 @@
 animation_t* animation_new()
 {
 animation_t* animation=malloc(sizeof(animation_t));
-animation->name=NULL;
+animation->name=malloc(18);
+strcpy(animation->name,"Unnamed Animation");
 animation->num_frames=1;
 animation->num_objects=0;
 return animation;
@@ -56,30 +57,7 @@ void animation_update_transform(animation_t* animation,int frame,int object,Vect
 object_transform_t* transform=&(animation->frames[frame][object]);
 transform->position=position;
 transform->rotation=rotation;
-
-Matrix rotate_x=
-    {{
-    1.0,       0.0      ,        0.0      , 0.0,
-    0.0, cos(rotation.X), -sin(rotation.X), 0.0,
-    0.0, sin(rotation.X),  cos(rotation.X), 0.0,
-    0.0,       0.0      ,        0.0      , 1.0
-    }};
-Matrix rotate_y=
-    {{
-     cos(rotation.Y), 0.0,  sin(rotation.Y), 0.0,
-           0.0      , 1.0,       0.0       , 0.0,
-    -sin(rotation.Y), 0.0,  cos(rotation.Y), 0.0,
-           0.0      , 0.0,       0.0       , 1.0
-    }};
-Matrix rotate_z=
-    {{
-    cos(rotation.Z), -sin(rotation.Z),0.0, 0.0,
-    sin(rotation.Z),  cos(rotation.Z),0.0, 0.0,
-          0.0      ,         0.0     ,1.0, 0.0,
-          0.0      ,         0.0     ,0.0, 1.0
-    }};
-
-transform->transform=MatrixMultiply(rotate_y,MatrixMultiply(rotate_x,rotate_z));
+transform->transform=MatrixFromEulerAngles(rotation);
 transform->transform.Data[3]=position.X;
 transform->transform.Data[7]=position.Y;
 transform->transform.Data[11]=position.Z;

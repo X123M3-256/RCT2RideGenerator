@@ -1,15 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <dirent.h>
-#include <jansson.h>
-#include <math.h>
-#include "palette.h"
-#include "interface.h"
-#include "model.h"
-#include "animation.h"
+#include "mainwindow.h"
 #include "dat.h"
-
+/*
 //These methods are used to dump various bits of information for reversing purposes
 uint32_t flags;
 
@@ -129,7 +122,7 @@ int i;
         if(i%32==31)putchar('\n');
     }
 }
-*/
+
 void DisplayRideInfo(ObjectFile* object)
 {
 RideHeader* header=object->ObjectHeader;
@@ -208,35 +201,28 @@ SaveDat(file,".wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjD
 }
 
 
-
+*/
 
 int main(int argc,char**argv)
 {
-//Alters an existing DAT for testing purposes
 /*
-ObjectFile* object=LoadDat("RCT2 Reversing/Object DATs/Canoes");
-SetString(object,STRING_TABLE_NAME,1,"5 Sprite Canoes");
-//RideHeader* sourceheader=(RideHeader*)source->ObjectHeader;
-RideHeader* header=(RideHeader*)object->ObjectHeader;
-//header->Flags=0;
-header->Cars[0].RiderSprites=5;
-//header->CarTypes[CAR_INDEX_FRONT]=0;
-//header->CarTypes[CAR_INDEX_REAR]=0
-//header->Cars[0].Unknown[2]=0x200F;
-
-
-//header->Cars[0].Unknown[2]=0;
-//header->Cars[0].Unknown[6]=0;
-SaveDat(object,"/home/edward/.wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjData/TEST.DAT");
+object_t* object=object_load_dat("/home/edward/RCT2 Reversing/Object DATs/Inverted Hairpin Coaster");
+string_table_set_string_by_language(object->string_tables[0],LANGUAGE_ENGLISH_US,"AAAAAAA");
+object->ride_header->track_style=2;
+object->ride_header->maximum_cars=8;
+object->ride_header->minimum_cars=3;
+object->ride_header->track_sections=0xFFFFFFFFFFFFFFFFl;
+object->ride_header->cars[0].flags|=CAR_IS_POWERED;
+object->ride_header->cars[0].powered_velocity=80;
+object->ride_header->cars[0].powered_acceleration=80;
+object_save_dat(object,"ObjData/TEST.DAT");
 */
-
-
-InitializePalette();
 
 gtk_init(&argc,&argv);
 //Create main interface
-MainWindow* MainInterface=CreateInterface();
-
+main_window_t* main_window=main_window_new();
+gtk_main();
+main_window_free(main_window);
 
 return 0;
 }

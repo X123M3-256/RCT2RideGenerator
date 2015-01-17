@@ -10,6 +10,7 @@ typedef struct
 {
 int default_animation;
 int loading_animation;
+uint16_t flags;
 uint16_t friction;
 uint8_t spacing;
 uint8_t z_value;

@@ -184,10 +184,10 @@ ride_header->preview_index=0;
     ride_header->preview_index++;
     }
 
-/*Read unknown data*/
-ride_header->unknown=bytes[18];
 /*Read zero cars*/
-ride_header->zero_cars=bytes[19];
+ride_header->zero_cars=bytes[18];
+/*Read car icon index*/
+ride_header->car_icon_index=bytes[19];
 /*Read minimum and maximum car length*/
 ride_header->minimum_cars=bytes[15];
 ride_header->maximum_cars=bytes[16];
@@ -218,7 +218,7 @@ uint8_t* car_data=bytes+26;
     /*Load highest rotation index*/
     car->highest_rotation_index=car_data[0];
     /*Load spacing*/
-    car->spacing=car_data[6];
+    car->spacing=*((uint16_t*)(car_data+5));
     /*Load car friction*/
     car->friction=*((uint16_t*)(car_data+8));
     /*Load riders*/
@@ -230,19 +230,20 @@ uint8_t* car_data=bytes+26;
     car->rider_sprites=car_data[84];
     /*Load flags*/
     car->flags=*((uint32_t*)(car_data+17));
-    /*Load parameters*/
+    /*Load spin parameters*/
     car->spin_inertia=car_data[85];
     car->spin_friction=car_data[86];
-    car->powered_velocity=car_data[91];
+    /*Load powered velocity*/
+    car->powered_acceleration=car_data[91];
+    car->powered_velocity=car_data[92];
     /*Load Z value*/
     car->z_value=car_data[95];
     /*Read unknown fields*/
-    car->unknown[0]=*((uint16_t*)(car_data+4));
+    car->unknown[0]=(uint16_t)car_data[4];
     car->unknown[1]=*((uint16_t*)(car_data+87));
     car->unknown[2]=*((uint16_t*)(car_data+89));
-    car->unknown[3]=*((uint16_t*)(car_data+92));
-    car->unknown[4]=(uint16_t)car_data[94];
-    car->unknown[5]=*((uint16_t*)(car_data+96));
+    car->unknown[3]=(uint16_t)car_data[94];
+    car->unknown[4]=*((uint16_t*)(car_data+96));
     /*Move to next car structure*/
     car_data+=101;
     }
@@ -260,10 +261,10 @@ memset(header_bytes,0,0x1C2);
 /*Write track style & preview index*/
 memset(header_bytes+12,0xFFu,3);
 header_bytes[12+header->preview_index]=header->track_style;
-/*Write unknown data*/
-header_bytes[18]=header->unknown;
 /*Write zero cars*/
-header_bytes[19]=header->zero_cars;
+header_bytes[18]=header->zero_cars;
+/*Write car icon index*/
+header_bytes[19]=header->car_icon_index;
 /*Write minimum and maximum car length*/
 header_bytes[15]=header->minimum_cars;
 header_bytes[16]=header->maximum_cars;
@@ -298,7 +299,7 @@ uint8_t* car_data=header_bytes+26;
     /*Write highest rotation index*/
     car_data[0]=car->highest_rotation_index;
     /*Write spacing*/
-    car_data[6]=car->spacing;
+    *((uint16_t*)(car_data+5))=car->spacing;
     /*Write friction*/
     *((uint16_t*)(car_data+8))=car->friction;
     /*Write riders*/
@@ -309,19 +310,20 @@ uint8_t* car_data=header_bytes+26;
     car_data[84]=car->rider_sprites;
     /*Write flags*/
     *((uint32_t*)(car_data+17))=car->flags;
-    /*Write parameters*/
+    /*Write spin parameters*/
     car_data[85]=car->spin_inertia;
     car_data[86]=car->spin_friction;
-    car_data[91]=car->powered_velocity;
+    /*Write powered velocity*/
+    car_data[91]=car->powered_acceleration;
+    car_data[92]=car->powered_velocity;
     /*Write Z value*/
     car_data[95]=car->z_value;
     /*Write unknown fields*/
-    *((uint16_t*)(car_data+4))=car->unknown[0];
+    car_data[4]=(uint8_t)car->unknown[0];
     *((uint16_t*)(car_data+87))=car->unknown[1];
     *((uint16_t*)(car_data+89))=car->unknown[2];
-    *((uint16_t*)(car_data+92))=car->unknown[3];
-    car_data[94]=(uint8_t)car->unknown[4];
-    *((uint16_t*)(car_data+96))=car->unknown[5];
+    car_data[94]=(uint8_t)car->unknown[3];
+    *((uint16_t*)(car_data+96))=car->unknown[4];
     /*Move to next car*/
     car_data+=101;
     }

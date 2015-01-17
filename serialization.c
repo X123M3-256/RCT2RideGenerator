@@ -93,7 +93,6 @@ json_t* faces=json_array();
     {
     json_t* face=json_array();
     json_array_append_new(face,json_integer(model->faces[i].color));
-    json_array_append_new(face,json_integer(model->faces[i].flags));
 
     json_t* vert_indices=json_array();
     json_array_append_new(vert_indices,json_integer(model->faces[i].vertices[0]));
@@ -122,17 +121,19 @@ json_t* vertices=json_object_get(json,"vertices");
 json_t* normals=json_object_get(json,"normals");
 json_t* faces=json_object_get(json,"faces");
 json_t* transform=json_object_get(json,"transform");
-assert(name!=NULL&&vertices!=NULL&&normals!=NULL&&faces!=NULL&&transform!=NULL);
+assert(vertices!=NULL&&normals!=NULL&&faces!=NULL);
 //Allocate model
 model_t* model=malloc(sizeof(model_t));
-model->name=strdup(json_string_value(name));
+    if(name)model->name=strdup(json_string_value(name));
+    else model->name=strdup("Unnamed Model");
 model->num_vertices=json_array_size(vertices);
 model->num_normals=json_array_size(normals);
 model->num_faces=json_array_size(faces);
 model->vertices=malloc(model->num_vertices*sizeof(Vector));
 model->normals=malloc(model->num_normals*sizeof(Vector));
 model->faces=malloc(model->num_faces*sizeof(face_t));
-model->transform=matrix_deserialize(transform);
+    if(transform)model->transform=matrix_deserialize(transform);
+    else model->transform=MatrixIdentity();
 model->num_lines=0;
 model->lines=NULL;
     for(i=0;i<model->num_vertices;i++)
@@ -151,9 +152,8 @@ model->lines=NULL;
     {
     json_t* face=json_array_get(faces,i);
     model->faces[i].color=json_integer_value(json_array_get(face,0));
-    model->faces[i].flags=json_integer_value(json_array_get(face,1));
-    json_t* vertices=json_array_get(face,2);
-    json_t* normals=json_array_get(face,3);
+    json_t* vertices=json_array_get(face,1);
+    json_t* normals=json_array_get(face,2);
         for(j=0;j<3;j++)
         {
         model->faces[i].vertices[j]=json_integer_value(json_array_get(vertices,j));
@@ -217,7 +217,9 @@ animation_t* animation_deserialize(json_t* json,model_t** model_list,int num_mod
 int i,j;
 animation_t* animation=animation_new();
 //Deserialize name
-animation_set_name(animation,json_string_value(json_object_get(json,"name")));
+json_t* name=json_object_get(json,"name");
+    if(name!=NULL)animation_set_name(animation,json_string_value(name));
+    else animation_set_name(animation,strdup("Unnamed Animation"));
 
 
 //Deserialize model list
@@ -290,6 +292,9 @@ json_t* cars=json_array();
         //Loading animation
         json_t* loading_anim=json_integer(project->cars[i].loading_animation);
         json_object_set_new(car,"loading_animation",loading_anim);
+         //Flags
+        json_t* flags=json_integer(project->cars[i].flags);
+        json_object_set_new(car,"flags",flags);
         //Spacing
         json_t* spacing=json_integer(project->cars[i].spacing);
         json_object_set_new(car,"spacing",spacing);
@@ -365,6 +370,9 @@ json_t* cars=json_object_get(json,"cars");
         //Loading animation
         json_t* loading_anim=json_object_get(car,"loading_animation");
             if(loading_anim!=NULL)project->cars[i].loading_animation=json_integer_value(loading_anim);
+        //Flags
+        json_t* flags=json_object_get(car,"flags");
+            if(flags!=NULL)project->cars[i].flags=json_integer_value(flags);
         //Spacing
         json_t* spacing=json_object_get(car,"spacing");
             if(spacing!=NULL)project->cars[i].spacing=json_integer_value(spacing);

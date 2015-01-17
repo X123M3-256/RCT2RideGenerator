@@ -7,7 +7,7 @@ project_t* project_new()
 {
 project_t* project=malloc(sizeof(project_t));
 project->track_type=0x33;//Default to B&M track
-project->flags=0;
+project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
 project->maximum_cars=8;
 memset(project->car_types,0xFF,5);
@@ -20,7 +20,8 @@ int i;
     {
     project->cars[i].default_animation=-1;
     project->cars[i].loading_animation=-1;
-    project->cars[i].spacing=3;
+    project->cars[i].flags=0;
+    project->cars[i].spacing=0x300;
     project->cars[i].z_value=8;
     project->cars[i].friction=0x2A8;
     }
@@ -274,6 +275,7 @@ memset(cars_used,0,NUM_CARS);
         if(cars_used[i])
         {
         object->ride_header->cars[i].highest_rotation_index=31;
+        object->ride_header->cars[i].flags=project->cars[i].flags;
         object->ride_header->cars[i].friction=project->cars[i].friction;
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;

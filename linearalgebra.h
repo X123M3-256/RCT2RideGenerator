@@ -31,6 +31,7 @@ Quaternion QuaternionMultiply(Quaternion A,Quaternion B);
 Vector QuaternionTransformVector(Quaternion Quat,Vector Vec);
 Matrix MatrixFromQuaternion(Quaternion Qtr);
 
+Vector VectorFromComponents(float x,float y,float z);
 Vector VectorMultiply(Vector vector,float scalar);
 Vector VectorNormalize(Vector A);
 Vector VectorAdd(Vector A,Vector B);
@@ -42,7 +43,7 @@ Matrix MatrixTranspose(Matrix A);
 Matrix MatrixInverse(Matrix A);
 Matrix MatrixMultiply(Matrix A,Matrix B);
 
-
+Matrix MatrixFromEulerAngles(Vector rotation);
 Matrix TranslationMatrix(Vector displacement);
 Matrix ProjectionMatrix(float left,float right,float bottom,float top,float near,float far);
 
