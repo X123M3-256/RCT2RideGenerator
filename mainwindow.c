@@ -460,7 +460,7 @@ return editor;
 void car_editor_set_car(car_editor_t* editor,car_settings_t* car_settings)
 {
 editor->car_settings=car_settings;
-flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
+//flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
 value_editor_set_value(editor->spacing_editor,&(car_settings->spacing));
 value_editor_set_value(editor->friction_editor,&(car_settings->friction));
 value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));
@@ -618,7 +618,7 @@ main_window_t* main_window=(main_window_t*)data;
     if(main_window->project==NULL)return;
 animation_t* animation=animation_new();
 project_add_animation(main_window->project,animation);
-animation_dialog_t* dialog=animation_dialog_new(animation);
+animation_dialog_t* dialog=animation_dialog_new(animation,main_window->project->models,main_window->project->num_models);
 animation_dialog_run(dialog);
 animation_dialog_free(dialog);
 }
