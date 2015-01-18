@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include "interface.h"
 #include "palette.h"
