@@ -39,7 +39,7 @@ GtkWidget* container;
 
 typedef struct
 {
-model_t* models;
+model_t** models;
 int num_models;
 GtkWidget* container;
 }model_selector_t;
@@ -49,9 +49,17 @@ typedef struct
 animation_t* animation;
 
 string_editor_t* name_editor;
+model_selector_t* model_selector;
 animation_viewer_t* animation_viewer;
 object_transform_editor_t* transform_editor;
 
 GtkWidget* dialog;
+GtkWidget* add_model;
 }animation_dialog_t;
+
+
+animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models,int num_models);
+void animation_dialog_run(animation_dialog_t* dialog);
+void animation_dialog_free(animation_dialog_t* dialog);
+
 #endif // ANIMATIONDIALOG_H_INCLUDED

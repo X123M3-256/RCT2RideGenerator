@@ -1,6 +1,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<math.h>
+#include "renderer.h"
 #include "animationdialog.h"
 #include "image.h"
 
@@ -133,7 +134,7 @@ image_free(image);
 }
 void animation_viewer_set_frame(animation_viewer_t* viewer,int frame)
 {
-int i;
+//int i;
     if(viewer->animation==NULL)return;
 viewer->frame=frame;
     if(viewer->frame==0)gtk_widget_set_sensitive(viewer->prev_frame,FALSE);
@@ -275,22 +276,47 @@ selector->container=gtk_combo_box_text_new();
     }
 return selector;
 }
+model_t* model_selector_get_model(model_selector_t* model_selector)
+{
+int index=gtk_combo_box_get_active(GTK_COMBO_BOX(model_selector->container));
+    if(index<0)return NULL;
+return model_selector->models[index];
+}
 
+static void animation_dialog_add_model(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+printf("Test\n");
+model_t* model=model_selector_get_model(dialog->model_selector);
+printf("Test2 %d\n",model);
+    if(model!=NULL)
+    {
+    animation_add_object(dialog->animation,model);
+    animation_viewer_update(dialog->animation_viewer);
+    }
+}
 
 static void animation_dialog_preview_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 int i;
 animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+Vector coords;
+coords.X=event->x;
+coords.Y=event->y;
+/*
+int selected_object=-1;
 int frame=dialog->animation_viewer->frame;
     for(i=0;i<dialog->animation->num_objects;i++)
     {
-    //model_t* model=dialog->animation->objects[i]->model;
-    //renderer_get_face_by_point(dialog->animation->frames[frame][i]->)
+    model_t* model=dialog->animation->objects[i].model;
+    object_transform_t* object_data=&(dialog->animation->frames[frame][i]);
+        if(renderer_get_face_by_point(model,object_data->transform,coords)!=NULL)selected_object=i;
     }
+*/
+printf("%f %f\n",event->x,event->y);
 }
-animation_dialog_t* animation_dialog_new(animation_t* animation)
+animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models,int num_models)
 {
-int i;
 animation_dialog_t* dialog=malloc(sizeof(animation_dialog_t));
 dialog->animation=animation;
 //animationDialog.numObjects=0;
@@ -302,6 +328,16 @@ GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog->dialog));
 dialog->name_editor=string_editor_new("Name");
 string_editor_set_string(dialog->name_editor,&(dialog->animation->name));
 gtk_box_pack_start(GTK_BOX(content_area),dialog->name_editor->container,FALSE,FALSE,2);
+
+GtkWidget* add_model_hbox=gtk_hbox_new(FALSE,1);
+dialog->model_selector=model_selector_new(models,num_models);
+gtk_box_pack_start(GTK_BOX(add_model_hbox),dialog->model_selector->container,TRUE,TRUE,2);
+dialog->add_model=gtk_button_new_from_stock(GTK_STOCK_ADD);
+gtk_box_pack_start(GTK_BOX(add_model_hbox),dialog->add_model,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(content_area),add_model_hbox,FALSE,FALSE,2);
+g_signal_connect(dialog->add_model,"clicked",G_CALLBACK(animation_dialog_add_model),dialog);
+
+
 
 dialog->animation_viewer=animation_viewer_new();
 animation_viewer_set_animation(dialog->animation_viewer,animation);
