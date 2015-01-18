@@ -9,7 +9,7 @@
 #define M_PI 3.1415926535
 #define M_PI_2 (3.1415926535/2.0)
 #define M_SQRT2 sqrt(2.0)
-
+#define M_SQRT1_2 (1.0/sqrt(2.0))
 
 /*
 static void ScaleChanged(GtkSpinButton *spinbutton,gpointer user_data)
@@ -459,7 +459,7 @@ static void model_dialog_preview_released(GtkWidget *widget, GdkEventButton *eve
 model_dialog_t* dialog=(model_dialog_t*)user_data;
 dialog->painting=0;
 }
-/*
+
 static void model_dialog_paint_model(GtkWidget *widget, GdkEventMotion *event, gpointer user_data)
 {
 model_dialog_t* dialog=(model_dialog_t*)user_data;
@@ -474,7 +474,7 @@ face_t* face=renderer_get_face_by_point(dialog->model,dialog->model_viewer->mode
     model_viewer_render_preview(dialog->model_viewer);
     }
 }
-*/
+
 model_dialog_t* model_dialog_new(model_t* model)
 {
 model_dialog_t* dialog=malloc(sizeof(model_dialog_t));
@@ -536,7 +536,7 @@ dialog->color_selector=color_selector_new();
 color_selector_set_color(dialog->color_selector,&(dialog->color));
 gtk_box_pack_start(GTK_BOX(hbox),dialog->color_selector->container,FALSE,FALSE,2);
 
-//g_signal_connect(dialog->model_viewer->image_viewer->container,"motion_notify_event",G_CALLBACK(model_dialog_paint_model),dialog);
+g_signal_connect(dialog->model_viewer->image_viewer->container,"motion_notify_event",G_CALLBACK(model_dialog_paint_model),dialog);
 g_signal_connect(dialog->model_viewer->image_viewer->container,"button_press_event",G_CALLBACK(model_dialog_preview_pressed),dialog);
 g_signal_connect(dialog->model_viewer->image_viewer->container,"button_release_event",G_CALLBACK(model_dialog_preview_released),dialog);
 
