@@ -3,6 +3,7 @@
 #include<math.h>
 #include<string.h>
 #include "renderer.h"
+#include "palette.h"
 #include "linearalgebra.h"
 #define FRAME_BUFFER_SIZE 255
 
@@ -125,29 +126,28 @@ float lerp(float x1,float x2,float u)
 return x1+u*(x2-x1);
 }
 
-/*
 //Rasterizes a line from the first two vertices in the supplied primitive; others are ignored
 #define ABS(X) ((X)>0?(X):-(X))
-void RasterizeLine(Primitive* primitive)
+void rasterize_line(primitive_t* primitive)
 {
-Vector firstVertex,lastVertex;
+Vector first_vertex,last_vertex;
 
 
-float dx=ABS(primitive->Vertices[0].X-primitive->Vertices[1].X);
-float dy=ABS(primitive->Vertices[0].Y-primitive->Vertices[1].Y);
+float dx=ABS(primitive->vertices[0].X-primitive->vertices[1].X);
+float dy=ABS(primitive->vertices[0].Y-primitive->vertices[1].Y);
 
 int steep=dy>dx;
 //If not steep, we step over x coordinate, otherwise, step over y. Either way, the first vertex must have the smaller coord
 
-    if((steep&&primitive->Vertices[0].Y<primitive->Vertices[1].Y)||(!steep&&primitive->Vertices[0].X<primitive->Vertices[1].X))
+    if((steep&&primitive->vertices[0].Y<primitive->vertices[1].Y)||(!steep&&primitive->vertices[0].X<primitive->vertices[1].X))
     {
-    firstVertex=primitive->Vertices[0];
-    lastVertex=primitive->Vertices[1];
+    first_vertex=primitive->vertices[0];
+    last_vertex=primitive->vertices[1];
     }
     else
     {
-    firstVertex=primitive->Vertices[1];
-    lastVertex=primitive->Vertices[0];
+    first_vertex=primitive->vertices[1];
+    last_vertex=primitive->vertices[0];
     }
 
 int start,end;
@@ -156,21 +156,21 @@ float u_step;
 //Step over y if steep, else x
     if(steep)
     {
-    GetEnclosedPixels(firstVertex.Y,lastVertex.Y,&start,&end,&skip);
+    get_enclosed_pixels(first_vertex.Y,last_vertex.Y,&start,&end,&skip);
     u_step=1.0/dy;
     }
     else
     {
-    GetEnclosedPixels(firstVertex.X,lastVertex.X,&start,&end,&skip);
+    get_enclosed_pixels(first_vertex.X,last_vertex.X,&start,&end,&skip);
     u_step=1.0/dx;
     }
 
-LinearInterp positionInterp=LinearInterpInit(firstVertex,lastVertex,skip*u_step,u_step);
+linear_interp_t position_interp=linear_interp_init(first_vertex,last_vertex,skip*u_step,u_step);
 
 int i;
     for(i=start;i<=end;i++)
     {
-    Vector position=positionInterp.current;
+    Vector position=position_interp.current;
     int x,y;
         if(steep)
         {
@@ -182,15 +182,15 @@ int i;
         x=i;
         y=(int)position.Y;
         }
-        if(x>=0&&x<FRAME_BUFFER_SIZE&&y>=0&&y<FRAME_BUFFER_SIZE&&position.Z>DepthBuffer[x][y])
+        if(x>=0&&x<FRAME_BUFFER_SIZE&&y>=0&&y<FRAME_BUFFER_SIZE&&position.Z>depth_buffer[x][y])
         {
-        FrameBuffer[x][y]=primitive->Color;
-        DepthBuffer[x][y]=position.Z;
+        frame_buffer[x][y]=palette_remap_section_index(primitive->color,6);
+        depth_buffer[x][y]=position.Z;
         }
-    LinearInterpStep(&positionInterp);
+    linear_interp_step(&position_interp);
     }
 }
-*/
+
 //DWISOTT
 void rasterize_primitive(primitive_t* primitive)
 {
@@ -336,23 +336,21 @@ int i,j;
         }
     rasterize_primitive(&primitive);
     }
-    /*
-    for(i=0;i<model->NumLines;i++)
+    for(i=0;i<model->num_lines;i++)
     {
-    primitive.Color=model->Lines[i].Color;
-    primitive.Vertices[0]=transformedVertices[model->Lines[i].Vertices[0]];
-    primitive.Vertices[1]=transformedVertices[model->Lines[i].Vertices[1]];
-    RasterizeLine(&primitive);
+    primitive.color=model->lines[i].color;
+    primitive.vertices[0]=transformed_vertices[model->lines[i].vertices[0]];
+    primitive.vertices[1]=transformed_vertices[model->lines[i].vertices[1]];
+    rasterize_line(&primitive);
     }
-    */
 free(transformed_vertices);
 free(transformed_normals);
 }
 
-/*
+
 #define MIN(X,Y) ((X)<(Y)?(X):(Y))
 #define MAX(X,Y) ((X)>(Y)?(X):(Y))
-int IsInTriangle(Vector point,Vector t1,Vector t2,Vector t3,float* depth)
+int point_in_triangle(Vector point,Vector t1,Vector t2,Vector t3,float* depth)
 {
 float denominator=((t2.Y-t3.Y)*(t1.X-t3.X)+(t3.X-t2.X)*(t1.Y-t3.Y));
 float a=((t2.Y-t3.Y)*(point.X-t3.X)+(t3.X-t2.X)*(point.Y-t3.Y))/denominator;
@@ -365,31 +363,29 @@ float c=1-a-b;
     }
 return 0;
 }
-Face* GetFaceEnclosingPoint(Model* model,Matrix modelView,Vector coords)
+face_t* renderer_get_face_by_point(model_t* model,Matrix model_view,Vector coords)
 {
 //Transform model into screen space, reducing the test for intersection to a 2D problem
-Vector* transformedVertices=malloc(model->NumVertices*sizeof(Vector));
-modelView=MatrixMultiply(modelView,model->transform);
-Matrix modelViewProjection=MatrixMultiply(projection,modelView);
-TransformVectors(modelViewProjection,model->Vertices,transformedVertices,model->NumVertices,1.0);
+Vector* transformed_vertices=malloc(model->num_vertices*sizeof(Vector));
+model_view=MatrixMultiply(model_view,model->transform);
+Matrix model_view_projection=MatrixMultiply(projection,model_view);
+transform_vectors(model_view_projection,model->vertices,transformed_vertices,model->num_vertices,1.0);
 
 //Abbreviate variable name because it's used a lot
-#define TV transformedVertices
+#define TV transformed_vertices
 
-float largestDepth=-INFINITY;
-Face* nearestFace=NULL;
+float largest_depth=-INFINITY;
+face_t* nearest_face=NULL;
 int i;
-    for(i=0;i<model->NumFaces;i++)
+    for(i=0;i<model->num_faces;i++)
     {
     float depth;
-        if(IsInTriangle(coords,TV[model->Faces[i].Vertices[0]],TV[model->Faces[i].Vertices[1]],TV[model->Faces[i].Vertices[2]],&depth)&&depth>largestDepth)
+        if(point_in_triangle(coords,TV[model->faces[i].vertices[0]],TV[model->faces[i].vertices[1]],TV[model->faces[i].vertices[2]],&depth)&&depth>largest_depth)
         {
-        largestDepth=depth;
-        nearestFace=model->Faces+i;
+        largest_depth=depth;
+        nearest_face=model->faces+i;
         }
     }
-free(transformedVertices);
-return nearestFace;
+free(transformed_vertices);
+return nearest_face;
 }
-
-*/
