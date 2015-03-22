@@ -162,7 +162,12 @@ ride_header_t* ride_header_new()
 int i;
 ride_header_t* ride_header=malloc(sizeof(ride_header_t));
 memset(ride_header,0,sizeof(ride_header_t));
-    for(i=0;i<NUM_CARS;i++)ride_header->cars[i].unknown[4]=0x1;
+    for(i=0;i<NUM_CARS;i++)
+    {
+    ride_header->cars[i].unknown[0]=1;
+    ride_header->cars[i].unknown[3]=1;
+    ride_header->cars[i].unknown[4]=0x1;
+    }
 return ride_header;
 }
 ride_header_t* ride_header_load(uint8_t* bytes,uint32_t* pos_ptr)
@@ -774,6 +779,7 @@ free(encoded_bytes);
     buffer_free(bytes);
     return NULL;
     }
+
 
 /*Allocate object*/
 object_t* object=malloc(sizeof(object_t));
