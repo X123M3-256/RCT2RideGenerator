@@ -538,7 +538,7 @@ editor->project=project;
 void car_editor_set_car(car_editor_t* editor,car_settings_t* car_settings)
 {
 editor->car_settings=car_settings;
-//flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
+flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
 value_editor_set_value(editor->spacing_editor,&(car_settings->spacing));
 value_editor_set_value(editor->friction_editor,&(car_settings->friction));
 value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));
