@@ -24,14 +24,11 @@ uint8_t maximum_cars;
 uint8_t car_types[5];
 car_settings_t cars[4];
 model_t** models;
-animation_t** animations;
 int num_models;
-int num_animations;
 }project_t;
 
 project_t* project_new();
 void project_add_model(project_t* project,model_t* model);
-void project_add_animation(project_t* project,animation_t* animation);
 object_t* project_export_dat(project_t* project);
 void project_free(project_t* project);
 

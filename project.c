@@ -12,9 +12,7 @@ project->minimum_cars=3;
 project->maximum_cars=8;
 memset(project->car_types,0xFF,5);
 project->car_types[CAR_INDEX_DEFAULT]=0;
-project->animations=NULL;
 project->models=NULL;
-project->num_animations=0;
 project->num_models=0;
 int i;
     for(i=0;i<NUM_CARS;i++)
@@ -32,18 +30,12 @@ void project_add_model(project_t* project,model_t* model)
 project->models=realloc(project->models,(project->num_models+1)*sizeof(model_t*));
 project->models[project->num_models++]=model;
 }
-void project_add_animation(project_t* project,animation_t* animation)
-{
-project->animations=realloc(project->animations,(project->num_animations+1)*sizeof(animation_t*));
-project->animations[project->num_animations++]=animation;
-}
 void project_free(project_t* project)
 {
 int i;
     for(i=0;i<project->num_models;i++)model_free(project->models[i]);
-    for(i=0;i<project->num_animations;i++)animation_free(project->animations[i]);
+    for(i=0;i<NUM_CARS;i++)animation_free(project->cars[i].animation);
 free(project->models);
-free(project->animations);
 free(project);
 }
 
