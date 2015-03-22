@@ -494,6 +494,15 @@ editor->car_type=car_type;
     }
 }
 
+void car_editor_edit_animation(GtkWidget* widget,gpointer data)
+{
+car_editor_t* editor=(car_editor_t*)data;
+    if(editor->project==NULL||editor->car_settings==NULL)return;
+animation_dialog_t* dialog=animation_dialog_new(editor->car_settings->animation,editor->project->models,editor->project->num_models);
+animation_dialog_run(dialog);
+animation_dialog_free(dialog);
+}
+
 car_editor_t* car_editor_new()
 {
 car_editor_t* editor=malloc(sizeof(car_editor_t));
@@ -509,11 +518,23 @@ gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FAL
 editor->spacing_editor=value_editor_new(VALUE_SIZE_WORD,"Spacing:");
 editor->friction_editor=value_editor_new(VALUE_SIZE_WORD,"Friction:");
 editor->z_value_editor=value_editor_new(VALUE_SIZE_BYTE,"Z Value:");
+
+editor->animation_button=gtk_button_new_with_label("Edit Animation");
+g_signal_connect(editor->animation_button,"clicked",G_CALLBACK(car_editor_edit_animation),editor);
+
+gtk_box_pack_start(GTK_BOX(editor->container),editor->animation_button,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->spacing_editor->container,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->friction_editor->container,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->z_value_editor->container,FALSE,FALSE,1);
+
+
 return editor;
 }
+void car_editor_set_project(car_editor_t* editor,project_t* project)
+{
+editor->project=project;
+}
+
 void car_editor_set_car(car_editor_t* editor,car_settings_t* car_settings)
 {
 editor->car_settings=car_settings;
@@ -593,6 +614,7 @@ car_type_editor_set_car_type(editor->third_car_editor,&(project->car_types[CAR_I
 car_type_editor_set_car_type(editor->rear_car_editor,&(project->car_types[CAR_INDEX_REAR]));
     for(i=0;i<NUM_CARS;i++)
     {
+    car_editor_set_project(editor->car_editors[i],project);
     car_editor_set_car(editor->car_editors[i],&(project->cars[i]));
     }
 }
@@ -635,7 +657,7 @@ model_t* model=(model_t*)data;
         gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->name);
         }
 }
-
+/*
 static void main_window_add_animation(GtkWidget* widget,gpointer data)
 {
 main_window_t* main_window=(main_window_t*)data;
@@ -646,8 +668,20 @@ animation_dialog_t* dialog=animation_dialog_new(animation,main_window->project->
 animation_dialog_run(dialog);
 animation_dialog_free(dialog);
 }
-
-
+*/
+/*
+static void main_window_edit_animation(GtkWidget* widget,gpointer data)
+{
+animation_t* animation=(animation_t*)data;
+        if(animation!=NULL)
+        {
+        animation_dialog_t* dialog=animation_dialog_new(animation,);
+        animation_dialog_run(dialog);
+        animation_dialog_free(dialog);
+        gtk_menu_item_set_label(GTK_MENU_ITEM(widget),animation->name);
+        }
+}
+*/
 
 void main_window_populate_model_menu(main_window_t* main_window)
 {
@@ -661,13 +695,26 @@ int i;
     gtk_widget_show(model_menu_item);
     }
 }
-
-
+/*
+void main_window_populate_animation_menu(main_window_t* main_window)
+{
+int i;
+    for(i=0;i<main_window->project->num_animations;i++)
+    {
+    //Add model to menu
+    GtkWidget* animation_menu_item=gtk_menu_item_new_with_label(main_window->project->animations[i]->name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(main_window->animation_menu),animation_menu_item);
+//    g_signal_connect(model_menu_item,"activate",G_CALLBACK(main_window_edit_animation),main_window->project->models[i]);
+    gtk_widget_show(animation_menu_item);
+    }
+}
+*/
 void main_window_set_project(main_window_t* main_window,project_t* project)
 {
 main_window->project=project;
 header_editor_set_project(main_window->header_editor,project);
 main_window_populate_model_menu(main_window);
+//main_window_populate_animation_menu(main_window);
 }
 static void main_window_new_project(GtkWidget* widget,gpointer data)
 {
@@ -710,10 +757,10 @@ void main_window_build_menus(main_window_t* main_window)
 main_window->main_menu=gtk_menu_bar_new();
 GtkWidget* file_menu_item=gtk_menu_item_new_with_label("File");
 GtkWidget* model_menu_item=gtk_menu_item_new_with_label("Model");
-GtkWidget* animation_menu_item=gtk_menu_item_new_with_label("Animation");
+//GtkWidget* animation_menu_item=gtk_menu_item_new_with_label("Animation");
 gtk_menu_shell_append(GTK_MENU_SHELL(main_window->main_menu),file_menu_item);
 gtk_menu_shell_append(GTK_MENU_SHELL(main_window->main_menu),model_menu_item);
-gtk_menu_shell_append(GTK_MENU_SHELL(main_window->main_menu),animation_menu_item);
+//gtk_menu_shell_append(GTK_MENU_SHELL(main_window->main_menu),animation_menu_item);
 
 GtkWidget* file_menu=gtk_menu_new();
 GtkWidget* new_menu_item=gtk_menu_item_new_with_label("New");
@@ -736,16 +783,14 @@ g_signal_connect(add_model_menu_item,"activate",G_CALLBACK(main_window_add_model
 gtk_menu_shell_append(GTK_MENU_SHELL(main_window->model_menu),add_model_menu_item);
 gtk_menu_item_set_submenu(GTK_MENU_ITEM(model_menu_item),main_window->model_menu);
 
-
-
-
+/*
 main_window->animation_menu=gtk_menu_new();
 GtkWidget* add_animation_menu_item=gtk_menu_item_new_with_label("Add Animation");
 g_signal_connect(add_animation_menu_item,"activate",G_CALLBACK(main_window_add_animation),main_window);
 gtk_menu_shell_append(GTK_MENU_SHELL(main_window->animation_menu),add_animation_menu_item);
 gtk_menu_item_set_submenu(GTK_MENU_ITEM(animation_menu_item),main_window->animation_menu);
 //g_signal_connect(addAnimationMenuItem,"activate",G_CALLBACK(AddNewAnimation),MainInterface);
-
+*/
 
 gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->main_menu,FALSE,FALSE,0);
 }

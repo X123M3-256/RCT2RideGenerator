@@ -69,12 +69,14 @@ GtkWidget* car_select;
 typedef struct
 {
 car_settings_t* car_settings;
+project_t* project;
 
 flag_editor_t* flag_editor;
 value_editor_t* spacing_editor;
 value_editor_t* friction_editor;
 value_editor_t* z_value_editor;
 
+GtkWidget* animation_button;
 GtkWidget* container;
 }car_editor_t;
 
