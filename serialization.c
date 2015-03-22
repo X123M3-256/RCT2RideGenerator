@@ -167,10 +167,6 @@ json_t* animation_serialize(animation_t* animation,model_t** model_list,int num_
 {
 int i,j;
 json_t* root=json_object();
-//Serialize name
-json_t* name=json_string(animation->name);
-json_object_set(root,"name",name);
-
 
 //Serialize model list
 json_t* objects=json_array();
@@ -216,11 +212,6 @@ animation_t* animation_deserialize(json_t* json,model_t** model_list,int num_mod
 {
 int i,j;
 animation_t* animation=animation_new();
-//Deserialize name
-json_t* name=json_object_get(json,"name");
-    if(name!=NULL)animation_set_name(animation,json_string_value(name));
-    else animation_set_name(animation,strdup("Unnamed Animation"));
-
 
 //Deserialize model list
 json_t* objects=json_object_get(json,"objects");
@@ -286,12 +277,9 @@ json_t* cars=json_array();
         if(cars_used[i])
         {
         car=json_object();
-        //Default animation
-        json_t* default_anim=json_integer(project->cars[i].default_animation);
-        json_object_set_new(car,"default_animation",default_anim);
-        //Loading animation
-        json_t* loading_anim=json_integer(project->cars[i].loading_animation);
-        json_object_set_new(car,"loading_animation",loading_anim);
+        //Animation
+        json_t* anim=animation_serialize(project->cars[i].animation,project->models,project->num_models);
+        json_object_set_new(car,"animation",anim);
          //Flags
         json_t* flags=json_integer(project->cars[i].flags);
         json_object_set_new(car,"flags",flags);
@@ -317,14 +305,7 @@ json_t* models=json_array();
         json_array_append_new(models,model);
         }
 json_object_set_new(json,"models",models);
-//Load animations
-json_t* animations=json_array();
-        for(i=0;i<project->num_animations;i++)
-        {
-        json_t* animation=animation_serialize(project->animations[i],project->models,project->num_models);
-        json_array_append_new(animations,animation);
-        }
-json_object_set_new(json,"animations",animations);
+
 return json;
 }
 project_t* project_deserialize(json_t* json)
@@ -357,6 +338,18 @@ json_t* car_types=json_object_get(json,"car_types");
     car_type=json_object_get(car_types,"rear");
     project->car_types[CAR_INDEX_REAR]=car_type!=NULL?json_integer_value(car_type):0xFF;
     }
+
+//Load models
+json_t* models=json_object_get(json,"models");
+    if(models!=NULL)
+    {
+        for(i=0;i<json_array_size(models);i++)
+        {
+        model_t* model=model_deserialize(json_array_get(models,i));
+        project_add_model(project,model);
+        }
+    }
+
 //Deserialize cars
 json_t* cars=json_object_get(json,"cars");
     for(i=0;i<NUM_CARS;i++)
@@ -364,12 +357,10 @@ json_t* cars=json_object_get(json,"cars");
     json_t* car=json_array_get(cars,i);
         if(!json_is_null(car))
         {
-        //Default animation
-        json_t* default_anim=json_object_get(car,"default_animation");
-            if(default_anim!=NULL)project->cars[i].default_animation=json_integer_value(default_anim);
-        //Loading animation
-        json_t* loading_anim=json_object_get(car,"loading_animation");
-            if(loading_anim!=NULL)project->cars[i].loading_animation=json_integer_value(loading_anim);
+        //Animation
+        json_t* anim=json_object_get(car,"animation");
+            if(anim!=NULL)project->cars[i].animation=animation_deserialize(anim,project->models,project->num_models);
+            else project->cars[i].animation=animation_new();
         //Flags
         json_t* flags=json_object_get(car,"flags");
             if(flags!=NULL)project->cars[i].flags=json_integer_value(flags);
@@ -384,31 +375,11 @@ json_t* cars=json_object_get(json,"cars");
             if(z_value!=NULL)project->cars[i].z_value=json_integer_value(z_value);
         }
     }
-//Load models
-json_t* models=json_object_get(json,"models");
-    if(models!=NULL)
-    {
-        for(i=0;i<json_array_size(models);i++)
-        {
-        model_t* model=model_deserialize(json_array_get(models,i));
-        project_add_model(project,model);
-        }
-    }
-//Load animations
-json_t* animations=json_object_get(json,"animations");
-    if(animations!=NULL)
-    {
-        for(i=0;i<json_array_size(animations);i++)
-        {
-        animation_t* animation=animation_deserialize(json_array_get(animations,i),project->models,project->num_models);
-        project_add_animation(project,animation);
-        }
-    }
+
 return project;
 }
 project_t* project_load(const char* filename)
 {
-int i;
 json_t* file=json_load_file(filename,0,NULL);
 project_t* project=project_deserialize(file);
 json_delete(file);
