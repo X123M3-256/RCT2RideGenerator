@@ -25,7 +25,6 @@ int parent_index;
 
 typedef struct
 {
-char* name;
 object_transform_t frames[MAX_FRAMES][MAX_OBJECTS_PER_FRAME];
 object_data_t objects[MAX_OBJECTS_PER_FRAME];
 int num_objects;
@@ -36,7 +35,6 @@ int num_frames;
 
 
 animation_t* animation_new();
-void animation_set_name(animation_t* animation,const char* name);
 void animation_set_num_frames(animation_t* animation,int frames);
 int animation_add_object(animation_t* animation,model_t* model);
 void animation_update_transform(animation_t* animation,int frame,int object,Vector position,Vector rotation);

@@ -10,16 +10,9 @@
 animation_t* animation_new()
 {
 animation_t* animation=malloc(sizeof(animation_t));
-animation->name=malloc(18);
-strcpy(animation->name,"Unnamed Animation");
 animation->num_frames=1;
 animation->num_objects=0;
 return animation;
-}
-void animation_set_name(animation_t* animation,const char* name)
-{
-animation->name=realloc(animation->name,strlen(name)+1);
-strcpy(animation->name,name);
 }
 void animation_set_num_frames(animation_t* animation,int frames)
 {
@@ -84,7 +77,6 @@ renderer_clear_buffers();
 }
 void animation_free(animation_t* animation)
 {
-free(animation->name);
 free(animation);
 }
 
