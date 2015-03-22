@@ -286,9 +286,7 @@ return model_selector->models[index];
 static void animation_dialog_add_model(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 animation_dialog_t* dialog=(animation_dialog_t*)user_data;
-printf("Test\n");
 model_t* model=model_selector_get_model(dialog->model_selector);
-printf("Test2 %d\n",model);
     if(model!=NULL)
     {
     animation_add_object(dialog->animation,model);
@@ -298,11 +296,11 @@ printf("Test2 %d\n",model);
 
 static void animation_dialog_preview_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-int i;
-animation_dialog_t* dialog=(animation_dialog_t*)user_data;
-Vector coords;
-coords.X=event->x;
-coords.Y=event->y;
+//int i;
+//animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+//Vector coords;
+//coords.X=event->x;
+//coords.Y=event->y;
 /*
 int selected_object=-1;
 int frame=dialog->animation_viewer->frame;
@@ -324,10 +322,6 @@ dialog->animation=animation;
 dialog->dialog=gtk_dialog_new_with_buttons("Animation Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
 GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog->dialog));
 
-
-dialog->name_editor=string_editor_new("Name");
-string_editor_set_string(dialog->name_editor,&(dialog->animation->name));
-gtk_box_pack_start(GTK_BOX(content_area),dialog->name_editor->container,FALSE,FALSE,2);
 
 GtkWidget* add_model_hbox=gtk_hbox_new(FALSE,1);
 dialog->model_selector=model_selector_new(models,num_models);
