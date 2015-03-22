@@ -11,6 +11,7 @@ project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
 project->maximum_cars=8;
 memset(project->car_types,0xFF,5);
+project->car_types[CAR_INDEX_DEFAULT]=0;
 project->animations=NULL;
 project->models=NULL;
 project->num_animations=0;
@@ -18,8 +19,7 @@ project->num_models=0;
 int i;
     for(i=0;i<NUM_CARS;i++)
     {
-    project->cars[i].default_animation=-1;
-    project->cars[i].loading_animation=-1;
+    project->cars[i].animation=animation_new();
     project->cars[i].flags=0;
     project->cars[i].spacing=0x300;
     project->cars[i].z_value=8;
@@ -147,7 +147,7 @@ image_list_set_image(object->images,2,image_new(1,1,0));
     for(i=0;i<NUM_CARS;i++)//Test render only one car
     {
     uint16_t sprites=header->cars[i].sprites;
-    animation_t* animation=project->animations[project->cars[i].default_animation];
+    animation_t* animation=project->cars[i].animation;
     image_list_t* images=object->images;
         if(sprites&SPRITE_FLAT_SLOPE)
         {
@@ -239,7 +239,7 @@ image_list_set_image(object->images,2,image_new(1,1,0));
         }
         if(sprites&SPRITE_RESTRAINT_ANIMATION)
         {
-        render_loading(images,project->animations[project->cars[i].loading_animation],&frame);
+        render_loading(images,project->cars[i].animation,&frame);
         }
     }
 
@@ -280,7 +280,7 @@ memset(cars_used,0,NUM_CARS);
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
         object->ride_header->cars[i].sprites=SPRITE_FLAT_SLOPE|SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKED_SLOPE_TRANSITION|SPRITE_BANKING|SPRITE_DIAGONAL_BANK_TRANSITION|SPRITE_DIAGONAL_SLOPE|SPRITE_SLOPE_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION|SPRITE_SLOPED_BANKED_TURN|SPRITE_VERTICAL_SLOPE;
-            if(project->cars[i].loading_animation>=0)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
+            //if(project->cars[i].loading_animation>=0)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
         object->ride_header->cars[i].riders=0;
         object->ride_header->cars[i].rider_pairs=0;
         object->ride_header->cars[i].rider_sprites=0;

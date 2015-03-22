@@ -8,8 +8,7 @@
 
 typedef struct
 {
-int default_animation;
-int loading_animation;
+animation_t* animation;
 uint16_t flags;
 uint16_t friction;
 uint8_t spacing;
