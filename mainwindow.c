@@ -437,6 +437,63 @@ editor->flags=flags;
     }
 }
 
+
+void car_type_editor_changed(GtkWidget* widget,gpointer data)
+{
+car_type_editor_t* editor=(car_type_editor_t*)data;
+    if(editor->car_type==NULL)return;
+int active=gtk_combo_box_get_active(GTK_COMBO_BOX(editor->car_select));
+    switch(active)
+    {
+    case 0:
+    *(editor->car_type)=0xFF;
+    break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    *(editor->car_type)=active-1;
+    break;
+    }
+}
+car_type_editor_t* car_type_editor_new(const char* label)
+{
+int i;
+car_type_editor_t* editor=malloc(sizeof(car_type_editor_t));
+editor->car_type=NULL;
+editor->container=gtk_hbox_new(FALSE,1);
+editor->label=gtk_label_new(label);
+editor->car_select=gtk_combo_box_text_new();
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),"Default");
+    for(i=0;i<NUM_CARS;i++)
+    {
+    char option_text[256];
+    sprintf(option_text,"Car %d",i);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),option_text);
+    }
+gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),0);
+g_signal_connect(editor->car_select,"changed",G_CALLBACK(car_type_editor_changed),editor);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->car_select,FALSE,FALSE,2);
+return editor;
+}
+void car_type_editor_set_car_type(car_type_editor_t* editor,uint8_t* car_type)
+{
+editor->car_type=car_type;
+    switch(*car_type)
+    {
+    case 0xFF:
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),0);
+    break;
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),(*car_type)+1);
+    break;
+    }
+}
+
 car_editor_t* car_editor_new()
 {
 car_editor_t* editor=malloc(sizeof(car_editor_t));
@@ -466,6 +523,7 @@ value_editor_set_value(editor->friction_editor,&(car_settings->friction));
 value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));
 }
 
+
 header_editor_t* header_editor_new()
 {
 header_editor_t* editor=malloc(sizeof(header_editor_t));
@@ -481,13 +539,34 @@ flag_editor_add_checkbox(editor->flag_editor,"Ride is covered",RIDE_COVERED);
 flag_editor_add_checkbox(editor->flag_editor,"Riders get wet",RIDE_WET);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,2);
 
+
+
+//Edit car related information
+GtkWidget* cars_frame=gtk_frame_new("Cars");
+GtkWidget* cars_vbox=gtk_vbox_new(FALSE,1);
+gtk_container_add(GTK_CONTAINER(cars_frame),cars_vbox);
+gtk_box_pack_start(GTK_BOX(editor->container),cars_frame,FALSE,FALSE,2);
+
+
 editor->min_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Minimum cars per train:");
 editor->max_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Maximum cars per train:");
-gtk_box_pack_start(GTK_BOX(editor->container),editor->min_cars_editor->container,FALSE,FALSE,2);
-gtk_box_pack_start(GTK_BOX(editor->container),editor->max_cars_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->min_cars_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->max_cars_editor->container,FALSE,FALSE,2);
 
-GtkWidget* cars=gtk_notebook_new();
+editor->default_car_editor=car_type_editor_new("Default car");
+editor->front_car_editor=car_type_editor_new("First car");
+editor->second_car_editor=car_type_editor_new("Second car");
+editor->third_car_editor=car_type_editor_new("Third car");
+editor->rear_car_editor=car_type_editor_new("Rear car");
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->default_car_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->front_car_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->second_car_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->third_car_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->rear_car_editor->container,FALSE,FALSE,2);
+
+
 int i;
+GtkWidget* cars=gtk_notebook_new();
     for(i=0;i<NUM_CARS;i++)
     {
     char label_text[256];
@@ -498,66 +577,6 @@ int i;
     }
 gtk_box_pack_start(GTK_BOX(editor->container),cars,FALSE,FALSE,2);
 return editor;
-
-/*
-//Create flags editor
-GtkWidget* flagsFrame=gtk_frame_new("Flags");
-GtkWidget* flagsTable=gtk_table_new(3,2,FALSE);
-GtkWidget* seperateLabel=gtk_label_new("Show as seperate ride");
-GtkWidget* coveredLabel=gtk_label_new("Ride is covered");
-GtkWidget* wetLabel=gtk_label_new("Guests get wet");
-GtkWidget* seperateCheckbox=gtk_check_button_new();
-GtkWidget* coveredCheckbox=gtk_check_button_new();
-GtkWidget* wetCheckbox=gtk_check_button_new();
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),seperateLabel,0,1,0,1);
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),coveredLabel,0,1,1,2);
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),wetLabel,0,1,2,3);
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),seperateCheckbox,1,2,0,1);
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),coveredCheckbox,1,2,1,2);
-gtk_table_attach_defaults(GTK_TABLE(flagsTable),wetCheckbox,1,2,2,3);
-gtk_container_add(GTK_CONTAINER(flagsFrame),flagsTable);
-gtk_box_pack_start(GTK_BOX(interface->LeftVBox),flagsFrame,FALSE,FALSE,2);
-
-//Create flags editor
-GtkWidget* carsFrame=gtk_frame_new("Cars");
-GtkWidget* carsTable=gtk_table_new(5,2,FALSE);
-GtkWidget* defaultLabel=gtk_label_new("Default car");
-GtkWidget* frontLabel=gtk_label_new("Front car");
-GtkWidget* secondLabel=gtk_label_new("Second car");
-GtkWidget* thirdLabel=gtk_label_new("Third car");
-GtkWidget* rearLabel=gtk_label_new("Rear car");
-GtkWidget* defaultSelect=gtk_combo_box_text_new();
-GtkWidget* frontSelect=gtk_combo_box_text_new();
-GtkWidget* secondSelect=gtk_combo_box_text_new();
-GtkWidget* thirdSelect=gtk_combo_box_text_new();
-GtkWidget* rearSelect=gtk_combo_box_text_new();
-    for(i=0;i<NUM_CARS;i++)
-    {
-    char optionText[256];
-    sprintf(optionText,"Car %d",i);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(defaultSelect),optionText);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(frontSelect),optionText);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(secondSelect),optionText);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(thirdSelect),optionText);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(rearSelect),optionText);
-    }
-gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(frontSelect),"Default");
-gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(secondSelect),"Default");
-gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(thirdSelect),"Default");
-gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(rearSelect),"Default");
-gtk_table_attach_defaults(GTK_TABLE(carsTable),defaultLabel,0,1,0,1);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),frontLabel,0,1,1,2);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),secondLabel,0,1,2,3);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),thirdLabel,0,1,3,4);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),rearLabel,0,1,4,5);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),defaultSelect,1,2,0,1);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),frontSelect,1,2,1,2);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),secondSelect,1,2,2,3);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),thirdSelect,1,2,3,4);
-gtk_table_attach_defaults(GTK_TABLE(carsTable),rearSelect,1,2,4,5);
-gtk_container_add(GTK_CONTAINER(carsFrame),carsTable);
-gtk_box_pack_start(GTK_BOX(interface->LeftVBox),carsFrame,FALSE,FALSE,2);
-*/
 }
 void header_editor_set_project(header_editor_t* editor,project_t* project)
 {
@@ -567,6 +586,11 @@ track_type_editor_set_track_type(editor->track_type_editor,&(project->track_type
 flag_editor_set_flags(editor->flag_editor,&(project->flags));
 value_editor_set_value(editor->min_cars_editor,&(project->minimum_cars));
 value_editor_set_value(editor->max_cars_editor,&(project->maximum_cars));
+car_type_editor_set_car_type(editor->default_car_editor,&(project->car_types[CAR_INDEX_DEFAULT]));
+car_type_editor_set_car_type(editor->front_car_editor,&(project->car_types[CAR_INDEX_FRONT]));
+car_type_editor_set_car_type(editor->second_car_editor,&(project->car_types[CAR_INDEX_SECOND]));
+car_type_editor_set_car_type(editor->third_car_editor,&(project->car_types[CAR_INDEX_THIRD]));
+car_type_editor_set_car_type(editor->rear_car_editor,&(project->car_types[CAR_INDEX_REAR]));
     for(i=0;i<NUM_CARS;i++)
     {
     car_editor_set_car(editor->car_editors[i],&(project->cars[i]));

@@ -60,6 +60,14 @@ GtkWidget* table;
 
 typedef struct
 {
+uint8_t* car_type;
+GtkWidget* container;
+GtkWidget* label;
+GtkWidget* car_select;
+}car_type_editor_t;
+
+typedef struct
+{
 car_settings_t* car_settings;
 
 flag_editor_t* flag_editor;
@@ -78,6 +86,11 @@ track_type_editor_t* track_type_editor;
 flag_editor_t* flag_editor;
 value_editor_t* min_cars_editor;
 value_editor_t* max_cars_editor;
+car_type_editor_t* default_car_editor;
+car_type_editor_t* front_car_editor;
+car_type_editor_t* second_car_editor;
+car_type_editor_t* third_car_editor;
+car_type_editor_t* rear_car_editor;
 car_editor_t* car_editors[NUM_CARS];
 GtkWidget* container;
 }header_editor_t;
