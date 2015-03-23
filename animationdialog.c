@@ -283,7 +283,7 @@ int index=gtk_combo_box_get_active(GTK_COMBO_BOX(model_selector->container));
 return model_selector->models[index];
 }
 
-static void animation_dialog_add_model(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+static void animation_dialog_add_model(GtkWidget *widget, gpointer user_data)
 {
 animation_dialog_t* dialog=(animation_dialog_t*)user_data;
 model_t* model=model_selector_get_model(dialog->model_selector);
@@ -316,6 +316,7 @@ printf("%f %f\n",event->x,event->y);
 animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models,int num_models)
 {
 animation_dialog_t* dialog=malloc(sizeof(animation_dialog_t));
+
 dialog->animation=animation;
 //animationDialog.numObjects=0;
 
