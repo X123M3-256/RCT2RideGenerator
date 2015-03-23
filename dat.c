@@ -708,6 +708,7 @@ object->string_tables[1]=string_table_new();
 object->string_tables[2]=string_table_new();
 object->optional=ride_structures_new();
 object->images=image_list_new();
+return object;
 }
 #define HEADER_SIZE 21
 object_t* object_load_dat(const char* filename)
