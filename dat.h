@@ -263,7 +263,7 @@ char* string_table_get_string_by_language(string_table_t* table,language_t langu
 void string_table_set_string_by_language(string_table_t* table,language_t language,char* str);
 
 void image_list_set_image(image_list_t* list,int index,image_t* image);
-void image_list_set_num_images(image_list_t* list,int num_images);
+void image_list_set_num_images(image_list_t* list,uint32_t num_images);
 
 ride_header_t* ride_header_new();
 

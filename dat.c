@@ -61,7 +61,7 @@ return (checksum<<11)|(checksum>>21);
 }
 uint32_t calculate_checksum(uint8_t* header,uint8_t* data,uint32_t size)
 {
-int i;
+uint32_t i;
 /*Check checksum*/
 uint32_t checksum=0xF369A75B;
 checksum=checksum_process_byte(checksum,header[0]);/*Do first byte*/
@@ -522,7 +522,7 @@ return list;
 }
 image_list_t* image_list_load(uint8_t* bytes,uint32_t* pos_ptr)
 {
-int i,j;
+uint32_t i,j;
 uint32_t pos=*pos_ptr;
 /*Allocate image list*/
 image_list_t* list=image_list_new();
@@ -606,7 +606,7 @@ return list;
 }
 void image_list_write(image_list_t* list,buffer_t* buffer)
 {
-int i,j;
+uint32_t i,j;
 /*Write number of images*/
 buffer_write(buffer,(uint8_t*)&list->num_images,4);
 /*Save the offset of the graphic data size field, so we can write it later*/
@@ -682,9 +682,9 @@ void image_list_set_image(image_list_t* list,int index,image_t* image)
     if(list->images[index]!=NULL)image_free(list->images[index]);
 list->images[index]=image;
 }
-void image_list_set_num_images(image_list_t* list,int num_images)
+void image_list_set_num_images(image_list_t* list,uint32_t num_images)
 {
-int i;
+uint32_t i;
     if(num_images<list->num_images)for(i=num_images;i<list->num_images;i++)image_free(list->images[i]);
 list->images=realloc(list->images,num_images*sizeof(image_t*));
     if(num_images>list->num_images)for(i=list->num_images;i<num_images;i++)list->images[i]=NULL;
@@ -692,7 +692,7 @@ list->num_images=num_images;
 }
 void image_list_free(image_list_t* list)
 {
-int i;
+uint32_t i;
     for(i=0;i<list->num_images;i++)image_free(list->images[i]);
 free(list->images);
 free(list);
