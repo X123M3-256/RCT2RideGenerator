@@ -53,10 +53,10 @@ free(buffer);
 
 uint32_t checksum_process_byte(uint32_t checksum,uint8_t byte)
 {
-unsigned int checksum_higher_bits=checksum&0xFFFFFF00;
-uint8_t checksum_lower_bits=(uint8_t)(checksum&0xFF);
+uint32_t checksum_higher_bits=checksum&0xFFFFFF00u;
+uint32_t checksum_lower_bits=checksum&0xFFu;
 checksum_lower_bits^=byte;
-checksum=(uint32_t)checksum_higher_bits|(uint32_t)checksum_lower_bits;
+checksum=checksum_higher_bits|checksum_lower_bits;
 return (checksum<<11)|(checksum>>21);
 }
 uint32_t calculate_checksum(uint8_t* header,uint8_t* data,uint32_t size)
@@ -714,7 +714,7 @@ return object;
 object_t* object_load_dat(const char* filename)
 {
 int i;
-FILE* file=fopen(filename,"r");
+FILE* file=fopen(filename,"rb");
     if(file==NULL)
     {
     printf("Cannot open file\n");
@@ -774,6 +774,7 @@ if(header[0x10])
     }
 free(encoded_bytes);
 
+
     if(calculate_checksum(header,bytes->data,bytes->size)!=*((uint32_t*)(header+12)))
     {
     printf("Checksum does not match\n");
@@ -809,12 +810,13 @@ int i;
 int filename_length=strlen(filename);
 int start_index=filename_length;
 int end_index=filename_length;
-    while(filename[start_index]!='/')start_index--;
+    while(filename[start_index]!='/'&&filename[start_index]!='\\')start_index--;
 start_index++;
     while(filename[end_index]!='.'&&end_index>start_index)end_index--;
 /*If there's no extension, set end_index to the end of the file*/
     if(start_index==end_index)end_index=filename_length-1;
     else end_index--;
+
 /*Check filename length*/
     if(end_index-start_index>8)
     {
@@ -861,7 +863,7 @@ uint32_t checksum =calculate_checksum(header,decoded_file->data,decoded_file->si
 buffer_free(decoded_file);
 
 
-FILE* file=fopen(filename,"w");
+FILE* file=fopen(filename,"wb");
 fwrite(header,1,HEADER_SIZE,file);
 fwrite(encoded_bytes->data,1,encoded_bytes->size,file);
 fclose(file);
