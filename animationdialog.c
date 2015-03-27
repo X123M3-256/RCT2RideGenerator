@@ -251,6 +251,15 @@ gtk_box_pack_start(GTK_BOX(editor->container),editor->z,FALSE,FALSE,1);
 return editor;
 }
 
+void vector_editor_set_vector(vector_editor_t* editor,Vector* vector)
+{
+editor->vector=vector;
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->x),vector->X);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->y),vector->Y);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->z),vector->Z);
+}
+
+
 object_transform_editor_t* object_transform_editor_new()
 {
 object_transform_editor_t* editor=malloc(sizeof(object_transform_editor_t));
@@ -260,6 +269,12 @@ editor->rotation_editor=vector_editor_new("Rotation",0,360,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->position_editor->container,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->rotation_editor->container,FALSE,FALSE,2);
 return editor;
+}
+
+void object_transform_editor_set_object_transform(object_transform_editor_t* editor,object_transform_t* object_transform)
+{
+vector_editor_set_vector(editor->position_editor,&(object_transform->position));
+vector_editor_set_vector(editor->rotation_editor,&(object_transform->rotation));
 }
 
 
@@ -314,7 +329,10 @@ int frame=dialog->animation_viewer->frame;
     object_transform_t* object_data=&(dialog->animation->frames[frame][i]);
         if(renderer_get_face_by_point(model,object_data->transform,coords)!=NULL)selected_object=i;
     }
-printf("%d\n",selected_object);
+    if(selected_object!=-1)
+    {
+    object_transform_editor_set_object_transform(dialog->transform_editor,&(dialog->animation->frames[dialog->animation_viewer->frame][selected_object]));
+    }
 }
 animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models,int num_models)
 {
