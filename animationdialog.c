@@ -296,12 +296,16 @@ model_t* model=model_selector_get_model(dialog->model_selector);
 
 static void animation_dialog_preview_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-//int i;
-//animation_dialog_t* dialog=(animation_dialog_t*)user_data;
-//Vector coords;
-//coords.X=event->x;
-//coords.Y=event->y;
-/*
+int i;
+animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+
+GtkAllocation container_alloc;
+GdkPixbuf* pixbuf=dialog->animation_viewer->image_viewer->pixbuf;
+gtk_widget_get_allocation(widget,&container_alloc);
+
+Vector coords;
+coords.X=event->x-(container_alloc.width-gdk_pixbuf_get_width(pixbuf))/2;
+coords.Y=event->y-(container_alloc.height-gdk_pixbuf_get_height(pixbuf))/2;
 int selected_object=-1;
 int frame=dialog->animation_viewer->frame;
     for(i=0;i<dialog->animation->num_objects;i++)
@@ -310,8 +314,7 @@ int frame=dialog->animation_viewer->frame;
     object_transform_t* object_data=&(dialog->animation->frames[frame][i]);
         if(renderer_get_face_by_point(model,object_data->transform,coords)!=NULL)selected_object=i;
     }
-*/
-printf("%f %f\n",event->x,event->y);
+printf("%d\n",selected_object);
 }
 animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models,int num_models)
 {
