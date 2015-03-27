@@ -574,6 +574,9 @@ editor->max_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Maximum cars per train
 gtk_box_pack_start(GTK_BOX(cars_vbox),editor->min_cars_editor->container,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(cars_vbox),editor->max_cars_editor->container,FALSE,FALSE,2);
 
+editor->zero_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Number of zero cars:");
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->zero_cars_editor->container,FALSE,FALSE,2);
+
 editor->default_car_editor=car_type_editor_new("Default car");
 editor->front_car_editor=car_type_editor_new("First car");
 editor->second_car_editor=car_type_editor_new("Second car");
@@ -607,6 +610,7 @@ track_type_editor_set_track_type(editor->track_type_editor,&(project->track_type
 flag_editor_set_flags(editor->flag_editor,&(project->flags));
 value_editor_set_value(editor->min_cars_editor,&(project->minimum_cars));
 value_editor_set_value(editor->max_cars_editor,&(project->maximum_cars));
+value_editor_set_value(editor->zero_cars_editor,&(project->zero_cars));
 car_type_editor_set_car_type(editor->default_car_editor,&(project->car_types[CAR_INDEX_DEFAULT]));
 car_type_editor_set_car_type(editor->front_car_editor,&(project->car_types[CAR_INDEX_FRONT]));
 car_type_editor_set_car_type(editor->second_car_editor,&(project->car_types[CAR_INDEX_SECOND]));

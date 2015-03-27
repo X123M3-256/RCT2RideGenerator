@@ -88,6 +88,7 @@ track_type_editor_t* track_type_editor;
 flag_editor_t* flag_editor;
 value_editor_t* min_cars_editor;
 value_editor_t* max_cars_editor;
+value_editor_t* zero_cars_editor;
 car_type_editor_t* default_car_editor;
 car_type_editor_t* front_car_editor;
 car_type_editor_t* second_car_editor;

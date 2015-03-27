@@ -10,6 +10,7 @@ project->track_type=0x33;//Default to B&M track
 project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
 project->maximum_cars=8;
+project->zero_cars=0;
 memset(project->car_types,0xFF,5);
 project->car_types[CAR_INDEX_DEFAULT]=0;
 project->models=NULL;
@@ -258,6 +259,7 @@ object->ride_header->categories[1]=project->flags&RIDE_WET?0x3:0xFF;
 object->ride_header->track_sections=0xFFFFFFFFFFFFFFFFl;
 object->ride_header->minimum_cars=project->minimum_cars;
 object->ride_header->maximum_cars=project->maximum_cars;
+object->ride_header->zero_cars=project->zero_cars;
 
 unsigned char cars_used[NUM_CARS];
 memset(cars_used,0,NUM_CARS);

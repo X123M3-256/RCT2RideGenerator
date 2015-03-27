@@ -257,6 +257,10 @@ json_t* min_cars=json_integer(project->minimum_cars);
 json_object_set_new(json,"minimum_cars",min_cars);
 json_t* max_cars=json_integer(project->maximum_cars);
 json_object_set_new(json,"maximum_cars",max_cars);
+//Serialize zero cars
+json_t* zero_cars=json_integer(project->zero_cars);
+json_object_set_new(json,"zero_cars",zero_cars);
+
 //Serialize car types
 json_t* car_types=json_object();
     if(project->car_types[CAR_INDEX_DEFAULT]!=0xFF)json_object_set_new(car_types,"default",json_integer(project->car_types[CAR_INDEX_DEFAULT]));
@@ -323,6 +327,9 @@ json_t* minimum_cars=json_object_get(json,"minimum_cars");
     if(minimum_cars!=NULL)project->minimum_cars=json_integer_value(minimum_cars);
 json_t* maximum_cars=json_object_get(json,"maximum_cars");
     if(maximum_cars!=NULL)project->maximum_cars=json_integer_value(maximum_cars);
+//Deserialize zero cars
+json_t* zero_cars=json_object_get(json,"zero_cars");
+    if(zero_cars!=NULL)project->zero_cars=json_integer_value(zero_cars);
 //Deserialize car types
 json_t* car_types=json_object_get(json,"car_types");
     if(car_types!=NULL)

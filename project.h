@@ -21,6 +21,7 @@ uint32_t flags;
 uint8_t track_type;
 uint8_t minimum_cars;
 uint8_t maximum_cars;
+uint8_t zero_cars;
 uint8_t car_types[5];
 car_settings_t cars[4];
 model_t** models;
