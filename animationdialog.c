@@ -235,46 +235,84 @@ gtk_spin_button_set_range(GTK_SPIN_BUTTON(viewer->frame_spin),0,animation->num_f
 animation_viewer_update(viewer);
 }
 
+static void vector_editor_changed(GtkWidget* widget,gpointer data)
+{
+vector_editor_t* editor=(vector_editor_t*)data;
+editor->vector.X=gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(editor->x));
+editor->vector.Y=gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(editor->y));
+editor->vector.Z=gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(editor->z));
+}
+void vector_editor_register_callback(vector_editor_t* editor,void (*callback)(GtkWidget* widget,gpointer data),gpointer data)
+{
+g_signal_connect(editor->x,"value-changed",G_CALLBACK(callback),data);
+g_signal_connect(editor->y,"value-changed",G_CALLBACK(callback),data);
+g_signal_connect(editor->z,"value-changed",G_CALLBACK(callback),data);
+}
 vector_editor_t* vector_editor_new(const char* label,float min,float max,float step)
 {
 vector_editor_t* editor=malloc(sizeof(vector_editor_t));
-editor->vector=NULL;
+editor->vector.X=0.0;
+editor->vector.Y=0.0;
+editor->vector.Z=0.0;
 editor->container=gtk_hbox_new(FALSE,1);
 editor->label=gtk_label_new(label);
 editor->x=gtk_spin_button_new_with_range(min,max,step);
 editor->y=gtk_spin_button_new_with_range(min,max,step);
 editor->z=gtk_spin_button_new_with_range(min,max,step);
+vector_editor_register_callback(editor,vector_editor_changed,editor);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->x,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->y,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->z,FALSE,FALSE,1);
 return editor;
 }
-
-void vector_editor_set_vector(vector_editor_t* editor,Vector* vector)
+void vector_editor_set_value(vector_editor_t* editor,Vector vector)
 {
 editor->vector=vector;
-gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->x),vector->X);
-gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->y),vector->Y);
-gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->z),vector->Z);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->x),vector.X);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->y),vector.Y);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->z),vector.Z);
 }
 
-
+static void object_transform_editor_changed(GtkWidget* widget,gpointer data)
+{
+object_transform_editor_t* editor=(object_transform_editor_t*)data;
+    if(editor->object_transform==NULL)return;
+Vector radians;
+radians.X=editor->rotation_editor->vector.X*3.141592654/180.0;
+radians.Y=editor->rotation_editor->vector.Y*3.141592654/180.0;
+radians.Z=editor->rotation_editor->vector.Z*3.141592654/180.0;
+animation_update_transform(editor->object_transform,editor->position_editor->vector,radians);
+}
+void object_transform_editor_register_callback(object_transform_editor_t* editor,void (*callback)(GtkWidget* widget,gpointer data),gpointer data)
+{
+vector_editor_register_callback(editor->position_editor,callback,data);
+vector_editor_register_callback(editor->rotation_editor,callback,data);
+}
 object_transform_editor_t* object_transform_editor_new()
 {
 object_transform_editor_t* editor=malloc(sizeof(object_transform_editor_t));
 editor->container=gtk_vbox_new(TRUE,1);
 editor->position_editor=vector_editor_new("Position",-10,10,0.1);
 editor->rotation_editor=vector_editor_new("Rotation",0,360,1);
+object_transform_editor_register_callback(editor,object_transform_editor_changed,editor);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->position_editor->container,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->rotation_editor->container,FALSE,FALSE,2);
 return editor;
 }
-
 void object_transform_editor_set_object_transform(object_transform_editor_t* editor,object_transform_t* object_transform)
 {
-vector_editor_set_vector(editor->position_editor,&(object_transform->position));
-vector_editor_set_vector(editor->rotation_editor,&(object_transform->rotation));
+//Setting the spin button values triggers a cascade of update events. This is the simplest way of making sure they don't corrupt anything
+editor->object_transform=NULL;
+
+vector_editor_set_value(editor->position_editor,object_transform->position);
+Vector degrees;
+degrees.X=object_transform->rotation.X*180.0/3.141592654;
+degrees.Y=object_transform->rotation.Y*180.0/3.141592654;
+degrees.Z=object_transform->rotation.Z*180.0/3.141592654;
+vector_editor_set_value(editor->rotation_editor,degrees);
+
+editor->object_transform=object_transform;
 }
 
 
@@ -309,6 +347,11 @@ model_t* model=model_selector_get_model(dialog->model_selector);
     }
 }
 
+static void animation_dialog_update_preview(GtkWidget* widget,gpointer data)
+{
+animation_dialog_t* dialog=(animation_dialog_t*)data;
+animation_viewer_update(dialog->animation_viewer);
+}
 static void animation_dialog_preview_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 int i;
@@ -361,6 +404,7 @@ g_signal_connect(dialog->animation_viewer->image_viewer->container,"button_press
 gtk_box_pack_start(GTK_BOX(content_area),dialog->animation_viewer->container,FALSE,FALSE,2);
 
 dialog->transform_editor=object_transform_editor_new();
+object_transform_editor_register_callback(dialog->transform_editor,animation_dialog_update_preview,dialog);
 gtk_box_pack_start(GTK_BOX(content_area),dialog->transform_editor->container,FALSE,FALSE,2);
 
 gtk_widget_show_all(content_area);

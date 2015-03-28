@@ -21,8 +21,7 @@ GtkWidget* frame_spin;
 
 typedef struct
 {
-Vector* vector;
-
+Vector vector;
 GtkWidget* container;
 GtkWidget* label;
 GtkWidget* x;
@@ -32,6 +31,7 @@ GtkWidget* z;
 
 typedef struct
 {
+object_transform_t* object_transform;
 vector_editor_t* position_editor;
 vector_editor_t* rotation_editor;
 GtkWidget* container;
