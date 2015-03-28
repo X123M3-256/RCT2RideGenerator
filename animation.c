@@ -45,9 +45,8 @@ animation->objects[animation->num_objects].parent_index=-1;
     }
 return animation->num_objects++;
 }
-void animation_update_transform(animation_t* animation,int frame,int object,Vector position,Vector rotation)
+void animation_update_transform(object_transform_t* transform,Vector position,Vector rotation)
 {
-object_transform_t* transform=&(animation->frames[frame][object]);
 transform->position=position;
 transform->rotation=rotation;
 transform->transform=MatrixFromEulerAngles(rotation);
