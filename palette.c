@@ -300,7 +300,7 @@ uint8_t palette_remap_section_index(uint8_t color,uint8_t section_index)
 {
     if(color==COLOR_REMAP_1)return 243+section_index;
     if(color==COLOR_REMAP_2)return 202+section_index;
-    if(color==COLOR_REMAP_3)return section_index<=3?227:section_index<=6?228:229;
+    if(color==COLOR_REMAP_3)return 46+section_index;
 return remap[color][section_index];
 }
 
