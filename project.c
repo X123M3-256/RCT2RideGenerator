@@ -94,7 +94,7 @@ yaw_matrix.Data[0]=0;
 yaw_matrix.Data[2]=-1;
 yaw_matrix.Data[8]=1;
 yaw_matrix.Data[10]=0;
-    for(i=0;i<animation->num_frames;i++)
+    for(i=1;i<4;i++)
     {
         for(j=0;j<4;j++)
         {
@@ -126,7 +126,7 @@ int num_sprites=3;
         if(sprites&SPRITE_SLOPED_BANK_TRANSITION)num_sprites+=16;
         if(sprites&SPRITE_SLOPED_BANKED_TURN)num_sprites+=128;
         if(sprites&SPRITE_BANKED_SLOPE_TRANSITION)num_sprites+=16;
-        if(sprites&SPRITE_RESTRAINT_ANIMATION)num_sprites+=16;
+        if(sprites&SPRITE_RESTRAINT_ANIMATION)num_sprites+=12;
     }
 
 //Reallocate images
@@ -274,7 +274,7 @@ memset(cars_used,0,NUM_CARS);
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
         object->ride_header->cars[i].sprites=SPRITE_FLAT_SLOPE|SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKED_SLOPE_TRANSITION|SPRITE_BANKING|SPRITE_DIAGONAL_BANK_TRANSITION|SPRITE_DIAGONAL_SLOPE|SPRITE_SLOPE_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION|SPRITE_SLOPED_BANKED_TURN|SPRITE_VERTICAL_SLOPE;
-            //if(project->cars[i].loading_animation>=0)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
+            if(project->cars[i].animation->num_frames>=4)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
         object->ride_header->cars[i].riders=0;
         object->ride_header->cars[i].rider_pairs=0;
         object->ride_header->cars[i].rider_sprites=0;
