@@ -5,8 +5,11 @@
 #include "renderer.h"
 #include "palette.h"
 #include "linearalgebra.h"
-#define FRAME_BUFFER_SIZE 255
 
+#define FRAME_BUFFER_SIZE 255
+//See palette.c for the calculation of these values
+#define LUMINANCE_REGRESSION_INTERCEPT 0.103077
+#define LUMINANCE_REGRESSION_GRADIENT 0.069605
 
 //3 metres per tile
 #define SQRT1_2 0.707106781
@@ -21,7 +24,11 @@ const Matrix projection={{
            0.0     ,       0.0     ,       0.0     ,         1.0
     }};
 
-uint8_t frame_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+//Stores the color indices for each pixel, as used in the in-game palette.
+uint8_t color_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+//Stores luminance values for each pixel
+float luminance_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+//Stores depth values for each pixel
 float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
 image_t* renderer_get_image()
@@ -37,7 +44,27 @@ int x,y;
     for(y=0;y<FRAME_BUFFER_SIZE;y++)
     {
     image->data[y]=malloc(FRAME_BUFFER_SIZE);
-        for(x=0;x<FRAME_BUFFER_SIZE;x++)image->data[y][x]=frame_buffer[x][y];
+        for(x=0;x<FRAME_BUFFER_SIZE;x++)
+        {
+        //Find the section index with the nearest average luminance
+        uint8_t section_index=(uint8_t)(0.5+(luminance_buffer[x][y]-LUMINANCE_REGRESSION_INTERCEPT)/LUMINANCE_REGRESSION_GRADIENT);
+        //Clamp values within the correct rance
+            if(section_index<0)section_index=0;
+            else if(section_index>11)section_index=11;
+
+        //Apply floyd-steinberg dithering. Transparent pixels have no error so ignore them
+            if(color_buffer[x][y]!=TRANSPARENT)
+            {
+            float final_luminance=section_index*LUMINANCE_REGRESSION_GRADIENT+LUMINANCE_REGRESSION_INTERCEPT;
+            float error=luminance_buffer[x][y]-final_luminance;
+                if(x<FRAME_BUFFER_SIZE-1)luminance_buffer[x+1][y  ]+=error*7.0/16.0;
+                if(x>0&&y<FRAME_BUFFER_SIZE-1)luminance_buffer[x-1][y+1]+=error*3.0/16.0;
+                if(y<FRAME_BUFFER_SIZE-1)luminance_buffer[x  ][y+1]+=error*5.0/16.0;
+                if(x<FRAME_BUFFER_SIZE-1&&y<FRAME_BUFFER_SIZE-1)luminance_buffer[x+1][y+1]+=error*1.0/16.0;
+            }
+        //Calculate final palette index for this pixel
+        image->data[y][x]=palette_remap_section_index(color_buffer[x][y],section_index);
+        }
     }
 return image;
 }
@@ -69,20 +96,23 @@ int x,y;
     for(x=0;x<FRAME_BUFFER_SIZE;x++)
     for(y=0;y<FRAME_BUFFER_SIZE;y++)
     {
-    frame_buffer[x][y]=0;
+    color_buffer[x][y]=TRANSPARENT;
+    luminance_buffer[x][y]=0;
     depth_buffer[x][y]=-INFINITY;
     }
 }
 
 
 //Fragment shader
-uint8_t shade_fragment(Vector normal)
+float shade_fragment(Vector normal)
 {
 //printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
 const Vector light_direction={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
 float lambert=VectorDotProduct(normal,light_direction);
 if(lambert<0.0)lambert=0.0;
-return (uint8_t)(lambert*8.0)+3;
+float luminance=lambert*0.4+0.4;
+    if(luminance>1.0)return 1.0;
+return luminance;
 }
 
 
@@ -184,7 +214,8 @@ int i;
         }
         if(x>=0&&x<FRAME_BUFFER_SIZE&&y>=0&&y<FRAME_BUFFER_SIZE&&position.Z>depth_buffer[x][y])
         {
-        frame_buffer[x][y]=palette_remap_section_index(primitive->color,6);
+        color_buffer[x][y]=primitive->color;
+        luminance_buffer[x][y]=0.5;
         depth_buffer[x][y]=position.Z;
         }
     linear_interp_step(&position_interp);
@@ -271,7 +302,8 @@ int i;
             Vector cur_normal=VectorNormalize(cur_normal_interp.current);
                 if(cur_position.Z>depth_buffer[x][y])
                 {
-                frame_buffer[x][y]=palette_remap_section_index(primitive->color,shade_fragment(cur_normal));
+                color_buffer[x][y]=primitive->color;
+                luminance_buffer[x][y]=shade_fragment(cur_normal);
                 depth_buffer[x][y]=cur_position.Z;
                 }
             linear_interp_step(&cur_position_interp);
