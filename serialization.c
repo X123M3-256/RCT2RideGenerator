@@ -235,7 +235,7 @@ animation_set_num_frames(animation,json_array_size(frames));
         json_t* transform=json_array_get(frame,j);
         Vector position=vector_deserialize(json_array_get(transform,0));
         Vector rotation=vector_deserialize(json_array_get(transform,1));
-        animation_update_transform(animation,i,j,position,rotation);
+        animation_update_transform(&(animation->frames[i][j]),position,rotation);
         }
     }
 return animation;
@@ -382,7 +382,6 @@ json_t* cars=json_object_get(json,"cars");
             if(z_value!=NULL)project->cars[i].z_value=json_integer_value(z_value);
         }
     }
-
 return project;
 }
 project_t* project_load(const char* filename)
