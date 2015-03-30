@@ -1,5 +1,6 @@
 #include "palette.h"
-#include<stdio.h>
+
+#include <stdio.h>
 
 color_t palette[255]={
 {0,0,0,0},
@@ -298,6 +299,7 @@ uint8_t remap[32][12]={
 
 uint8_t palette_remap_section_index(uint8_t color,uint8_t section_index)
 {
+    if(color==TRANSPARENT)return 0;
     if(color==COLOR_REMAP_1)return 243+section_index;
     if(color==COLOR_REMAP_2)return 202+section_index;
     if(color==COLOR_REMAP_3)return 46+section_index;
@@ -308,4 +310,63 @@ return remap[color][section_index];
 color_t palette_color_from_index(uint8_t index)
 {
 return palette[index];
+}
+
+
+
+// GRAY VALUE ("brightness")
+float colfunc(float r, float g, float b)
+{
+return ;
+}
+
+/*Each color has 12 shades from dark to light (section_index above). This calculates the
+linear regression line between the luminance and the section index - that is, the best
+approximation for the luminance given only the section index. This function isn't actually
+called since the result will always be the same - instead, the results are hardcoded where they're needed*/
+
+void palette_calculate_regression()
+{
+int i,j;
+
+float xy_mean=0.0;
+float xx_mean=0.0;
+float yy_mean=0.0;
+float x_mean=0.0;
+float y_mean=0.0;
+float n=0.0;
+float x;
+    for(i=1;i<30;i+=3)
+    {
+    x=0;
+        for(j=0;j<12;j++)
+        {
+        int index=palette_remap_section_index(i,j);
+        float r=(float)palette[index].red/255.0;
+        float g=(float)palette[index].green/255.0;
+        float b=(float)palette[index].blue/255.0;
+        //Calculate relative luminance from rgb components
+        float y=0.2126*r+0.7152*g+0.0722*b;
+        xy_mean+=x*y;
+        xx_mean+=x*x;
+        yy_mean+=y*y;
+        x_mean+=x;
+        y_mean+=y;
+        n+=1.0;
+        x+=1.0;
+        }
+    }
+xy_mean/=n;
+xx_mean/=n;
+yy_mean/=n;
+x_mean/=n;
+y_mean/=n;
+
+float x_stddev=sqrt((xx_mean-x_mean*x_mean));
+float y_stddev=sqrt((yy_mean-y_mean*y_mean));
+float correlation=(xy_mean-x_mean*y_mean)/(x_stddev*y_stddev);
+float slope=correlation*(y_stddev/x_stddev);
+float intercept=y_mean-slope*x_mean;
+
+printf("intercept %f slope %f\n",intercept,slope);
 }

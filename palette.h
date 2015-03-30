@@ -6,6 +6,7 @@
 #define COLOR_REMAP_1 32
 #define COLOR_REMAP_2 33
 #define COLOR_REMAP_3 34
+#define TRANSPARENT 35
 
 typedef struct
 {
