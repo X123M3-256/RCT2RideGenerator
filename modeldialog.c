@@ -242,6 +242,7 @@ Matrix scale=
 model_viewer->model_view=MatrixMultiply(scale,model_viewer->model_view);
     if(model_viewer->model!=NULL)model_viewer_render_preview(model_viewer);
 }
+
 model_viewer_t* model_viewer_new()
 {
 model_viewer_t* model_viewer=malloc(sizeof(model_viewer_t));
@@ -475,6 +476,13 @@ face_t* face=renderer_get_face_by_point(dialog->model,dialog->model_viewer->mode
     }
 }
 
+static void model_dialog_is_rider_changed(GtkWidget* widget, gpointer data)
+{
+model_dialog_t* dialog=(model_dialog_t*)data;
+    if(dialog->model==NULL)return;
+dialog->model->is_rider=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->is_rider));
+}
+
 model_dialog_t* model_dialog_new(model_t* model)
 {
 model_dialog_t* dialog=malloc(sizeof(model_dialog_t));
@@ -486,10 +494,18 @@ dialog->color=0;
 dialog->dialog=gtk_dialog_new_with_buttons("Model Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
 GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog->dialog));
 
+GtkWidget* name_hbox=gtk_hbox_new(FALSE,1);
 //Create name editor
-dialog->name_editor=string_editor_new("Name");
+dialog->name_editor=string_editor_new("Name:");
 string_editor_set_string(dialog->name_editor,&(model->name));
-gtk_box_pack_start(GTK_BOX(content_area),dialog->name_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(name_hbox),dialog->name_editor->container,TRUE,TRUE,2);
+
+//Create rider checkbox
+dialog->is_rider=gtk_check_button_new_with_label("Rider");
+gtk_box_pack_start(GTK_BOX(name_hbox),dialog->is_rider,FALSE,FALSE,2);
+g_signal_connect(dialog->is_rider,"toggled",G_CALLBACK(model_dialog_is_rider_changed),dialog);
+
+gtk_box_pack_start(GTK_BOX(content_area),name_hbox,FALSE,FALSE,2);
 
 //Create transform buttons
 GtkWidget* top_hbox=gtk_hbox_new(FALSE,1);
