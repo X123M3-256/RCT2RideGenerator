@@ -23,6 +23,13 @@ gtk_widget_destroy(file_dialog);
 return filename;
 }
 
+void show_error(char* message)
+{
+GtkWidget* dialog=gtk_message_dialog_new(NULL,0,GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,message);
+gtk_dialog_run (GTK_DIALOG (dialog));
+gtk_widget_destroy (dialog);
+}
+
 /*
 static void EditModel(GtkWidget* widget,gpointer* data)
 {
@@ -735,7 +742,12 @@ static void main_window_open_project(GtkWidget* widget,gpointer data)
 {
 main_window_t* main_window=(main_window_t*)data;
 char* filename=get_filename("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
-    if(filename!=NULL)main_window_set_project(main_window,project_load(filename));
+    if(filename!=NULL)
+    {
+    project_t* project=project_load(filename);
+        if(project!=NULL)main_window_set_project(main_window,project);
+        else show_error("Failed to load project file\n");
+    }
 }
 static void main_window_save_project(GtkWidget* widget,gpointer data)
 {
