@@ -31,39 +31,83 @@ float luminance_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 //Stores depth values for each pixel
 float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
+
+void renderer_get_image_bounds(int* x_ptr,int* y_ptr,int* width_ptr,int* height_ptr)
+{
+int x,y;
+int x_min=FRAME_BUFFER_SIZE;
+int x_max=0;
+int y_min=FRAME_BUFFER_SIZE;
+int y_max=0;
+
+    for(x=0;x<FRAME_BUFFER_SIZE;x++)
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+        if(color_buffer[x][y]!=TRANSPARENT)
+        {
+            if(x<x_min)x_min=x;
+            if(x>x_max)x_max=x;
+            if(y<y_min)y_min=y;
+            if(y>y_max)y_max=y;
+        }
+    }
+    if(x_min>=x_max||y_min>=y_max)
+    {
+    *x_ptr=0;
+    *y_ptr=0;
+    *width_ptr=1;
+    *height_ptr=1;
+    }
+    else
+    {
+    *x_ptr=x_min;
+    *y_ptr=y_min;
+    *width_ptr=x_max-x_min+1;
+    *height_ptr=y_max-y_min+1;
+    }
+}
+
+
 image_t* renderer_get_image()
 {
+int b_x,b_y,b_w,b_h;
+renderer_get_image_bounds(&b_x,&b_y,&b_w,&b_h);
+
+
 image_t* image=malloc(sizeof(image_t));
-image->width=FRAME_BUFFER_SIZE;
-image->height=FRAME_BUFFER_SIZE;
-image->x_offset=-FRAME_BUFFER_SIZE/2;
-image->y_offset=-FRAME_BUFFER_SIZE/2;
+image->width=b_w;
+image->height=b_h;
+image->x_offset=b_x-FRAME_BUFFER_SIZE/2;
+image->y_offset=b_y-FRAME_BUFFER_SIZE/2;
 image->data=malloc(FRAME_BUFFER_SIZE*sizeof(char*));
 image->flags=5;
 int x,y;
-    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    for(y=0;y<image->height;y++)
     {
     image->data[y]=malloc(FRAME_BUFFER_SIZE);
-        for(x=0;x<FRAME_BUFFER_SIZE;x++)
+        for(x=0;x<image->width;x++)
         {
+        //Compute coordinates of this image pixel in framebuffer
+        int fb_x=x+b_x;
+        int fb_y=y+b_y;
         //Find the section index with the nearest average luminance
-        uint8_t section_index=(uint8_t)(0.5+(luminance_buffer[x][y]-LUMINANCE_REGRESSION_INTERCEPT)/LUMINANCE_REGRESSION_GRADIENT);
+        uint8_t section_index=(uint8_t)(0.5+(luminance_buffer[fb_x][fb_y]-LUMINANCE_REGRESSION_INTERCEPT)/LUMINANCE_REGRESSION_GRADIENT);
         //Clamp values within the correct rance
             if(section_index<0)section_index=0;
             else if(section_index>11)section_index=11;
 
         //Apply floyd-steinberg dithering. Transparent pixels have no error so ignore them
-            if(color_buffer[x][y]!=TRANSPARENT)
+            if(color_buffer[fb_x][fb_y]!=TRANSPARENT)
             {
             float final_luminance=section_index*LUMINANCE_REGRESSION_GRADIENT+LUMINANCE_REGRESSION_INTERCEPT;
-            float error=luminance_buffer[x][y]-final_luminance;
-                if(x<FRAME_BUFFER_SIZE-1)luminance_buffer[x+1][y  ]+=error*7.0/16.0;
-                if(x>0&&y<FRAME_BUFFER_SIZE-1)luminance_buffer[x-1][y+1]+=error*3.0/16.0;
-                if(y<FRAME_BUFFER_SIZE-1)luminance_buffer[x  ][y+1]+=error*5.0/16.0;
-                if(x<FRAME_BUFFER_SIZE-1&&y<FRAME_BUFFER_SIZE-1)luminance_buffer[x+1][y+1]+=error*1.0/16.0;
+            float error=luminance_buffer[fb_x][fb_y]-final_luminance;
+                if(fb_x<FRAME_BUFFER_SIZE-1)luminance_buffer[fb_x+1][fb_y  ]+=error*7.0/16.0;
+                if(fb_x>0&&y<FRAME_BUFFER_SIZE-1)luminance_buffer[fb_x-1][fb_y+1]+=error*3.0/16.0;
+                if(fb_y<FRAME_BUFFER_SIZE-1)luminance_buffer[fb_x  ][fb_y+1]+=error*5.0/16.0;
+                if(fb_x<FRAME_BUFFER_SIZE-1&&fb_y<FRAME_BUFFER_SIZE-1)luminance_buffer[fb_x+1][fb_y+1]+=error*1.0/16.0;
             }
         //Calculate final palette index for this pixel
-        image->data[y][x]=palette_remap_section_index(color_buffer[x][y],section_index);
+        image->data[y][x]=palette_remap_section_index(color_buffer[fb_x][fb_y],section_index);
         }
     }
 return image;
