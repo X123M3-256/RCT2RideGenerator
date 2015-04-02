@@ -34,6 +34,7 @@ editor->label=gtk_label_new(label);
     editor->spin_button=gtk_spin_button_new_with_range(0,65535,1);
     break;
     }
+gtk_widget_set_sensitive(editor->spin_button,FALSE);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->spin_button,FALSE,FALSE,1);
 g_signal_connect(editor->spin_button,"value-changed",G_CALLBACK(value_editor_changed),editor);
@@ -52,6 +53,7 @@ uint32_t value=0;
     value=*((uint16_t*)value_ptr);
     break;
     }
+gtk_widget_set_sensitive(editor->spin_button,TRUE);
 gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button),value);
 }
 

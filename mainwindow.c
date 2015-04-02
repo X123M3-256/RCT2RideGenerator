@@ -366,6 +366,7 @@ editor->track_type=NULL;
 editor->container=gtk_hbox_new(FALSE,1);
 editor->label=gtk_label_new("Track type:");
 editor->select=gtk_combo_box_text_new();
+gtk_widget_set_sensitive(editor->select,FALSE);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->select,FALSE,FALSE,1);
     for(i=0;i<NUM_RIDE_TYPES;i++)
@@ -379,6 +380,7 @@ void track_type_editor_set_track_type(track_type_editor_t* editor,uint8_t* track
 {
 int i;
 editor->track_type=track_type;
+gtk_widget_set_sensitive(editor->select,TRUE);
     for(i=0;i<NUM_RIDE_TYPES;i++)
     {
         if(ride_type_by_index(i)->id==*track_type)
@@ -419,6 +421,7 @@ checkbox->flags=NULL;
 checkbox->flag=flag;
 checkbox->label=gtk_label_new(label);
 checkbox->checkbox=gtk_check_button_new();
+gtk_widget_set_sensitive(checkbox->checkbox,FALSE);
 gtk_table_resize(GTK_TABLE(editor->table),editor->num_checkboxes,2);
 gtk_table_attach_defaults(GTK_TABLE(editor->table),checkbox->label,0,1,editor->num_checkboxes-1,editor->num_checkboxes);
 gtk_table_attach_defaults(GTK_TABLE(editor->table),checkbox->checkbox,1,2,editor->num_checkboxes-1,editor->num_checkboxes);
@@ -432,6 +435,7 @@ editor->flags=flags;
     for(i=0;i<editor->num_checkboxes;i++)
     {
     editor->flag_checkboxes[i]->flags=flags;
+    gtk_widget_set_sensitive(editor->flag_checkboxes[i]->checkbox,TRUE);
         if((*flags)&editor->flag_checkboxes[i]->flag)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(editor->flag_checkboxes[i]->checkbox),TRUE);
         else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(editor->flag_checkboxes[i]->checkbox),FALSE);
     }
@@ -464,6 +468,7 @@ editor->car_type=NULL;
 editor->container=gtk_hbox_new(FALSE,1);
 editor->label=gtk_label_new(label);
 editor->car_select=gtk_combo_box_text_new();
+gtk_widget_set_sensitive(editor->car_select,FALSE);
 gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),"Default");
     for(i=0;i<NUM_CARS;i++)
     {
@@ -480,6 +485,7 @@ return editor;
 void car_type_editor_set_car_type(car_type_editor_t* editor,uint8_t* car_type)
 {
 editor->car_type=car_type;
+gtk_widget_set_sensitive(editor->car_select,TRUE);
     switch(*car_type)
     {
     case 0xFF:
