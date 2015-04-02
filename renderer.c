@@ -102,6 +102,17 @@ int x,y;
     }
 }
 
+void renderer_clear_color_buffer()
+{
+int x,y;
+    for(x=0;x<FRAME_BUFFER_SIZE;x++)
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+    color_buffer[x][y]=TRANSPARENT;
+    luminance_buffer[x][y]=0;
+    }
+}
+
 
 //Fragment shader
 float shade_fragment(Vector normal)
