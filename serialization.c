@@ -67,6 +67,8 @@ json_t* root=json_object();
 
 json_object_set_new(root,"name",json_string(model->name));
 
+json_object_set_new(root,"is_rider",json_integer(model->is_rider));
+
 json_t* vertices=json_array();
     for(i=0;i<model->num_vertices;i++)
     {
@@ -121,6 +123,7 @@ json_t* vertices=json_object_get(json,"vertices");
 json_t* normals=json_object_get(json,"normals");
 json_t* faces=json_object_get(json,"faces");
 json_t* transform=json_object_get(json,"transform");
+json_t* is_rider=json_object_get(json,"is_rider");
 assert(vertices!=NULL&&normals!=NULL&&faces!=NULL);
 //Allocate model
 model_t* model=malloc(sizeof(model_t));
@@ -134,6 +137,8 @@ model->normals=malloc(model->num_normals*sizeof(Vector));
 model->faces=malloc(model->num_faces*sizeof(face_t));
     if(transform)model->transform=matrix_deserialize(transform);
     else model->transform=MatrixIdentity();
+    if(is_rider)model->is_rider=json_integer_value(is_rider);
+    else model->is_rider=0;
 model->num_lines=0;
 model->lines=NULL;
     for(i=0;i<model->num_vertices;i++)

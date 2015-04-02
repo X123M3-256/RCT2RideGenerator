@@ -125,6 +125,7 @@ model_t* model_new()
 {
 model_t* model=malloc(sizeof(model_t));
 model->name=NULL;
+model->is_rider=0;
 model->num_faces=0;
 model->num_normals=0;
 model->num_vertices=0;

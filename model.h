@@ -21,6 +21,7 @@ typedef struct
 {
 char* name;
 Matrix transform;
+unsigned short is_rider;
 unsigned short num_vertices;
 unsigned short num_normals;
 unsigned short num_lines;
