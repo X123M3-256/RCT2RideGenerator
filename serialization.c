@@ -124,7 +124,11 @@ json_t* normals=json_object_get(json,"normals");
 json_t* faces=json_object_get(json,"faces");
 json_t* transform=json_object_get(json,"transform");
 json_t* is_rider=json_object_get(json,"is_rider");
-assert(vertices!=NULL&&normals!=NULL&&faces!=NULL);
+    if(vertices==NULL||normals==NULL||faces==NULL)
+    {
+    fprintf(stderr,"Failed loading model because one or more of the vertex,normal,and face arrays are missing\n");
+    return NULL;
+    }
 //Allocate model
 model_t* model=malloc(sizeof(model_t));
     if(name)model->name=strdup(json_string_value(name));
@@ -224,6 +228,12 @@ json_t* objects=json_object_get(json,"objects");
     {
     json_t* object_data=json_array_get(objects,i);
     int index=json_integer_value(json_array_get(object_data,0));
+        if(index>=num_models)
+        {
+        fprintf(stderr,"Failed loading animation because model index is out of range\n");
+        animation_free(animation);
+        return NULL;
+        }
     int object=animation_add_object(animation,model_list[index]);
     int parent=json_integer_value(json_array_get(object_data,1));
     animation->objects[object].parent_index=parent;
@@ -358,6 +368,12 @@ json_t* models=json_object_get(json,"models");
         for(i=0;i<json_array_size(models);i++)
         {
         model_t* model=model_deserialize(json_array_get(models,i));
+            if(model==NULL)
+            {
+            fprintf(stderr,"Failed loading project because one of its models is invalid\n");
+            project_free(project);
+            return NULL;
+            }
         project_add_model(project,model);
         }
     }
@@ -371,7 +387,16 @@ json_t* cars=json_object_get(json,"cars");
         {
         //Animation
         json_t* anim=json_object_get(car,"animation");
-            if(anim!=NULL)project->cars[i].animation=animation_deserialize(anim,project->models,project->num_models);
+            if(anim!=NULL)
+            {
+            project->cars[i].animation=animation_deserialize(anim,project->models,project->num_models);
+                if(project->cars[i].animation==NULL)
+                {
+                fprintf(stderr,"Failed loading project because an animation is invalid\n");
+                project_free(project);
+                return NULL;
+                }
+            }
             else project->cars[i].animation=animation_new();
         //Flags
         json_t* flags=json_object_get(car,"flags");
@@ -392,14 +417,17 @@ return project;
 project_t* project_load(const char* filename)
 {
 json_t* file=json_load_file(filename,0,NULL);
-    if(file==NULL)return NULL;
+    if(file==NULL)
+    {
+    fprintf(stderr,"Failed loading project because file is not valid JSON\n");
+    return NULL;
+    }
 project_t* project=project_deserialize(file);
 json_delete(file);
 return project;
 }
 void project_save(const char* filename,project_t* project)
 {
-int i;
 json_t* json=project_serialize(project);
 json_dump_file(json,filename,0);
 json_delete(json);
