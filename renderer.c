@@ -91,7 +91,7 @@ int x,y;
         int fb_x=x+b_x;
         int fb_y=y+b_y;
         //Find the section index with the nearest average luminance
-        uint8_t section_index=(uint8_t)(0.5+(luminance_buffer[fb_x][fb_y]-LUMINANCE_REGRESSION_INTERCEPT)/LUMINANCE_REGRESSION_GRADIENT);
+        int section_index=0.5+(luminance_buffer[fb_x][fb_y]-LUMINANCE_REGRESSION_INTERCEPT)/LUMINANCE_REGRESSION_GRADIENT;
         //Clamp values within the correct rance
             if(section_index<0)section_index=0;
             else if(section_index>11)section_index=11;
@@ -107,7 +107,7 @@ int x,y;
                 if(fb_x<FRAME_BUFFER_SIZE-1&&fb_y<FRAME_BUFFER_SIZE-1)luminance_buffer[fb_x+1][fb_y+1]+=error*1.0/16.0;
             }
         //Calculate final palette index for this pixel
-        image->data[y][x]=palette_remap_section_index(color_buffer[fb_x][fb_y],section_index);
+        image->data[y][x]=palette_remap_section_index(color_buffer[fb_x][fb_y],(uint8_t)section_index);
         }
     }
 return image;
@@ -387,7 +387,7 @@ int i;
 }
 void transform_vectors(Matrix transform,Vector* source,Vector* dest,unsigned int num,float w)
 {
-int i;
+unsigned int i;
     for(i=0;i<num;i++)
     {
     dest[i].X=source[i].X*transform.Data[0]+source[i].Y*transform.Data[1]+source[i].Z*transform.Data[2]+w*transform.Data[3];
