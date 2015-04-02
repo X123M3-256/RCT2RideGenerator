@@ -77,6 +77,7 @@ model_viewer_t* model_viewer;
 color_selector_t* color_selector;
 
 GtkWidget* dialog;
+GtkWidget* paint_all;
 GtkWidget* is_rider;
 }model_dialog_t;
 

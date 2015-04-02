@@ -476,6 +476,14 @@ face_t* face=renderer_get_face_by_point(dialog->model,dialog->model_viewer->mode
     }
 }
 
+static void model_dialog_paint_all(GtkWidget *widget,gpointer user_data)
+{
+model_dialog_t* dialog=(model_dialog_t*)user_data;
+int i;
+    for(i=0;i<dialog->model->num_faces;i++)dialog->model->faces[i].color=dialog->color;
+model_viewer_render_preview(dialog->model_viewer);
+}
+
 static void model_dialog_is_rider_changed(GtkWidget* widget, gpointer data)
 {
 model_dialog_t* dialog=(model_dialog_t*)data;
@@ -548,9 +556,17 @@ dialog->model_viewer=model_viewer_new();
 model_viewer_set_model(dialog->model_viewer,model);
 gtk_box_pack_start(GTK_BOX(hbox),dialog->model_viewer->container,FALSE,FALSE,2);
 
+GtkWidget* paint_vbox=gtk_vbox_new(FALSE,2);
+
 dialog->color_selector=color_selector_new();
 color_selector_set_color(dialog->color_selector,&(dialog->color));
-gtk_box_pack_start(GTK_BOX(hbox),dialog->color_selector->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(paint_vbox),dialog->color_selector->container,TRUE,TRUE,2);
+
+dialog->paint_all=gtk_button_new_with_label("Paint all");
+g_signal_connect(dialog->paint_all,"clicked",G_CALLBACK(model_dialog_paint_all),dialog);
+gtk_box_pack_start(GTK_BOX(paint_vbox),dialog->paint_all,FALSE,FALSE,2);
+
+gtk_box_pack_start(GTK_BOX(hbox),paint_vbox,FALSE,FALSE,2);
 
 g_signal_connect(dialog->model_viewer->image_viewer->container,"motion_notify_event",G_CALLBACK(model_dialog_paint_model),dialog);
 g_signal_connect(dialog->model_viewer->image_viewer->container,"button_press_event",G_CALLBACK(model_dialog_preview_pressed),dialog);
