@@ -392,6 +392,7 @@ return project;
 project_t* project_load(const char* filename)
 {
 json_t* file=json_load_file(filename,0,NULL);
+    if(file==NULL)return NULL;
 project_t* project=project_deserialize(file);
 json_delete(file);
 return project;
