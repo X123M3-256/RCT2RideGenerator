@@ -11,6 +11,7 @@ animation_t* animation_new()
 {
 animation_t* animation=malloc(sizeof(animation_t));
 animation->num_frames=1;
+animation->num_riders=0;
 animation->num_objects=0;
 return animation;
 }
@@ -43,8 +44,10 @@ animation->objects[animation->num_objects].parent_index=-1;
     transform->rotation.Z=0;
     transform->transform=MatrixIdentity();
     }
+    if(model->is_rider)animation->num_riders++;
 return animation->num_objects++;
 }
+
 void animation_update_transform(object_transform_t* transform,Vector position,Vector rotation)
 {
 transform->position=position;
@@ -59,6 +62,7 @@ void animation_update_parent(animation_t* animation,int object,int parent)
     if(parent>=0&&parent<animation->num_objects)animation->objects[object].parent_index=parent;
     else animation->objects[object].parent_index=-1;
 }
+
 void animation_render_frame(animation_t* animation,int frame,Matrix model_view)
 {
 int i;
@@ -66,14 +70,64 @@ renderer_clear_buffers();
     for(i=0;i<animation->num_objects;i++)
     {
     Matrix transform=animation->frames[frame][i].transform;
+    //Parenting code not currently used
+    /*
     int cur_object_index=i;
         while((cur_object_index=animation->objects[cur_object_index].parent_index)!=-1)
         {
         transform=MatrixMultiply(animation->frames[frame][cur_object_index].transform,transform);
         }
+    */
     renderer_render_model(animation->objects[i].model,MatrixMultiply(model_view,transform));
     }
 }
+
+render_data_t animation_split_render_begin(animation_t* animation,int frame,Matrix model_view)
+{
+int i;
+render_data_t data;
+data.cur_object=0;
+data.frame=frame;
+data.model_view=model_view;
+
+renderer_clear_buffers();
+    for(i=0;i<animation->num_objects;i++)
+    {
+        if(!animation->objects[i].model->is_rider)
+        {
+        Matrix transform=animation->frames[frame][i].transform;
+        renderer_render_model(animation->objects[i].model,MatrixMultiply(model_view,transform));
+        }
+    }
+return data;
+}
+
+int animation_split_render_render_rider(animation_t* animation,int frame,Matrix model_view,int cur_object)
+{
+    while(cur_object<animation->num_objects)
+    {
+        if(animation->objects[cur_object].model->is_rider)
+        {
+        Matrix transform=animation->frames[frame][cur_object].transform;
+        renderer_render_model(animation->objects[cur_object].model,MatrixMultiply(model_view,transform));
+        cur_object++;
+        break;
+        }
+    cur_object++;
+    }
+return cur_object;
+}
+
+void animation_split_render_next_image(animation_t* animation,render_data_t* data)
+{
+renderer_clear_color_buffer();
+//Render pair of riders
+data->cur_object=animation_split_render_render_rider(animation,data->frame,data->model_view,data->cur_object);
+data->cur_object=animation_split_render_render_rider(animation,data->frame,data->model_view,data->cur_object);
+}
+
+
+
 void animation_free(animation_t* animation)
 {
 free(animation);
