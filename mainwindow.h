@@ -102,6 +102,8 @@ typedef struct
 {
 project_t* project;
 
+string_editor_t* name_editor;
+string_editor_t* description_editor;
 header_editor_t* header_editor;
 
 GtkWidget* window;

@@ -405,9 +405,10 @@ int i;
 void main_window_set_project(main_window_t* main_window,project_t* project)
 {
 main_window->project=project;
+string_editor_set_string(main_window->name_editor,&(project->name));
+string_editor_set_string(main_window->description_editor,&(project->description));
 header_editor_set_project(main_window->header_editor,project);
 main_window_populate_model_menu(main_window);
-//main_window_populate_animation_menu(main_window);
 }
 static void main_window_new_project(GtkWidget* widget,gpointer data)
 {
@@ -507,6 +508,12 @@ main_window->main_vbox=gtk_vbox_new(FALSE,5);
 gtk_container_add(GTK_CONTAINER(main_window->window),main_window->main_vbox);
 
 main_window_build_menus(main_window);
+
+main_window->name_editor=string_editor_new("Name:");
+gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->name_editor->container,FALSE,FALSE,2);
+
+main_window->description_editor=string_editor_new("Description:");
+gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->description_editor->container,FALSE,FALSE,2);
 
 main_window->header_editor=header_editor_new();
 gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->header_editor->container,FALSE,FALSE,2);
