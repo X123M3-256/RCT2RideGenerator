@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include "palette.h"
 #include "renderer.h"
 #include "animation.h"
 
@@ -123,6 +124,7 @@ void animation_split_render_next_image(animation_t* animation,render_data_t* dat
 renderer_clear_color_buffer();
 //Render pair of riders
 data->cur_object=animation_split_render_render_rider(animation,data->frame,data->model_view,data->cur_object);
+renderer_remap_color(COLOR_REMAP_1,COLOR_REMAP_2);
 data->cur_object=animation_split_render_render_rider(animation,data->frame,data->model_view,data->cur_object);
 }
 

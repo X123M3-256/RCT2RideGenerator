@@ -157,6 +157,15 @@ int x,y;
     }
 }
 
+void renderer_remap_color(uint8_t source,uint8_t dest)
+{
+int x,y;
+    for(x=0;x<FRAME_BUFFER_SIZE;x++)
+    for(y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+        if(color_buffer[x][y]==source)color_buffer[x][y]=dest;
+    }
+}
 
 //Fragment shader
 float shade_fragment(Vector normal)
