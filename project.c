@@ -6,6 +6,10 @@
 project_t* project_new()
 {
 project_t* project=malloc(sizeof(project_t));
+project->name=malloc(13);
+project->description=malloc(14);
+strcpy(project->name,"Unnamed ride");
+strcpy(project->description,"No description");
 project->track_type=0x33;//Default to B&M track
 project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
@@ -37,6 +41,8 @@ int i;
     for(i=0;i<project->num_models;i++)model_free(project->models[i]);
     for(i=0;i<NUM_CARS;i++)animation_free(project->cars[i].animation);
 free(project->models);
+free(project->name);
+free(project->description);
 free(project);
 }
 
@@ -255,7 +261,12 @@ object_t* project_export_dat(project_t* project)
 int i;
 object_t* object=object_new_ride();
 object->ride_header->track_style=project->track_type;
-
+//Set strings
+char capacity[256];
+sprintf(capacity,"%d passengers per car",project->cars[project->car_types[CAR_INDEX_DEFAULT]].animation->num_riders);
+string_table_set_string_by_language(object->string_tables[STRING_TABLE_NAME],LANGUAGE_ENGLISH_UK,project->name);
+string_table_set_string_by_language(object->string_tables[STRING_TABLE_DESCRIPTION],LANGUAGE_ENGLISH_UK,project->description);
+string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY],LANGUAGE_ENGLISH_UK,capacity);
 //Set car types
 object->ride_header->car_types[CAR_INDEX_DEFAULT]=project->car_types[CAR_INDEX_DEFAULT];
 object->ride_header->car_types[CAR_INDEX_FRONT]=project->car_types[CAR_INDEX_FRONT];
