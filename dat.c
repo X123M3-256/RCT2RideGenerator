@@ -7,14 +7,14 @@
 /*#include "renderer.h"*/
 #include "dat.h"
 
-
+/*
 typedef struct
 {
 uint8_t* data;
 uint32_t size;
 uint32_t allocated;
 }buffer_t;
-
+*/
 buffer_t* buffer_new()
 {
 buffer_t* buffer=malloc(sizeof(buffer_t));
@@ -811,12 +811,11 @@ int filename_length=strlen(filename);
 int start_index=filename_length;
 int end_index=filename_length;
     while(filename[start_index]!='/'&&filename[start_index]!='\\')start_index--;
-start_index++;
+    start_index++;
     while(filename[end_index]!='.'&&end_index>start_index)end_index--;
 /*If there's no extension, set end_index to the end of the file*/
     if(start_index==end_index)end_index=filename_length-1;
     else end_index--;
-
 /*Check filename length*/
     if(end_index-start_index>8)
     {
@@ -849,7 +848,10 @@ header[0]=0x00;
 /*Write filename in header*/
 uint8_t* header_filename=header+4;
 memset(header_filename,' ',8);
-    for(i=start_index;i<=end_index;i++)*header_filename=toupper(filename[i]);
+    for(i=start_index;i<=end_index;i++)
+    {
+    header_filename[i-start_index]=toupper(filename[i]);
+    }
 /*Specify that data is compressed*/
 header[0x10]=1;
 /*Calculate checksum*/
@@ -881,51 +883,24 @@ ride_structures_free(object->optional);
 image_list_free(object->images);
 }
 
-/*
 
 
-
-void FreeRideStructures(RideStructures* structures)
+buffer_t* track_decode(char* filename)
 {
-int i;
-free(structures->Structures);
-    for(i=0;i<4;i++)free(structures->PeepPositions[i].Positions);
-free(structures);
+FILE* file=fopen(filename,"rb");
+fseek(file,0,SEEK_END);
+int file_size=ftell(file);
+fseek(file,SEEK_SET,0);
+/*Read data into array*/
+uint8_t* encoded_bytes=malloc(file_size);
+fread(encoded_bytes,file_size,1,file);
+fclose(file);
+return decompress_data(encoded_bytes,file_size);
 }
-void FreeDat(ObjectFile* file)
+void track_encode(buffer_t* data,char* filename)
 {
-/*Free object header
-free(file->ObjectHeader);
-/*Free optional
-FreeRideStructures((RideStructures*)file->Optional);
-
-/*Free string tables
-int i,j;
-    for(i=0;i<3;i++)
-    {
-    int StringNum=0;
-        while(file->StringTables[i][StringNum]!=NULL)
-        {
-        free(file->StringTables[i][StringNum]->Str);
-        free(file->StringTables[i][StringNum]);
-        StringNum++;
-        }
-    free(file->StringTables[i]);
-    }
-
-/*Free images
-    for(i=0;i<file->NumImages;i++)
-    {
-        if(file->Images[i]->Data!=NULL)
-        {
-            for(j=0;j<file->Images[i]->Height;j++)
-            {
-            if(file->Images[i]->Data[j]!=NULL)free(file->Images[i]->Data[j]);
-            }
-        free(file->Images[i]->Data);
-        }
-    }
-free(file->Images);
-free(file);
+buffer_t* buffer=compress_data(data->data,data->size);
+FILE* file=fopen(filename,"w");
+fwrite(buffer->data,buffer->size,1,file);
+fclose(file);
 }
-*/
