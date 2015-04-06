@@ -53,7 +53,8 @@ enum
 {
 RIDE_WET=0x00000100u,
 RIDE_COVERED=0x00000400u,
-RIDE_SEPERATE=0x00001000u
+RIDE_SEPERATE=0x00001000u,
+RIDE_ENABLE_OR_ELSE=0x00002000u //Not setting this prevents track designs from showing in the window
 }ride_flags_t;
 
 enum
@@ -156,7 +157,12 @@ CATEGORY_WATER_RIDE
 #define TRACK_HALF_LOOP_UNINVERT 0x0020000000000000l
 #define TRACK_HALF_LOOP_INVERT 0x0040000000000000l
 
-
+typedef struct
+{
+uint8_t* data;
+uint32_t size;
+uint32_t allocated;
+}buffer_t;
 
 
 
@@ -276,5 +282,6 @@ char* object_get_string(object_t* object,string_table_index_t table_num,language
 void object_set_string(object_t* object,string_table_index_t table_num,language_t language,char* new_string);
 /*void RenderSprites(object_t* file,Animation* animations[5]);*/
 void object_free(object_t* object);
-
+void track_encode(buffer_t* data,char* filename);
+buffer_t* track_decode(char* file);
 #endif /*BACKEND_H_INCLUDED*/
