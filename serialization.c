@@ -261,6 +261,11 @@ json_t* project_serialize(project_t* project)
 {
 int i;
 json_t* json=json_object();
+//Serialize strings
+json_t* name=json_string(project->name);
+json_object_set_new(json,"name",name);
+json_t* description=json_string(project->description);
+json_object_set_new(json,"description",description);
 //Serialize flags
 json_t* flags=json_integer(project->flags);
 json_object_set_new(json,"flags",flags);
@@ -331,6 +336,19 @@ project_t* project_deserialize(json_t* json)
 {
 int i;
 project_t* project=project_new();
+//Deserialize strings
+json_t* name=json_object_get(json,"name");
+json_t* description=json_object_get(json,"description");
+    if(name!=NULL)
+    {
+    project->name=realloc(project->name,json_string_length(name)+1);
+    strcpy(project->name,json_string_value(name));
+    }
+    if(description!=NULL)
+    {
+    project->description=realloc(project->description,json_string_length(description)+1);
+    strcpy(project->description,json_string_value(description));
+    }
 //Deserialize flags
 json_t* flags=json_object_get(json,"flags");
     if(flags!=NULL)project->flags=json_integer_value(flags);
