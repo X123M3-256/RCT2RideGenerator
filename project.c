@@ -260,7 +260,9 @@ object_t* project_export_dat(project_t* project)
 {
 int i;
 object_t* object=object_new_ride();
+
 object->ride_header->track_style=project->track_type;
+
 //Set strings
 char capacity[256];
 sprintf(capacity,"%d passengers per car",project->cars[project->car_types[CAR_INDEX_DEFAULT]].animation->num_riders);
@@ -268,14 +270,15 @@ string_table_set_string_by_language(object->string_tables[STRING_TABLE_NAME],LAN
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_DESCRIPTION],LANGUAGE_ENGLISH_UK,project->description);
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY],LANGUAGE_ENGLISH_UK,capacity);
 //Set car types
+
 object->ride_header->car_types[CAR_INDEX_DEFAULT]=project->car_types[CAR_INDEX_DEFAULT];
 object->ride_header->car_types[CAR_INDEX_FRONT]=project->car_types[CAR_INDEX_FRONT];
 object->ride_header->car_types[CAR_INDEX_SECOND]=project->car_types[CAR_INDEX_SECOND];
 object->ride_header->car_types[CAR_INDEX_THIRD]=project->car_types[CAR_INDEX_THIRD];
 object->ride_header->car_types[CAR_INDEX_REAR]=project->car_types[CAR_INDEX_REAR];
 
+object->ride_header->flags=project->flags|RIDE_ENABLE_OR_ELSE;
 
-object->ride_header->flags=project->flags;
 //Set categories
 object->ride_header->categories[0]=2;
 object->ride_header->categories[1]=project->flags&RIDE_WET?0x3:0xFF;
