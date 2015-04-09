@@ -55,6 +55,7 @@ typedef struct
 uint8_t* color;
 GtkWidget* container;
 GtkWidget* remap_tools;
+GtkWidget* peep_tools;
 GtkWidget* color_tools;
 color_select_tool_t** tools;
 }color_selector_t;

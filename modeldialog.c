@@ -377,11 +377,13 @@ color_selector_t* selector=malloc(sizeof(color_selector_t));
 selector->color=NULL;
 selector->container=gtk_tool_palette_new();
 selector->remap_tools=gtk_tool_item_group_new("Remap colors");
+selector->peep_tools=gtk_tool_item_group_new("Peep colors");
 selector->color_tools=gtk_tool_item_group_new("Other colors");
 gtk_container_add(GTK_CONTAINER(selector->container),selector->remap_tools);
+gtk_container_add(GTK_CONTAINER(selector->container),selector->peep_tools);
 gtk_container_add(GTK_CONTAINER(selector->container),selector->color_tools);
 
-selector->tools=malloc(35*sizeof(color_select_tool_t*));
+selector->tools=malloc(39*sizeof(color_select_tool_t*));
 
 selector->tools[0]=color_select_tool_new(COLOR_REMAP_1);
 selector->tools[1]=color_select_tool_new(COLOR_REMAP_2);
@@ -389,11 +391,20 @@ selector->tools[2]=color_select_tool_new(COLOR_REMAP_3);
 gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->remap_tools),selector->tools[0]->tool_item,0);
 gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->remap_tools),selector->tools[1]->tool_item,1);
 gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->remap_tools),selector->tools[2]->tool_item,2);
+
+selector->tools[3]=color_select_tool_new(COLOR_PEEP_LEG);
+selector->tools[4]=color_select_tool_new(COLOR_PEEP_SKIN);
+selector->tools[5]=color_select_tool_new(COLOR_PEEP_REMAP_1);
+selector->tools[6]=color_select_tool_new(COLOR_PEEP_REMAP_2);
+gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),selector->tools[3]->tool_item,0);
+gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),selector->tools[4]->tool_item,1);
+gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),selector->tools[5]->tool_item,3);
+gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),selector->tools[6]->tool_item,4);
 int i;
     for(i=0;i<32;i++)
     {
-    selector->tools[3+i]=color_select_tool_new(i);
-    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->color_tools),selector->tools[3+i]->tool_item,i);
+    selector->tools[7+i]=color_select_tool_new(i);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->color_tools),selector->tools[7+i]->tool_item,i);
     }
 return selector;
 }
@@ -401,7 +412,7 @@ void color_selector_set_color(color_selector_t* selector,uint8_t* color)
 {
 int i;
 selector->color=color;
-    for(i=0;i<35;i++)
+    for(i=0;i<39;i++)
     {
     color_select_tool_set_color(selector->tools[i],color);
     }
@@ -409,11 +420,12 @@ selector->color=color;
 void color_selector_free(color_selector_t* selector)
 {
 int i;
-    for(i=0;i<35;i++)
+    for(i=0;i<39;i++)
     {
     color_select_tool_free(selector->tools[i]);
     }
 gtk_widget_destroy(selector->remap_tools);
+gtk_widget_destroy(selector->peep_tools);
 gtk_widget_destroy(selector->color_tools);
 gtk_widget_destroy(selector->container);
 free(selector->tools);
