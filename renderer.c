@@ -174,7 +174,7 @@ float shade_fragment(Vector normal)
 const Vector light_direction={sqrt(10.0)/5.0,-sqrt(10.0)/5.0,-sqrt(10.0)/5.0};
 float lambert=VectorDotProduct(normal,light_direction);
 if(lambert<0.0)lambert=0.0;
-float luminance=lambert*0.5+0.2;
+float luminance=lambert*0.5+0.275;
     if(luminance>1.0)return 1.0;
 return luminance;
 }
