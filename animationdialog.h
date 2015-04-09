@@ -47,6 +47,7 @@ GtkWidget* container;
 typedef struct
 {
 animation_t* animation;
+int selected_object;
 
 string_editor_t* name_editor;
 model_selector_t* model_selector;
