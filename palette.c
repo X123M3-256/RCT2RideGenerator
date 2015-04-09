@@ -1,6 +1,7 @@
 #include "palette.h"
 
 #include <stdio.h>
+#include <math.h>
 
 color_t palette[255]={
 {0,0,0,0},
@@ -261,7 +262,7 @@ color_t palette[255]={
 };
 
 
-uint8_t remap[32][12]={
+uint8_t remap[36][12]={
 {10,10,10,10,10,11,12,13,14,15,16,17},
 {10,11,12,13,14,15,16,17,18,19,20,21},
 {13,14,15,16,17,18,19,20,21,21,21,21},
@@ -293,7 +294,12 @@ uint8_t remap[32][12]={
 {166,167,168,169,170,171,172,173,174,175,176,177},
 {202,202,202,203,203,204,205,206,206,207,208,208},
 {202,203,204,205,206,207,208,209,210,211,212,213},
-{15,16,17,18,19,20,20,20,21,21,21,21}
+{15,16,17,18,19,20,20,20,21,21,21,21},
+//Special peep colors
+{108,109,110,111,112,113,114,115,116,116,117,117},//Skin
+{105,105,106,106,106,107,107,107,108,108,109,109},//Legs/Hair
+{243,244,245,246,246,247,247,248,248,248,249,250},//Remap1 -- These are darker than the normal remap colors
+{202,203,204,205,205,206,206,207,207,207,208,209},//Remap2  /
 };
 
 
@@ -313,12 +319,6 @@ return palette[index];
 }
 
 
-
-// GRAY VALUE ("brightness")
-float colfunc(float r, float g, float b)
-{
-return ;
-}
 
 /*Each color has 12 shades from dark to light (section_index above). This calculates the
 linear regression line between the luminance and the section index - that is, the best

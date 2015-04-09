@@ -3,10 +3,15 @@
 #include<stdint.h>
 #define PALETTE_SIZE 255
 
-#define COLOR_REMAP_1 32
-#define COLOR_REMAP_2 33
-#define COLOR_REMAP_3 34
-#define TRANSPARENT 35
+#define COLOR_PEEP_SKIN 32
+#define COLOR_PEEP_LEG 33
+#define COLOR_PEEP_REMAP_1 34
+#define COLOR_PEEP_REMAP_2 35
+
+#define COLOR_REMAP_1 36
+#define COLOR_REMAP_2 37
+#define COLOR_REMAP_3 38
+#define TRANSPARENT 39
 
 typedef struct
 {
