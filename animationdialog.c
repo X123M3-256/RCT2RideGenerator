@@ -374,6 +374,7 @@ int frame=dialog->animation_viewer->frame;
     }
     if(selected_object!=-1)
     {
+    dialog->selected_object=selected_object;
     object_transform_editor_set_object_transform(dialog->transform_editor,&(dialog->animation->frames[dialog->animation_viewer->frame][selected_object]));
     }
 }
