@@ -302,7 +302,7 @@ memset(cars_used,0,NUM_CARS);
         object->ride_header->cars[i].sprites=SPRITE_FLAT_SLOPE|SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKED_SLOPE_TRANSITION|SPRITE_BANKING|SPRITE_DIAGONAL_BANK_TRANSITION|SPRITE_DIAGONAL_SLOPE|SPRITE_SLOPE_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION|SPRITE_SLOPED_BANKED_TURN|SPRITE_VERTICAL_SLOPE;
             if(project->cars[i].animation->num_frames>=4)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
         object->ride_header->cars[i].riders=project->cars[i].animation->num_riders;
-        object->ride_header->cars[i].rider_pairs=0;
+        object->ride_header->cars[i].rider_pairs=0x80;
         object->ride_header->cars[i].rider_sprites=project->cars[i].animation->num_riders/2;
         }
     }
