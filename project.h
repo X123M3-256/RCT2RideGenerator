@@ -26,6 +26,7 @@ uint8_t maximum_cars;
 uint8_t zero_cars;
 uint8_t car_types[5];
 car_settings_t cars[4];
+image_t* preview_image;
 model_t** models;
 int num_models;
 }project_t;

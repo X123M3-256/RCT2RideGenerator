@@ -7,7 +7,7 @@ project_t* project_new()
 {
 project_t* project=malloc(sizeof(project_t));
 project->name=malloc(13);
-project->description=malloc(14);
+project->description=malloc(15);
 strcpy(project->name,"Unnamed ride");
 strcpy(project->description,"No description");
 project->track_type=0x33;//Default to B&M track
@@ -19,6 +19,7 @@ memset(project->car_types,0xFF,5);
 project->car_types[CAR_INDEX_DEFAULT]=0;
 project->models=NULL;
 project->num_models=0;
+project->preview_image=image_new(112,112,0);
 int i;
     for(i=0;i<NUM_CARS;i++)
     {
@@ -128,7 +129,7 @@ ride_header_t* header=object->ride_header;
 
 //Render preview images
 image_list_set_num_images(object->images,3);
-image_list_set_image(object->images,0,image_new(112,112,20));
+image_list_set_image(object->images,0,project->preview_image);
 image_list_set_image(object->images,1,image_new(1,1,0));
 image_list_set_image(object->images,2,image_new(1,1,0));
 
