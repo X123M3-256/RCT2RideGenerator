@@ -15,6 +15,7 @@ project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
 project->maximum_cars=8;
 project->zero_cars=0;
+project->car_icon_index=0;
 memset(project->car_types,0xFF,5);
 project->car_types[CAR_INDEX_DEFAULT]=0;
 project->models=NULL;
@@ -75,7 +76,6 @@ double step=2*3.141592654/num_frames;
 
     }
 }
-
 void render_loading(image_list_t* image_list,animation_t* animation,int base_frame,int sprites_per_image,int images)
 {
 int i,j;
@@ -121,7 +121,6 @@ int count=0;
     if(sprites&SPRITE_RESTRAINT_ANIMATION)count+=12;
 return count;
 }
-
 void project_render_sprites(project_t* project,object_t* object)
 {
 int i;
@@ -270,8 +269,8 @@ sprintf(capacity,"%d passengers per car",project->cars[project->car_types[CAR_IN
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_NAME],LANGUAGE_ENGLISH_UK,project->name);
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_DESCRIPTION],LANGUAGE_ENGLISH_UK,project->description);
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY],LANGUAGE_ENGLISH_UK,capacity);
-//Set car types
 
+//Set car types
 object->ride_header->car_types[CAR_INDEX_DEFAULT]=project->car_types[CAR_INDEX_DEFAULT];
 object->ride_header->car_types[CAR_INDEX_FRONT]=project->car_types[CAR_INDEX_FRONT];
 object->ride_header->car_types[CAR_INDEX_SECOND]=project->car_types[CAR_INDEX_SECOND];
@@ -287,6 +286,7 @@ object->ride_header->track_sections=0xFFFFFFFFFFFFFFFFl;
 object->ride_header->minimum_cars=project->minimum_cars;
 object->ride_header->maximum_cars=project->maximum_cars;
 object->ride_header->zero_cars=project->zero_cars;
+object->ride_header->car_icon_index=project->car_icon_index;
 
 unsigned char cars_used[NUM_CARS];
 memset(cars_used,0,NUM_CARS);
@@ -296,7 +296,7 @@ memset(cars_used,0,NUM_CARS);
         if(cars_used[i])
         {
         object->ride_header->cars[i].highest_rotation_index=31;
-        object->ride_header->cars[i].flags=project->cars[i].flags;
+        object->ride_header->cars[i].flags=project->cars[i].flags;//|0x11020000u;
         object->ride_header->cars[i].friction=project->cars[i].friction;
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
