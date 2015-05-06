@@ -205,6 +205,16 @@ flag_editor_add_checkbox(editor->flag_editor,"Enable remap color 3",CAR_ENABLE_R
 flag_editor_add_checkbox(editor->flag_editor,"No upstops",CAR_NO_UPSTOPS);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,1);
 
+editor->sprite_editor=flag_editor_new("Sprites");
+flag_editor_add_checkbox(editor->sprite_editor,"Gentle slopes",SPRITE_GENTLE_SLOPE);
+flag_editor_add_checkbox(editor->sprite_editor,"Steep slopes",SPRITE_STEEP_SLOPE);
+flag_editor_add_checkbox(editor->sprite_editor,"Vertical slopes/Loops",SPRITE_VERTICAL_SLOPE);
+flag_editor_add_checkbox(editor->sprite_editor,"Diagonal slopes",SPRITE_DIAGONAL_SLOPE);
+flag_editor_add_checkbox(editor->sprite_editor,"Banked turns",SPRITE_BANKING);
+flag_editor_add_checkbox(editor->sprite_editor,"Sloped banked turns",SPRITE_SLOPED_BANKED_TURN);
+flag_editor_add_checkbox(editor->sprite_editor,"Animated restraints",SPRITE_RESTRAINT_ANIMATION);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->sprite_editor->container,FALSE,FALSE,1);
+
 editor->spacing_editor=value_editor_new(VALUE_SIZE_WORD,"Spacing:");
 editor->friction_editor=value_editor_new(VALUE_SIZE_WORD,"Friction:");
 editor->z_value_editor=value_editor_new(VALUE_SIZE_BYTE,"Z Value:");
@@ -229,6 +239,7 @@ void car_editor_set_car(car_editor_t* editor,car_settings_t* car_settings)
 {
 editor->car_settings=car_settings;
 flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
+flag_editor_set_flags(editor->sprite_editor,&(car_settings->sprites));
 value_editor_set_value(editor->spacing_editor,&(car_settings->spacing));
 value_editor_set_value(editor->friction_editor,&(car_settings->friction));
 value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));

@@ -26,6 +26,7 @@ int i;
     {
     project->cars[i].animation=animation_new();
     project->cars[i].flags=0;
+    project->cars[i].sprites=SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKING|SPRITE_SLOPED_BANKED_TURN|SPRITE_DIAGONAL_SLOPE;
     project->cars[i].spacing=0x300;
     project->cars[i].z_value=8;
     project->cars[i].friction=0x2A8;
@@ -71,7 +72,7 @@ double step=2*3.141592654/num_frames;
     rotation_matrix.Data[10]=cos(rotation);
     rotation+=step;
 
-    //int animindex=0;/*(int)((2*(yaw+rotation)+pitch)*16.0/M_PI)%32;*/
+    //int animation_frame=0;/*(int)((2*(yaw+rotation)+pitch)*16.0/M_PI)%32;*/
     renderer_clear_buffers();
     render_data_t render_data=animation_split_render_begin(animation,0,MatrixMultiply(rotation_matrix,transform_matrix));
         for(j=0;j<images;j++)
@@ -306,8 +307,15 @@ memset(cars_used,0,NUM_CARS);
         object->ride_header->cars[i].friction=project->cars[i].friction;
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
-        object->ride_header->cars[i].sprites=SPRITE_FLAT_SLOPE|SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKED_SLOPE_TRANSITION|SPRITE_BANKING|SPRITE_DIAGONAL_BANK_TRANSITION|SPRITE_DIAGONAL_SLOPE|SPRITE_SLOPE_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION|SPRITE_SLOPED_BANKED_TURN|SPRITE_VERTICAL_SLOPE;
-            if(project->cars[i].animation->num_frames>=4)object->ride_header->cars[i].sprites|=SPRITE_RESTRAINT_ANIMATION;
+        //Some sprites ought be included if others are. Here we compute the minimum set of sprite flags needed that includes all the selected flags
+        object->ride_header->cars[i].sprites=project->cars[i].sprites|SPRITE_FLAT_SLOPE;
+            if(project->cars[i].sprites&SPRITE_VERTICAL_SLOPE)object->ride_header->cars[i].sprites|=SPRITE_STEEP_SLOPE;
+            if(project->cars[i].sprites&SPRITE_STEEP_SLOPE)object->ride_header->cars[i].sprites|=SPRITE_GENTLE_SLOPE;
+                if(project->cars[i].sprites&SPRITE_BANKING)
+                {
+                    if(project->cars[i].sprites&SPRITE_DIAGONAL_SLOPE)object->ride_header->cars[i].sprites|=SPRITE_DIAGONAL_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION;
+                    if(project->cars[i].sprites&SPRITE_GENTLE_SLOPE)object->ride_header->cars[i].sprites|=SPRITE_BANKED_SLOPE_TRANSITION|SPRITE_SLOPE_BANK_TRANSITION|SPRITE_SLOPED_BANK_TRANSITION|SPRITE_SLOPED_BANKED_TURN;
+                }
         object->ride_header->cars[i].riders=project->cars[i].animation->num_riders;
         object->ride_header->cars[i].rider_pairs=0x80;
         object->ride_header->cars[i].rider_sprites=project->cars[i].animation->num_riders/2;

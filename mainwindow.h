@@ -72,6 +72,7 @@ car_settings_t* car_settings;
 project_t* project;
 
 flag_editor_t* flag_editor;
+flag_editor_t* sprite_editor;
 value_editor_t* spacing_editor;
 value_editor_t* friction_editor;
 value_editor_t* z_value_editor;
