@@ -343,8 +343,32 @@ ride_structures_t* ride_structures_new()
 {
 int i;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
-structures->num_structures=0;
-structures->structures=NULL;
+structures->num_default_colors=8;
+structures->default_colors=malloc(2*sizeof(color_scheme_t));
+structures->default_colors[0].colors[0]=18;
+structures->default_colors[0].colors[1]=0;
+structures->default_colors[0].colors[2]=18;
+structures->default_colors[1].colors[0]=0;
+structures->default_colors[1].colors[1]=18;
+structures->default_colors[1].colors[2]=0;
+structures->default_colors[2].colors[0]=7;
+structures->default_colors[2].colors[1]=6;
+structures->default_colors[2].colors[2]=18;
+structures->default_colors[3].colors[0]=7;
+structures->default_colors[3].colors[1]=0;
+structures->default_colors[3].colors[2]=18;
+structures->default_colors[4].colors[0]=11;
+structures->default_colors[4].colors[1]=28;
+structures->default_colors[4].colors[2]=2;
+structures->default_colors[5].colors[0]=9;
+structures->default_colors[5].colors[1]=28;
+structures->default_colors[5].colors[2]=2;
+structures->default_colors[6].colors[0]=28;
+structures->default_colors[6].colors[1]=1;
+structures->default_colors[6].colors[2]=6;
+structures->default_colors[7].colors[0]=23;
+structures->default_colors[7].colors[1]=1;
+structures->default_colors[7].colors[2]=18;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;
@@ -357,16 +381,16 @@ ride_structures_t* ride_structures_load(uint8_t* bytes,uint32_t* pos_ptr)
 int i;
 int pos=*pos_ptr;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
-/*Sequence of 3 byte structures; I don't know why -1 means 32*/
-structures->num_structures=bytes[pos]==0xFF?32:bytes[pos];
-structures->structures=malloc(structures->num_structures*sizeof(struct3byte_t));
+/*Sequence of 3 byte structures representing the default color schemes; I don't know why -1 means 32*/
+structures->num_default_colors=bytes[pos]==0xFF?32:bytes[pos];
+structures->default_colors=malloc(structures->num_default_colors*sizeof(color_scheme_t));
 pos++;
 
-	for(i=0;i<structures->num_structures;i++)
+	for(i=0;i<structures->num_default_colors;i++)
     {
-    structures->structures[i].a=bytes[pos];
-    structures->structures[i].b=bytes[pos+1];
-    structures->structures[i].c=bytes[pos+2];
+    structures->default_colors[i].colors[0]=bytes[pos];
+    structures->default_colors[i].colors[1]=bytes[pos+1];
+    structures->default_colors[i].colors[2]=bytes[pos+2];
     pos+=3;
     }
 
@@ -397,13 +421,13 @@ void ride_structures_write(ride_structures_t* structures,buffer_t* buffer)
 {
 int i;
 /*Write number of 3 byte structures*/
-buffer_write(buffer,&structures->num_structures,1);
+buffer_write(buffer,&structures->num_default_colors,1);
 /*Write 3 byte structures*/
-    for(i=0;i<structures->num_structures;i++)
+    for(i=0;i<structures->num_default_colors;i++)
     {
-    buffer_write(buffer,&structures->structures[i].a,1);
-    buffer_write(buffer,&structures->structures[i].b,1);
-    buffer_write(buffer,&structures->structures[i].c,1);
+    buffer_write(buffer,&structures->default_colors[i].colors[0],1);
+    buffer_write(buffer,&structures->default_colors[i].colors[1],1);
+    buffer_write(buffer,&structures->default_colors[i].colors[2],1);
     }
 /*Write 4 byte peep positioning structures*/
     for(i=0;i<4;i++)

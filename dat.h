@@ -239,8 +239,8 @@ car_t cars[NUM_CARS];
 
 typedef struct
 {
-uint8_t a,b,c;
-}struct3byte_t;
+uint8_t colors[3];
+}color_scheme_t;
 
 typedef struct
 {
@@ -250,8 +250,8 @@ uint16_t num;
 
 typedef struct
 {
-struct3byte_t* structures;
-uint8_t num_structures;
+color_scheme_t* default_colors;
+uint8_t num_default_colors;
 peep_position_data_t peep_positions[4];
 }ride_structures_t;
 
