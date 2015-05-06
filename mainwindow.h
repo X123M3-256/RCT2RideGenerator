@@ -100,11 +100,21 @@ GtkWidget* container;
 
 typedef struct
 {
+image_t** image;
+
+image_viewer_t* preview_viewer;
+GtkWidget* set_preview;
+GtkWidget* container;
+}preview_editor_t;
+
+typedef struct
+{
 project_t* project;
 
 string_editor_t* name_editor;
 string_editor_t* description_editor;
 header_editor_t* header_editor;
+preview_editor_t* preview_editor;
 
 GtkWidget* window;
 GtkWidget* main_menu;

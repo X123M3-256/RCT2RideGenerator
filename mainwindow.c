@@ -8,6 +8,7 @@
 #include "project.h"
 #include "serialization.h"
 #include "ridetypes.h"
+#include "palette.h"
 
 
 
@@ -237,6 +238,7 @@ value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));
 header_editor_t* header_editor_new()
 {
 header_editor_t* editor=malloc(sizeof(header_editor_t));
+editor->project=NULL;
 editor->container=gtk_vbox_new(FALSE,2);
 
 
@@ -310,6 +312,72 @@ car_type_editor_set_car_type(editor->rear_car_editor,&(project->car_types[CAR_IN
     car_editor_set_project(editor->car_editors[i],project);
     car_editor_set_car(editor->car_editors[i],&(project->cars[i]));
     }
+}
+
+static void preview_editor_set_preview_pressed(GtkWidget* widget,gpointer data)
+{
+preview_editor_t* editor=(preview_editor_t*)data;
+
+char* filename=get_filename("Select preview image",GTK_FILE_CHOOSER_ACTION_OPEN);
+
+    if(filename==NULL)return;
+
+GError* error=NULL;
+GdkPixbuf* pixbuf=gdk_pixbuf_new_from_file(filename,&error);
+        if(!pixbuf)
+        {
+        show_error(error->message);
+        return;
+        }
+
+        if(gdk_pixbuf_get_width(pixbuf)!=112||gdk_pixbuf_get_height(pixbuf)!=112)
+        {
+        show_error("Preview images must be 112 by 112 pixels");
+        return;
+        }
+
+image_free(*(editor->image));
+image_t* image=image_new(112,112,0);
+//Set image from pixbuf
+int rowstride=gdk_pixbuf_get_rowstride(pixbuf);
+guchar* pixels=gdk_pixbuf_get_pixels(pixbuf);
+color_t color;
+int i,j;
+    for(i=0;i<112;i++)
+    {
+        for(j=0;j<112;j++)
+        {
+        color.red=pixels[j*3];
+        color.green=pixels[j*3+1];
+        color.blue=pixels[j*3+2];
+        image->data[i][j]=palette_index_from_color(color);
+        }
+    pixels+=rowstride;
+    }
+*(editor->image)=image;
+image_viewer_set_image(editor->preview_viewer,image);
+}
+
+preview_editor_t* preview_editor_new()
+{
+preview_editor_t* editor=malloc(sizeof(preview_editor_t));
+editor->image=NULL;
+editor->container=gtk_vbox_new(FALSE,2);
+
+editor->preview_viewer=image_viewer_new();
+gtk_box_pack_start(GTK_BOX(editor->container),editor->preview_viewer->container,FALSE,FALSE,2);
+
+editor->set_preview=gtk_button_new_with_label("Set preview image");
+g_signal_connect(editor->set_preview,"clicked",G_CALLBACK(preview_editor_set_preview_pressed),editor);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->set_preview,FALSE,FALSE,2);
+
+return editor;
+}
+
+void preview_editor_set_image(preview_editor_t* editor,image_t** image)
+{
+editor->image=image;
+image_viewer_set_image(editor->preview_viewer,*image);
 }
 
 
@@ -405,6 +473,7 @@ int i;
 void main_window_set_project(main_window_t* main_window,project_t* project)
 {
 main_window->project=project;
+preview_editor_set_image(main_window->preview_editor,&(project->preview_image));
 string_editor_set_string(main_window->name_editor,&(project->name));
 string_editor_set_string(main_window->description_editor,&(project->description));
 header_editor_set_project(main_window->header_editor,project);
@@ -509,6 +578,9 @@ gtk_container_add(GTK_CONTAINER(main_window->window),main_window->main_vbox);
 
 main_window_build_menus(main_window);
 
+main_window->preview_editor=preview_editor_new();
+gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->preview_editor->container,FALSE,FALSE,2);
+
 main_window->name_editor=string_editor_new("Name:");
 gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->name_editor->container,FALSE,FALSE,2);
 
@@ -521,22 +593,6 @@ gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->header_editor->c
 gtk_widget_show_all(main_window->window);
 
 return main_window;
-
-/*
-MainInterface->LeftVBox=gtk_vbox_new(FALSE,5);
-MainInterface->LowerHBox=gtk_hbox_new(FALSE,5);
-
-BuildMenus(MainInterface);
-BuildStringHandler(MainInterface);
-BuildHeaderEditor(MainInterface);
-
-GtkWidget* renderButton=gtk_button_new_with_label("Render Sprites");
-
-gtk_box_pack_start(GTK_BOX(MainInterface->LowerHBox),MainInterface->LeftVBox,TRUE,TRUE,0);
-gtk_box_pack_start(GTK_BOX(MainInterface->MainVBox),MainInterface->LowerHBox,TRUE,TRUE,0);
-
-BuildImageDisplay(MainInterface);
-*/
 }
 
 void main_window_free(main_window_t* main_window)
