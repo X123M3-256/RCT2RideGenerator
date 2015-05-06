@@ -118,12 +118,12 @@ preview_editor_t* preview_editor;
 
 GtkWidget* window;
 GtkWidget* main_menu;
-GtkWidget* main_vbox;
 GtkWidget* model_menu;
 GtkWidget* animation_menu;
-//;
-//GtkWidget* LeftVBox;
-//GtkWidget* LowerHBox;
+GtkWidget* main_vbox;
+GtkWidget* main_hbox;
+GtkWidget* left_vbox;
+
 }main_window_t;
 
 main_window_t* main_window_new();

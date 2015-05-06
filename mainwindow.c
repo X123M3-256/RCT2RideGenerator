@@ -578,17 +578,22 @@ gtk_container_add(GTK_CONTAINER(main_window->window),main_window->main_vbox);
 
 main_window_build_menus(main_window);
 
+main_window->main_hbox=gtk_hbox_new(FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->main_hbox,FALSE,FALSE,2);
+main_window->left_vbox=gtk_vbox_new(FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->main_hbox),main_window->left_vbox,FALSE,FALSE,2);
+
 main_window->preview_editor=preview_editor_new();
-gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->preview_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->left_vbox),main_window->preview_editor->container,FALSE,FALSE,2);
 
 main_window->name_editor=string_editor_new("Name:");
-gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->name_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->left_vbox),main_window->name_editor->container,FALSE,FALSE,2);
 
 main_window->description_editor=string_editor_new("Description:");
-gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->description_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->left_vbox),main_window->description_editor->container,FALSE,FALSE,2);
 
 main_window->header_editor=header_editor_new();
-gtk_box_pack_start(GTK_BOX(main_window->main_vbox),main_window->header_editor->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(main_window->main_hbox),main_window->header_editor->container,FALSE,FALSE,2);
 
 gtk_widget_show_all(main_window->window);
 
