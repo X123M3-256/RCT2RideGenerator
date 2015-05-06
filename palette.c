@@ -318,7 +318,18 @@ color_t palette_color_from_index(uint8_t index)
 return palette[index];
 }
 
-
+uint8_t palette_index_from_color(color_t color)
+{
+int i;
+    for(i=0;i<256;i++)
+    {
+        if(color.red==palette[i].red&&color.green==palette[i].green&&color.blue==palette[i].blue)
+        {
+        return i;
+        }
+    }
+return 0;
+}
 
 /*Each color has 12 shades from dark to light (section_index above). This calculates the
 linear regression line between the luminance and the section index - that is, the best

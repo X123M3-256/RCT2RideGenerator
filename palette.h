@@ -20,15 +20,8 @@ uint8_t green;
 uint8_t red;
 uint8_t reserved;
 }color_t;
-/*
-typedef struct
-{
-unsigned char Hue;
-unsigned char Saturation;
-unsigned char Value;
-unsigned char Reserved;
-}ColorHSV;
-*/
+
 uint8_t palette_remap_section_index(uint8_t color,uint8_t section_index);
 color_t palette_color_from_index(uint8_t index);
+uint8_t palette_index_from_color(color_t color);
 #endif // PALETTE_H_INCLUDED
