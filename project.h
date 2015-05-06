@@ -34,6 +34,7 @@ int num_models;
 
 project_t* project_new();
 void project_add_model(project_t* project,model_t* model);
+void project_set_preview(project_t* project,image_t* image);
 object_t* project_export_dat(project_t* project);
 void project_free(project_t* project);
 

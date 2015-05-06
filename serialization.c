@@ -256,6 +256,75 @@ animation_set_num_frames(animation,json_array_size(frames));
 return animation;
 }
 
+json_t* image_serialize(image_t* image)
+{
+json_t* json=json_object();
+
+json_t* width=json_integer(image->width);
+json_object_set_new(json,"width",width);
+
+json_t* height=json_integer(image->height);
+json_object_set_new(json,"height",height);
+
+json_t* x_offset=json_integer(image->x_offset);
+json_object_set_new(json,"x_offset",x_offset);
+
+json_t* y_offset=json_integer(image->y_offset);
+json_object_set_new(json,"y_offset",y_offset);
+
+json_t* flags=json_integer(image->flags);
+json_object_set_new(json,"flags",flags);
+
+json_t* data=json_array();
+int x,y;
+    for(y=0;y<image->height;y++)
+    {
+    json_t* row=json_array();
+        for(x=0;x<image->width;x++)
+        {
+        json_t* pixel=json_integer(image->data[x][y]);
+        json_array_append_new(row,pixel);
+        }
+    json_array_append_new(data,row);
+    }
+json_object_set_new(json,"data",data);
+
+return json;
+}
+
+image_t* image_deserialize(json_t* json)
+{
+json_t* width=json_object_get(json,"width");
+json_t* height=json_object_get(json,"height");
+json_t* x_offset=json_object_get(json,"x_offset");
+json_t* y_offset=json_object_get(json,"y_offset");
+json_t* flags=json_object_get(json,"flags");
+
+    if(width==NULL||height==NULL)
+    {
+    fprintf(stderr,"Failed loading image because width or height missing\n");
+    return NULL;
+    }
+
+image_t* image=image_new(json_integer_value(width),json_integer_value(height),0);
+
+image->x_offset=json_integer_value(x_offset);
+image->y_offset=json_integer_value(y_offset);
+image->flags=json_integer_value(flags);
+
+json_t* data=json_object_get(json,"data");
+int x,y;
+    for(y=0;y<image->height;y++)
+    {
+    json_t* row=json_array_get(data,y);
+        for(x=0;x<image->width;x++)
+        {
+        image->data[x][y]=json_integer_value(json_array_get(row,x));
+        }
+    }
+
+return image;
+}
 
 json_t* project_serialize(project_t* project)
 {
@@ -280,6 +349,10 @@ json_object_set_new(json,"maximum_cars",max_cars);
 //Serialize zero cars
 json_t* zero_cars=json_integer(project->zero_cars);
 json_object_set_new(json,"zero_cars",zero_cars);
+
+//Serialize preview image
+json_t* preview=image_serialize(project->preview_image);
+json_object_set_new(json,"preview",preview);
 
 //Serialize car types
 json_t* car_types=json_object();
@@ -363,6 +436,14 @@ json_t* maximum_cars=json_object_get(json,"maximum_cars");
 //Deserialize zero cars
 json_t* zero_cars=json_object_get(json,"zero_cars");
     if(zero_cars!=NULL)project->zero_cars=json_integer_value(zero_cars);
+
+//Deserialize preview image
+json_t* preview=json_object_get(json,"preview");
+    if(preview!=NULL)
+    {
+    image_t* preview_image=image_deserialize(preview);
+        if(preview_image!=NULL)project_set_preview(project,preview_image);
+    }
 //Deserialize car types
 json_t* car_types=json_object_get(json,"car_types");
     if(car_types!=NULL)

@@ -37,6 +37,12 @@ void project_add_model(project_t* project,model_t* model)
 project->models=realloc(project->models,(project->num_models+1)*sizeof(model_t*));
 project->models[project->num_models++]=model;
 }
+void project_set_preview(project_t* project,image_t* image)
+{
+image_free(project->preview_image);
+project->preview_image=image;
+}
+
 void project_free(project_t* project)
 {
 int i;
