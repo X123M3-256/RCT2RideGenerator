@@ -188,6 +188,8 @@ void car_editor_edit_animation(GtkWidget* widget,gpointer data)
 {
 car_editor_t* editor=(car_editor_t*)data;
     if(editor->project==NULL||editor->car_settings==NULL)return;
+int req_frames=car_settings_count_required_animation_frames(editor->car_settings);
+    if(editor->car_settings->animation->num_frames<req_frames)animation_set_num_frames(editor->car_settings->animation,req_frames);
 animation_dialog_t* dialog=animation_dialog_new(editor->car_settings->animation,editor->project->models,editor->project->num_models);
 animation_dialog_run(dialog);
 animation_dialog_free(dialog);
@@ -203,6 +205,7 @@ editor->flag_editor=flag_editor_new("Flags");
 flag_editor_add_checkbox(editor->flag_editor,"Enable remap color 2",CAR_ENABLE_REMAP2);
 flag_editor_add_checkbox(editor->flag_editor,"Enable remap color 3",CAR_ENABLE_REMAP3);
 flag_editor_add_checkbox(editor->flag_editor,"No upstops",CAR_NO_UPSTOPS);
+flag_editor_add_checkbox(editor->flag_editor,"Fake spinning",CAR_FAKE_SPINNING);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,1);
 
 editor->sprite_editor=flag_editor_new("Sprites");
@@ -368,7 +371,6 @@ int i,j;
 *(editor->image)=image;
 image_viewer_set_image(editor->preview_viewer,image);
 }
-
 preview_editor_t* preview_editor_new()
 {
 preview_editor_t* editor=malloc(sizeof(preview_editor_t));
@@ -384,7 +386,6 @@ gtk_box_pack_start(GTK_BOX(editor->container),editor->set_preview,FALSE,FALSE,2)
 
 return editor;
 }
-
 void preview_editor_set_image(preview_editor_t* editor,image_t** image)
 {
 editor->image=image;
