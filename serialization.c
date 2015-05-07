@@ -161,6 +161,7 @@ model->lines=NULL;
     {
     json_t* face=json_array_get(faces,i);
     model->faces[i].color=json_integer_value(json_array_get(face,0));
+
     json_t* vertices=json_array_get(face,1);
     json_t* normals=json_array_get(face,2);
         for(j=0;j<3;j++)
@@ -380,6 +381,9 @@ json_t* cars=json_array();
          //Flags
         json_t* flags=json_integer(project->cars[i].flags);
         json_object_set_new(car,"flags",flags);
+        //Sprites
+        json_t* sprites=json_integer(project->cars[i].sprites);
+        json_object_set_new(car,"sprites",sprites);
         //Spacing
         json_t* spacing=json_integer(project->cars[i].spacing);
         json_object_set_new(car,"spacing",spacing);
@@ -500,6 +504,8 @@ json_t* cars=json_object_get(json,"cars");
         //Flags
         json_t* flags=json_object_get(car,"flags");
             if(flags!=NULL)project->cars[i].flags=json_integer_value(flags);
+        json_t* sprites=json_object_get(car,"sprites");
+            if(sprites!=NULL)project->cars[i].sprites=json_integer_value(sprites);
         //Spacing
         json_t* spacing=json_object_get(car,"spacing");
             if(spacing!=NULL)project->cars[i].spacing=json_integer_value(spacing);
