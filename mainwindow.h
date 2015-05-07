@@ -87,9 +87,13 @@ project_t* project;
 
 track_type_editor_t* track_type_editor;
 flag_editor_t* flag_editor;
+value_editor_t* excitement_editor;
+value_editor_t* intensity_editor;
+value_editor_t* nausea_editor;
 value_editor_t* min_cars_editor;
 value_editor_t* max_cars_editor;
 value_editor_t* zero_cars_editor;
+value_editor_t* car_icon_index_editor;
 car_type_editor_t* default_car_editor;
 car_type_editor_t* front_car_editor;
 car_type_editor_t* second_car_editor;

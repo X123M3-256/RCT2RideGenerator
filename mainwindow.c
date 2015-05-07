@@ -265,6 +265,12 @@ flag_editor_add_checkbox(editor->flag_editor,"Ride is covered",RIDE_COVERED);
 flag_editor_add_checkbox(editor->flag_editor,"Riders get wet",RIDE_WET);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,2);
 
+editor->excitement_editor=value_editor_new(VALUE_SIZE_BYTE,"Excitement:");
+gtk_box_pack_start(GTK_BOX(editor->container),editor->excitement_editor->container,FALSE,FALSE,2);
+editor->intensity_editor=value_editor_new(VALUE_SIZE_BYTE,"Intensity:");
+gtk_box_pack_start(GTK_BOX(editor->container),editor->intensity_editor->container,FALSE,FALSE,2);
+editor->nausea_editor=value_editor_new(VALUE_SIZE_BYTE,"Nausea:");
+gtk_box_pack_start(GTK_BOX(editor->container),editor->nausea_editor->container,FALSE,FALSE,2);
 
 
 //Edit car related information
@@ -278,9 +284,10 @@ editor->min_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Minimum cars per train
 editor->max_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Maximum cars per train:");
 gtk_box_pack_start(GTK_BOX(cars_vbox),editor->min_cars_editor->container,FALSE,FALSE,2);
 gtk_box_pack_start(GTK_BOX(cars_vbox),editor->max_cars_editor->container,FALSE,FALSE,2);
-
 editor->zero_cars_editor=value_editor_new(VALUE_SIZE_BYTE,"Number of zero cars:");
 gtk_box_pack_start(GTK_BOX(cars_vbox),editor->zero_cars_editor->container,FALSE,FALSE,2);
+editor->car_icon_index_editor=value_editor_new(VALUE_SIZE_BYTE,"Car icon index:");
+gtk_box_pack_start(GTK_BOX(cars_vbox),editor->car_icon_index_editor->container,FALSE,FALSE,2);
 
 editor->default_car_editor=car_type_editor_new("Default car");
 editor->front_car_editor=car_type_editor_new("First car");
@@ -313,9 +320,13 @@ int i;
 editor->project=project;
 track_type_editor_set_track_type(editor->track_type_editor,&(project->track_type));
 flag_editor_set_flags(editor->flag_editor,&(project->flags));
+value_editor_set_value(editor->excitement_editor,&(project->excitement));
+value_editor_set_value(editor->intensity_editor,&(project->intensity));
+value_editor_set_value(editor->nausea_editor,&(project->nausea));
 value_editor_set_value(editor->min_cars_editor,&(project->minimum_cars));
 value_editor_set_value(editor->max_cars_editor,&(project->maximum_cars));
 value_editor_set_value(editor->zero_cars_editor,&(project->zero_cars));
+value_editor_set_value(editor->car_icon_index_editor,&(project->car_icon_index));
 car_type_editor_set_car_type(editor->default_car_editor,&(project->car_types[CAR_INDEX_DEFAULT]));
 car_type_editor_set_car_type(editor->front_car_editor,&(project->car_types[CAR_INDEX_FRONT]));
 car_type_editor_set_car_type(editor->second_car_editor,&(project->car_types[CAR_INDEX_SECOND]));

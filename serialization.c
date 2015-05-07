@@ -292,7 +292,6 @@ json_object_set_new(json,"data",data);
 
 return json;
 }
-
 image_t* image_deserialize(json_t* json)
 {
 json_t* width=json_object_get(json,"width");
@@ -339,6 +338,15 @@ json_object_set_new(json,"description",description);
 //Serialize flags
 json_t* flags=json_integer(project->flags);
 json_object_set_new(json,"flags",flags);
+//Serialize excitement
+json_t* excitement=json_integer(project->excitement);
+json_object_set_new(json,"excitement",excitement);
+//Serialize intensity
+json_t* intensity=json_integer(project->intensity);
+json_object_set_new(json,"intensity",intensity);
+//Serialize nausea
+json_t* nausea=json_integer(project->nausea);
+json_object_set_new(json,"nausea",nausea);
 //Serialize track type
 json_t* track_type=json_integer(project->track_type);
 json_object_set_new(json,"track_type",track_type);
@@ -350,6 +358,9 @@ json_object_set_new(json,"maximum_cars",max_cars);
 //Serialize zero cars
 json_t* zero_cars=json_integer(project->zero_cars);
 json_object_set_new(json,"zero_cars",zero_cars);
+//Serialize car icon index
+json_t* car_icon_index=json_integer(project->car_icon_index);
+json_object_set_new(json,"car_icon_index",car_icon_index);
 
 //Serialize preview image
 json_t* preview=image_serialize(project->preview_image);
@@ -429,6 +440,15 @@ json_t* description=json_object_get(json,"description");
 //Deserialize flags
 json_t* flags=json_object_get(json,"flags");
     if(flags!=NULL)project->flags=json_integer_value(flags);
+//Deserialize excitement
+json_t* excitement=json_object_get(json,"excitement");
+    if(excitement!=NULL)project->excitement=json_integer_value(excitement);
+//Deserialize intensity
+json_t* intensity=json_object_get(json,"intensity");
+    if(intensity!=NULL)project->intensity=json_integer_value(intensity);
+//Deserialize nausea
+json_t* nausea=json_object_get(json,"nausea");
+    if(nausea!=NULL)project->nausea=json_integer_value(nausea);
 //Deserialize track type
 json_t* track_type=json_object_get(json,"track_type");
     if(track_type!=NULL)project->track_type=json_integer_value(track_type);
@@ -440,6 +460,9 @@ json_t* maximum_cars=json_object_get(json,"maximum_cars");
 //Deserialize zero cars
 json_t* zero_cars=json_object_get(json,"zero_cars");
     if(zero_cars!=NULL)project->zero_cars=json_integer_value(zero_cars);
+//Deserialize car icon index
+json_t* car_icon_index=json_object_get(json,"car_icon_index");
+    if(car_icon_index!=NULL)project->car_icon_index=json_integer_value(car_icon_index);
 
 //Deserialize preview image
 json_t* preview=json_object_get(json,"preview");

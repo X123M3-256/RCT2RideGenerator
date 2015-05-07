@@ -16,6 +16,9 @@ project->minimum_cars=3;
 project->maximum_cars=8;
 project->zero_cars=0;
 project->car_icon_index=0;
+project->excitement=0;
+project->intensity=0;
+project->nausea=0;
 memset(project->car_types,0xFF,5);
 project->car_types[CAR_INDEX_DEFAULT]=0;
 project->models=NULL;
@@ -70,17 +73,18 @@ double step=2*3.141592654/num_frames;
     rotation_matrix.Data[2]=-sin(rotation);
     rotation_matrix.Data[8]=sin(rotation);
     rotation_matrix.Data[10]=cos(rotation);
-    rotation+=step;
 
-    //int animation_frame=0;/*(int)((2*(yaw+rotation)+pitch)*16.0/M_PI)%32;*/
+
+    int animation_frame=0;//(int)((rotation+yaw)*32.0/M_PI)%32;
     renderer_clear_buffers();
-    render_data_t render_data=animation_split_render_begin(animation,0,MatrixMultiply(rotation_matrix,transform_matrix));
+    render_data_t render_data=animation_split_render_begin(animation,animation_frame,MatrixMultiply(rotation_matrix,transform_matrix));
         for(j=0;j<images;j++)
         {
         image_list_set_image(image_list,base_frame+j*sprites_per_image+i,renderer_get_image());
         animation_split_render_next_image(animation,&render_data);
         }
 
+    rotation+=step;
     }
 }
 void render_loading(image_list_t* image_list,animation_t* animation,int base_frame,int sprites_per_image,int images)
@@ -110,6 +114,14 @@ int anim_frame;
     }
 }
 
+
+int car_settings_count_required_animation_frames(car_settings_t* car)
+{
+int frames=1;
+    if(car->flags&CAR_FAKE_SPINNING)frames+=31;
+    if(car->sprites&SPRITE_RESTRAINT_ANIMATION)frames+=3;
+return frames;
+}
 
 int count_sprites_from_flags(uint16_t sprites)
 {
@@ -268,6 +280,7 @@ object_t* project_export_dat(project_t* project)
 int i;
 object_t* object=object_new_ride();
 
+
 object->ride_header->track_style=project->track_type;
 
 //Set strings
@@ -294,7 +307,9 @@ object->ride_header->minimum_cars=project->minimum_cars;
 object->ride_header->maximum_cars=project->maximum_cars;
 object->ride_header->zero_cars=project->zero_cars;
 object->ride_header->car_icon_index=project->car_icon_index;
-
+object->ride_header->excitement=project->excitement;
+object->ride_header->intensity=project->intensity;
+object->ride_header->nausea=project->nausea;
 unsigned char cars_used[NUM_CARS];
 memset(cars_used,0,NUM_CARS);
     for(i=0;i<5;i++)if(project->car_types[i]!=0xFF)cars_used[project->car_types[i]]=1;
@@ -303,7 +318,7 @@ memset(cars_used,0,NUM_CARS);
         if(cars_used[i])
         {
         object->ride_header->cars[i].highest_rotation_index=31;
-        object->ride_header->cars[i].flags=project->cars[i].flags;//|0x11020000u;
+        object->ride_header->cars[i].flags=(CAR_ENABLE_ROLLING_SOUND|project->cars[i].flags)&~CAR_FAKE_SPINNING;
         object->ride_header->cars[i].friction=project->cars[i].friction;
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
