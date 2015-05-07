@@ -167,6 +167,11 @@ memset(ride_header,0,sizeof(ride_header_t));
     ride_header->cars[i].unknown[0]=1;
     ride_header->cars[i].unknown[3]=1;
     ride_header->cars[i].unknown[4]=0x1;
+
+    ride_header->cars[i].unknown[1]=2;
+    ride_header->cars[i].unknown[2]=2;
+    //object->ride_header->cars[i].unknown[3]=1;
+    //object->ride_header->cars[i].unknown[4]=0;
     }
 return ride_header;
 }
@@ -344,7 +349,7 @@ ride_structures_t* ride_structures_new()
 int i;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
 structures->num_default_colors=8;
-structures->default_colors=malloc(2*sizeof(color_scheme_t));
+structures->default_colors=malloc(8*sizeof(color_scheme_t));
 structures->default_colors[0].colors[0]=18;
 structures->default_colors[0].colors[1]=0;
 structures->default_colors[0].colors[2]=18;
