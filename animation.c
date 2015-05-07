@@ -64,22 +64,24 @@ void animation_update_parent(animation_t* animation,int object,int parent)
     else animation->objects[object].parent_index=-1;
 }
 
+void animation_render_object(animation_t* animation,int frame,int object,Matrix model_view)
+{
+Matrix transform=animation->frames[frame][object].transform;
+int cur_object_index=object;
+    while((cur_object_index=animation->objects[cur_object_index].parent_index)!=-1)
+    {
+    transform=MatrixMultiply(animation->frames[frame][cur_object_index].transform,transform);
+    }
+renderer_render_model(animation->objects[object].model,MatrixMultiply(model_view,transform));
+}
+
 void animation_render_frame(animation_t* animation,int frame,Matrix model_view)
 {
 int i;
 renderer_clear_buffers();
     for(i=0;i<animation->num_objects;i++)
     {
-    Matrix transform=animation->frames[frame][i].transform;
-    //Parenting code not currently used
-    /*
-    int cur_object_index=i;
-        while((cur_object_index=animation->objects[cur_object_index].parent_index)!=-1)
-        {
-        transform=MatrixMultiply(animation->frames[frame][cur_object_index].transform,transform);
-        }
-    */
-    renderer_render_model(animation->objects[i].model,MatrixMultiply(model_view,transform));
+    animation_render_object(animation,frame,i,model_view);
     }
 }
 
@@ -96,8 +98,7 @@ renderer_clear_buffers();
     {
         if(!animation->objects[i].model->is_rider)
         {
-        Matrix transform=animation->frames[frame][i].transform;
-        renderer_render_model(animation->objects[i].model,MatrixMultiply(model_view,transform));
+        animation_render_object(animation,frame,i,model_view);
         }
     }
 return data;
@@ -109,8 +110,7 @@ int animation_split_render_render_rider(animation_t* animation,int frame,Matrix 
     {
         if(animation->objects[cur_object].model->is_rider)
         {
-        Matrix transform=animation->frames[frame][cur_object].transform;
-        renderer_render_model(animation->objects[cur_object].model,MatrixMultiply(model_view,transform));
+        animation_render_object(animation,frame,cur_object,model_view);
         cur_object++;
         break;
         }
