@@ -126,8 +126,8 @@ gtk_widget_show_all(dialog->objectTable);
 void animation_viewer_update(animation_viewer_t* viewer)
 {
 renderer_clear_buffers();
-    if(viewer->animation!=NULL)animation_render_frame(viewer->animation,viewer->frame,MatrixIdentity());
-renderer_render_model(viewer->grid_model,MatrixIdentity());
+    if(viewer->animation!=NULL)animation_render_frame(viewer->animation,viewer->frame,viewer->model_view);
+renderer_render_model(viewer->grid_model,viewer->model_view);
 image_t* image=renderer_get_image();
 image_viewer_set_image(viewer->image_viewer,image);
 image_free(image);
@@ -195,6 +195,11 @@ animation_viewer_t* animation_viewer_new()
 animation_viewer_t* viewer=malloc(sizeof(animation_viewer_t));
 viewer->animation=NULL;
 viewer->frame=0;
+viewer->model_view=MatrixIdentity();
+viewer->model_view.Data[0]=4;
+viewer->model_view.Data[5]=4;
+viewer->model_view.Data[10]=4;
+
 viewer->grid_model=model_new_grid();
 viewer->image_viewer=image_viewer_new();
 viewer->container=gtk_vbox_new(FALSE,1);
@@ -366,11 +371,17 @@ coords.X=event->x-(container_alloc.width-gdk_pixbuf_get_width(pixbuf))/2;
 coords.Y=event->y-(container_alloc.height-gdk_pixbuf_get_height(pixbuf))/2;
 int selected_object=-1;
 int frame=dialog->animation_viewer->frame;
+float largest_depth=-INFINITY;
     for(i=0;i<dialog->animation->num_objects;i++)
     {
     model_t* model=dialog->animation->objects[i].model;
     object_transform_t* object_data=&(dialog->animation->frames[frame][i]);
-        if(renderer_get_face_by_point(model,object_data->transform,coords)!=NULL)selected_object=i;
+    float depth;
+        if(renderer_get_face_by_point(model,MatrixMultiply(dialog->animation_viewer->model_view,object_data->transform),coords,&depth)!=NULL&&depth>largest_depth)
+        {
+        selected_object=i;
+        largest_depth=depth;
+        }
     }
     if(selected_object!=-1)
     {
@@ -383,7 +394,6 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,model_t** models
 animation_dialog_t* dialog=malloc(sizeof(animation_dialog_t));
 
 dialog->animation=animation;
-//animationDialog.numObjects=0;
 
 dialog->dialog=gtk_dialog_new_with_buttons("Animation Settings",NULL,0,"OK",GTK_RESPONSE_OK,NULL);
 GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog->dialog));

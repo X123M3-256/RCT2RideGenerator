@@ -8,6 +8,7 @@ typedef struct
 {
 animation_t* animation;
 model_t* grid_model;
+Matrix model_view;
 int frame;
 
 image_viewer_t* image_viewer;

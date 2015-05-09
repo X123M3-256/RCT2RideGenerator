@@ -459,7 +459,7 @@ float c=1-a-b;
     }
 return 0;
 }
-face_t* renderer_get_face_by_point(model_t* model,Matrix model_view,Vector coords)
+face_t* renderer_get_face_by_point(model_t* model,Matrix model_view,Vector coords,float* depth)
 {
 //Transform model into screen space, reducing the test for intersection to a 2D problem
 Vector* transformed_vertices=malloc(model->num_vertices*sizeof(Vector));
@@ -483,5 +483,6 @@ int i;
         }
     }
 free(transformed_vertices);
+    if(depth!=NULL)*depth=largest_depth;
 return nearest_face;
 }
