@@ -480,7 +480,7 @@ model_dialog_t* dialog=(model_dialog_t*)user_data;
 Vector coords;
 coords.X=event->x;
 coords.Y=event->y;
-face_t* face=renderer_get_face_by_point(dialog->model,dialog->model_viewer->model_view,coords);
+face_t* face=renderer_get_face_by_point(dialog->model,dialog->model_viewer->model_view,coords,NULL);
     if(face!=NULL&&face->color!=dialog->color)
     {
     face->color=dialog->color;
