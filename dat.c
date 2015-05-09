@@ -165,13 +165,10 @@ memset(ride_header,0,sizeof(ride_header_t));
     for(i=0;i<NUM_CARS;i++)
     {
     ride_header->cars[i].unknown[0]=1;
-    ride_header->cars[i].unknown[3]=1;
-    ride_header->cars[i].unknown[4]=0x1;
-
     ride_header->cars[i].unknown[1]=2;
     ride_header->cars[i].unknown[2]=2;
-    //object->ride_header->cars[i].unknown[3]=1;
-    //object->ride_header->cars[i].unknown[4]=0;
+    ride_header->cars[i].unknown[3]=1;
+    ride_header->cars[i].unknown[4]=1;
     }
 return ride_header;
 }
@@ -352,28 +349,28 @@ structures->num_default_colors=8;
 structures->default_colors=malloc(8*sizeof(color_scheme_t));
 structures->default_colors[0].colors[0]=18;
 structures->default_colors[0].colors[1]=0;
-structures->default_colors[0].colors[2]=18;
+structures->default_colors[0].colors[2]=28;
 structures->default_colors[1].colors[0]=0;
-structures->default_colors[1].colors[1]=18;
-structures->default_colors[1].colors[2]=0;
-structures->default_colors[2].colors[0]=7;
-structures->default_colors[2].colors[1]=6;
-structures->default_colors[2].colors[2]=18;
-structures->default_colors[3].colors[0]=7;
-structures->default_colors[3].colors[1]=0;
-structures->default_colors[3].colors[2]=18;
-structures->default_colors[4].colors[0]=11;
-structures->default_colors[4].colors[1]=28;
-structures->default_colors[4].colors[2]=2;
-structures->default_colors[5].colors[0]=9;
-structures->default_colors[5].colors[1]=28;
-structures->default_colors[5].colors[2]=2;
-structures->default_colors[6].colors[0]=28;
-structures->default_colors[6].colors[1]=1;
-structures->default_colors[6].colors[2]=6;
-structures->default_colors[7].colors[0]=23;
-structures->default_colors[7].colors[1]=1;
-structures->default_colors[7].colors[2]=18;
+structures->default_colors[1].colors[1]=1;
+structures->default_colors[1].colors[2]=2;
+structures->default_colors[2].colors[0]=2;
+structures->default_colors[2].colors[1]=0;
+structures->default_colors[2].colors[2]=2;
+structures->default_colors[3].colors[0]=6;
+structures->default_colors[3].colors[1]=2;
+structures->default_colors[3].colors[2]=0;
+structures->default_colors[4].colors[0]=9;
+structures->default_colors[4].colors[1]=30;
+structures->default_colors[4].colors[2]=1;
+structures->default_colors[5].colors[0]=23;
+structures->default_colors[5].colors[1]=0;
+structures->default_colors[5].colors[2]=18;
+structures->default_colors[6].colors[0]=6;
+structures->default_colors[6].colors[1]=11;
+structures->default_colors[6].colors[2]=1;
+structures->default_colors[7].colors[0]=28;
+structures->default_colors[7].colors[1]=0;
+structures->default_colors[7].colors[2]=1;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;
