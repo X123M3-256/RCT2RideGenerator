@@ -59,7 +59,7 @@ free(project);
 }
 
 
-void render_rotation(image_list_t* image_list,animation_t* animation,int base_frame,int sprites_per_image,int images,int num_frames,double pitch,double roll,double yaw)
+void render_rotation(image_list_t* image_list,animation_t* animation,uint32_t flags,int base_frame,int sprites_per_image,int images,int num_frames,double pitch,double roll,double yaw)
 {
 int i,j;
 Matrix transform_matrix=MatrixFromEulerAngles(VectorFromComponents(-pitch,-yaw,-roll));
@@ -74,8 +74,8 @@ double step=2*3.141592654/num_frames;
     rotation_matrix.Data[8]=sin(rotation);
     rotation_matrix.Data[10]=cos(rotation);
 
+    int animation_frame=(flags&CAR_FAKE_SPINNING)?(int)((rotation+yaw)*32.0/M_PI)%32:0;
 
-    int animation_frame=0;//(int)((rotation+yaw)*32.0/M_PI)%32;
     renderer_clear_buffers();
     render_data_t render_data=animation_split_render_begin(animation,animation_frame,MatrixMultiply(rotation_matrix,transform_matrix));
         for(j=0;j<images;j++)
@@ -87,7 +87,7 @@ double step=2*3.141592654/num_frames;
     rotation+=step;
     }
 }
-void render_loading(image_list_t* image_list,animation_t* animation,int base_frame,int sprites_per_image,int images)
+void render_loading(image_list_t* image_list,animation_t* animation,uint32_t flags,int base_frame,int sprites_per_image,int images)
 {
 int i,j;
 Matrix rotation_matrix=MatrixIdentity();
@@ -102,7 +102,7 @@ int anim_frame;
         for(i=0;i<4;i++)
         {
         renderer_clear_buffers();
-        render_data_t render_data=animation_split_render_begin(animation,anim_frame,rotation_matrix);
+        render_data_t render_data=animation_split_render_begin(animation,anim_frame+((flags&CAR_FAKE_SPINNING)?31:0),rotation_matrix);
             for(j=0;j<images;j++)
             {
             image_list_set_image(image_list,base_frame+j*sprites_per_image+i,renderer_get_image());
@@ -165,111 +165,114 @@ image_list_set_image(object->images,2,image_new(1,1,0));
     int base_frame=object->images->num_images;
     //Allocate images for car
     image_list_set_num_images(object->images,base_frame+total_car_sprites);
+    //Set flags
+    uint32_t flags=project->cars[i].flags;
+
     //Render images for car
     image_list_t* images=object->images;
     animation_t* animation=project->cars[i].animation;
         if(sprite_flags&SPRITE_FLAT_SLOPE)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,32,FLAT,0,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,32,FLAT,0,0);
         base_frame+=32;
         }
         if(sprite_flags&SPRITE_GENTLE_SLOPE)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,FG_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,-FG_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,32,GENTLE,0,0);//Why the fuck does this become a 4 frame rotation with spinning enabled?
-        render_rotation(images,animation,base_frame+40,sprites_per_image,car_images,32,-GENTLE,0,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,FG_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,-FG_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,32,GENTLE,0,0);//Why the fuck does this become a 4 frame rotation with spinning enabled?
+        render_rotation(images,animation,flags,base_frame+40,sprites_per_image,car_images,32,-GENTLE,0,0);
         base_frame+=72;
         }
         if(sprite_flags&SPRITE_STEEP_SLOPE)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,8,GS_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,8,-GS_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+16,sprites_per_image,car_images,32,STEEP,0,0);
-        render_rotation(images,animation,base_frame+48,sprites_per_image,car_images,32,-STEEP,0,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,8,GS_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,8,-GS_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+16,sprites_per_image,car_images,32,STEEP,0,0);
+        render_rotation(images,animation,flags,base_frame+48,sprites_per_image,car_images,32,-STEEP,0,0);
         base_frame+=80;
         }
         if(sprite_flags&SPRITE_VERTICAL_SLOPE)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,SV_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,-SV_TRANSITION,0,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,32,VERTICAL,0,0);
-        render_rotation(images,animation,base_frame+40,sprites_per_image,car_images,32,-VERTICAL,0,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,SV_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,-SV_TRANSITION,0,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,32,VERTICAL,0,0);
+        render_rotation(images,animation,flags,base_frame+40,sprites_per_image,car_images,32,-VERTICAL,0,0);
         //Loop sprites
-        render_rotation(images,animation,base_frame+72,sprites_per_image,car_images,4,VERTICAL+PI_12,0,0);
-        render_rotation(images,animation,base_frame+76,sprites_per_image,car_images,4,-VERTICAL-PI_12,0,0);
-        render_rotation(images,animation,base_frame+80,sprites_per_image,car_images,4,VERTICAL+2*PI_12,0,0);
-        render_rotation(images,animation,base_frame+84,sprites_per_image,car_images,4,-VERTICAL-2*PI_12,0,0);
-        render_rotation(images,animation,base_frame+88,sprites_per_image,car_images,4,VERTICAL+3*PI_12,0,0);
-        render_rotation(images,animation,base_frame+92,sprites_per_image,car_images,4,-VERTICAL-3*PI_12,0,0);
-        render_rotation(images,animation,base_frame+96,sprites_per_image,car_images,4,VERTICAL+4*PI_12,0,0);
-        render_rotation(images,animation,base_frame+100,sprites_per_image,car_images,4,-VERTICAL-4*PI_12,0,0);
-        render_rotation(images,animation,base_frame+104,sprites_per_image,car_images,4,VERTICAL+5*PI_12,0,0);
-        render_rotation(images,animation,base_frame+108,sprites_per_image,car_images,4,-VERTICAL-5*PI_12,0,0);
-        render_rotation(images,animation,base_frame+112,sprites_per_image,car_images,4,M_PI,0,0);
+        render_rotation(images,animation,flags,base_frame+72,sprites_per_image,car_images,4,VERTICAL+PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+76,sprites_per_image,car_images,4,-VERTICAL-PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+80,sprites_per_image,car_images,4,VERTICAL+2*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+84,sprites_per_image,car_images,4,-VERTICAL-2*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+88,sprites_per_image,car_images,4,VERTICAL+3*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+92,sprites_per_image,car_images,4,-VERTICAL-3*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+96,sprites_per_image,car_images,4,VERTICAL+4*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+100,sprites_per_image,car_images,4,-VERTICAL-4*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+104,sprites_per_image,car_images,4,VERTICAL+5*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+108,sprites_per_image,car_images,4,-VERTICAL-5*PI_12,0,0);
+        render_rotation(images,animation,flags,base_frame+112,sprites_per_image,car_images,4,M_PI,0,0);
         base_frame+=116;
         }
         if(sprite_flags&SPRITE_DIAGONAL_SLOPE)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,FG_TRANSITION_DIAGONAL,0,M_PI_4);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,4,GENTLE_DIAGONAL,0,M_PI_4);
-        render_rotation(images,animation,base_frame+12,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,0,M_PI_4);
-        render_rotation(images,animation,base_frame+16,sprites_per_image,car_images,4,STEEP_DIAGONAL,0,M_PI_4);
-        render_rotation(images,animation,base_frame+20,sprites_per_image,car_images,4,-STEEP_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,FG_TRANSITION_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,4,GENTLE_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+12,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+16,sprites_per_image,car_images,4,STEEP_DIAGONAL,0,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+20,sprites_per_image,car_images,4,-STEEP_DIAGONAL,0,M_PI_4);
         base_frame+=24;
         }
         if(sprite_flags&SPRITE_BANKING)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,8,FLAT,BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,8,FLAT,-BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+16,sprites_per_image,car_images,32,FLAT,BANK,0);
-        render_rotation(images,animation,base_frame+48,sprites_per_image,car_images,32,FLAT,-BANK,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,8,FLAT,BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,8,FLAT,-BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+16,sprites_per_image,car_images,32,FLAT,BANK,0);
+        render_rotation(images,animation,flags,base_frame+48,sprites_per_image,car_images,32,FLAT,-BANK,0);
         base_frame+=80;
         }
         if(sprite_flags&SPRITE_SLOPE_BANK_TRANSITION)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,32,FG_TRANSITION,BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+32,sprites_per_image,car_images,32,FG_TRANSITION,-BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+64,sprites_per_image,car_images,32,-FG_TRANSITION,BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+96,sprites_per_image,car_images,32,-FG_TRANSITION,-BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,32,FG_TRANSITION,BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+32,sprites_per_image,car_images,32,FG_TRANSITION,-BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+64,sprites_per_image,car_images,32,-FG_TRANSITION,BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+96,sprites_per_image,car_images,32,-FG_TRANSITION,-BANK_TRANSITION,0);
         base_frame+=128;
         }
         if(sprite_flags&SPRITE_DIAGONAL_BANK_TRANSITION)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
-        render_rotation(images,animation,base_frame+12,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4);
+        render_rotation(images,animation,flags,base_frame+12,sprites_per_image,car_images,4,-GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4);
         base_frame+=16;
         }
         if(sprite_flags&SPRITE_SLOPED_BANK_TRANSITION)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,GENTLE,BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,GENTLE,-BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,4,-GENTLE,BANK_TRANSITION,0);
-        render_rotation(images,animation,base_frame+12,sprites_per_image,car_images,4,-GENTLE,-BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,GENTLE,BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,GENTLE,-BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,4,-GENTLE,BANK_TRANSITION,0);
+        render_rotation(images,animation,flags,base_frame+12,sprites_per_image,car_images,4,-GENTLE,-BANK_TRANSITION,0);
         base_frame+=16;
         }
         if(sprite_flags&SPRITE_SLOPED_BANKED_TURN)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,32,GENTLE,BANK,0);
-        render_rotation(images,animation,base_frame+32,sprites_per_image,car_images,32,GENTLE,-BANK,0);
-        render_rotation(images,animation,base_frame+64,sprites_per_image,car_images,32,-GENTLE,BANK,0);
-        render_rotation(images,animation,base_frame+96,sprites_per_image,car_images,32,-GENTLE,-BANK,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,32,GENTLE,BANK,0);
+        render_rotation(images,animation,flags,base_frame+32,sprites_per_image,car_images,32,GENTLE,-BANK,0);
+        render_rotation(images,animation,flags,base_frame+64,sprites_per_image,car_images,32,-GENTLE,BANK,0);
+        render_rotation(images,animation,flags,base_frame+96,sprites_per_image,car_images,32,-GENTLE,-BANK,0);
         base_frame+=128;
         }
         if(sprite_flags&SPRITE_BANKED_SLOPE_TRANSITION)
         {
-        render_rotation(images,animation,base_frame,sprites_per_image,car_images,4,FG_TRANSITION,BANK,0);
-        render_rotation(images,animation,base_frame+4,sprites_per_image,car_images,4,FG_TRANSITION,-BANK,0);
-        render_rotation(images,animation,base_frame+8,sprites_per_image,car_images,4,-FG_TRANSITION,BANK,0);
-        render_rotation(images,animation,base_frame+12,sprites_per_image,car_images,4,-FG_TRANSITION,-BANK,0);
+        render_rotation(images,animation,flags,base_frame,sprites_per_image,car_images,4,FG_TRANSITION,BANK,0);
+        render_rotation(images,animation,flags,base_frame+4,sprites_per_image,car_images,4,FG_TRANSITION,-BANK,0);
+        render_rotation(images,animation,flags,base_frame+8,sprites_per_image,car_images,4,-FG_TRANSITION,BANK,0);
+        render_rotation(images,animation,flags,base_frame+12,sprites_per_image,car_images,4,-FG_TRANSITION,-BANK,0);
         base_frame+=16;
         }
         if(sprite_flags&SPRITE_RESTRAINT_ANIMATION)
         {
-        render_loading(images,animation,base_frame,sprites_per_image,car_images);
+        render_loading(images,animation,flags,base_frame,sprites_per_image,car_images);
         base_frame+=12;
         }
     }
@@ -283,6 +286,8 @@ object_t* object=object_new_ride();
 
 object->ride_header->track_style=project->track_type;
 
+
+project->name[8]=246;
 //Set strings
 char capacity[256];
 sprintf(capacity,"%d passengers per car",project->cars[project->car_types[CAR_INDEX_DEFAULT]].animation->num_riders);
