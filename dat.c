@@ -237,6 +237,8 @@ uint8_t* car_data=bytes+26;
     car->rider_sprites=car_data[84];
     /*Load flags*/
     car->flags=*((uint32_t*)(car_data+17));
+    /*Load "extra frames*/
+    car_data[21]=car->extra_swing_frames;
     /*Load spin parameters*/
     car->spin_inertia=car_data[85];
     car->spin_friction=car_data[86];
@@ -317,6 +319,8 @@ uint8_t* car_data=header_bytes+26;
     car_data[84]=car->rider_sprites;
     /*Write flags*/
     *((uint32_t*)(car_data+17))=car->flags;
+    /*Write "extra frames"*/
+    car_data[21]=car->extra_swing_frames;
     /*Write spin parameters*/
     car_data[85]=car->spin_inertia;
     car_data[86]=car->spin_friction;
@@ -348,29 +352,29 @@ ride_structures_t* structures=malloc(sizeof(ride_structures_t));
 structures->num_default_colors=8;
 structures->default_colors=malloc(8*sizeof(color_scheme_t));
 structures->default_colors[0].colors[0]=18;
-structures->default_colors[0].colors[1]=0;
-structures->default_colors[0].colors[2]=28;
-structures->default_colors[1].colors[0]=0;
-structures->default_colors[1].colors[1]=1;
-structures->default_colors[1].colors[2]=2;
+structures->default_colors[0].colors[1]=6;
+structures->default_colors[0].colors[2]=0;
+structures->default_colors[1].colors[0]=6;
+structures->default_colors[1].colors[1]=18;
+structures->default_colors[1].colors[2]=0;
 structures->default_colors[2].colors[0]=2;
 structures->default_colors[2].colors[1]=0;
-structures->default_colors[2].colors[2]=2;
-structures->default_colors[3].colors[0]=6;
-structures->default_colors[3].colors[1]=2;
+structures->default_colors[2].colors[2]=0;
+structures->default_colors[3].colors[0]=0;
+structures->default_colors[3].colors[1]=1;
 structures->default_colors[3].colors[2]=0;
-structures->default_colors[4].colors[0]=9;
-structures->default_colors[4].colors[1]=30;
-structures->default_colors[4].colors[2]=1;
-structures->default_colors[5].colors[0]=23;
+structures->default_colors[4].colors[0]=10;
+structures->default_colors[4].colors[1]=6;
+structures->default_colors[4].colors[2]=0;
+structures->default_colors[5].colors[0]=6;
 structures->default_colors[5].colors[1]=0;
-structures->default_colors[5].colors[2]=18;
-structures->default_colors[6].colors[0]=6;
-structures->default_colors[6].colors[1]=11;
-structures->default_colors[6].colors[2]=1;
-structures->default_colors[7].colors[0]=28;
-structures->default_colors[7].colors[1]=0;
-structures->default_colors[7].colors[2]=1;
+structures->default_colors[5].colors[2]=0;
+structures->default_colors[6].colors[0]=7;
+structures->default_colors[6].colors[1]=6;
+structures->default_colors[6].colors[2]=0;
+structures->default_colors[7].colors[0]=18;
+structures->default_colors[7].colors[1]=18;
+structures->default_colors[7].colors[2]=0;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;

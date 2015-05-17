@@ -98,11 +98,11 @@ CAR_INDEX_REAR=3
 
 enum
 {
-CATEGORY_TRANSPORT_RIDE,
-CATEGORY_GENTLE_RIDE,
-CATEGORY_THRILL_RIDE,
+CATEGORY_TRANSPORT_RIDE=0,
+CATEGORY_GENTLE_RIDE=1,
 CATEGORY_ROLLERCOASTER=2,
-CATEGORY_WATER_RIDE
+CATEGORY_THRILL_RIDE=3,
+CATEGORY_WATER_RIDE=4
 }category_t;
 
 
@@ -209,6 +209,7 @@ uint16_t unknown[5];
 uint16_t sprites;
 uint16_t friction;
 uint16_t spacing;
+uint8_t extra_swing_frames;
 uint8_t highest_rotation_index;
 uint8_t rider_pairs;
 uint8_t riders;
