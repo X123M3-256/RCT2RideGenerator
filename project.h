@@ -29,6 +29,7 @@ uint8_t car_icon_index;
 uint8_t excitement;
 uint8_t intensity;
 uint8_t nausea;
+uint8_t max_height;
 uint8_t car_types[5];
 car_settings_t cars[4];
 image_t* preview_image;
