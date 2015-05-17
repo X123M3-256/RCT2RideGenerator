@@ -328,7 +328,7 @@ int i;
         return i;
         }
     }
-return 0;
+return 195;
 }
 
 /*Each color has 12 shades from dark to light (section_index above). This calculates the
