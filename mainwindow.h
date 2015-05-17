@@ -90,6 +90,7 @@ flag_editor_t* flag_editor;
 value_editor_t* excitement_editor;
 value_editor_t* intensity_editor;
 value_editor_t* nausea_editor;
+value_editor_t* max_height_editor;
 value_editor_t* min_cars_editor;
 value_editor_t* max_cars_editor;
 value_editor_t* zero_cars_editor;

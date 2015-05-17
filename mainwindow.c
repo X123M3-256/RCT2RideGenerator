@@ -206,6 +206,7 @@ flag_editor_add_checkbox(editor->flag_editor,"Enable remap color 2",CAR_ENABLE_R
 flag_editor_add_checkbox(editor->flag_editor,"Enable remap color 3",CAR_ENABLE_REMAP3);
 flag_editor_add_checkbox(editor->flag_editor,"No upstops",CAR_NO_UPSTOPS);
 flag_editor_add_checkbox(editor->flag_editor,"Fake spinning",CAR_FAKE_SPINNING);
+flag_editor_add_checkbox(editor->flag_editor,"Swinging",CAR_IS_SWINGING);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,1);
 
 editor->sprite_editor=flag_editor_new("Sprites");
@@ -271,7 +272,8 @@ editor->intensity_editor=value_editor_new(VALUE_SIZE_BYTE,"Intensity:");
 gtk_box_pack_start(GTK_BOX(editor->container),editor->intensity_editor->container,FALSE,FALSE,2);
 editor->nausea_editor=value_editor_new(VALUE_SIZE_BYTE,"Nausea:");
 gtk_box_pack_start(GTK_BOX(editor->container),editor->nausea_editor->container,FALSE,FALSE,2);
-
+editor->max_height_editor=value_editor_new(VALUE_SIZE_BYTE,"Max height increase:");
+gtk_box_pack_start(GTK_BOX(editor->container),editor->max_height_editor->container,FALSE,FALSE,2);
 
 //Edit car related information
 GtkWidget* cars_frame=gtk_frame_new("Cars");
@@ -323,6 +325,7 @@ flag_editor_set_flags(editor->flag_editor,&(project->flags));
 value_editor_set_value(editor->excitement_editor,&(project->excitement));
 value_editor_set_value(editor->intensity_editor,&(project->intensity));
 value_editor_set_value(editor->nausea_editor,&(project->nausea));
+value_editor_set_value(editor->max_height_editor,&(project->max_height));
 value_editor_set_value(editor->min_cars_editor,&(project->minimum_cars));
 value_editor_set_value(editor->max_cars_editor,&(project->maximum_cars));
 value_editor_set_value(editor->zero_cars_editor,&(project->zero_cars));
