@@ -27,6 +27,7 @@ ride_type_t ride_types[NUM_RIDE_TYPES]={
 {0x2c,"Vertical Drop Coaster"},
 {0x32,"Ghost Train"},
 {0x33,"Twister Coaster"},
+{0x34,"Wooden Coaster"},
 {0x35,"Side-Friction Coaster"},
 {0x36,"Wild Mouse"},
 {0x37,"Multi-Dimension Coaster"},

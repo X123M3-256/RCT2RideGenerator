@@ -1,7 +1,7 @@
 #ifndef RIDETYPES_H_INCLUDED
 #define RIDETYPES_H_INCLUDED
 #include<stdint.h>
-#define NUM_RIDE_TYPES 48
+#define NUM_RIDE_TYPES 49
 
 typedef struct
 {
