@@ -4,7 +4,7 @@
 #include<assert.h>
 #include "objLoader/obj_parser.h"//TODO make this a library
 #include "model.h"
-
+#include "palette.h"
 
 /*
 Vector ParseObjVertex()
@@ -177,6 +177,15 @@ int face_index=0;
     for(i=0;i<obj_data.face_count;i++)
     {
     model->faces[face_index].color=0;//Default to grey
+    if(obj_data.material_list!=NULL&&obj_data.face_list[i]->material_index>=0)
+    {
+    obj_material* material=obj_data.material_list[obj_data.face_list[i]->material_index];
+        if(material->diff[0]<0.1&&material->diff[1]>0.9&&material->diff[2]<0.1)model->faces[face_index].color=COLOR_REMAP_1;
+        if(material->diff[0]>0.9&&material->diff[1]<0.1&&material->diff[2]>0.9)model->faces[face_index].color=COLOR_REMAP_2;
+        if(material->diff[0]>0.9&&material->diff[1]>0.9&&material->diff[2]<0.1)model->faces[face_index].color=COLOR_REMAP_3;
+        if(material->diff[0]>0.9&&material->diff[1]>0.9&&material->diff[2]>0.9)model->faces[face_index].color=2;
+        if(material->diff[0]>0.4&&material->diff[0]<0.6&&material->diff[1]>0.4&&material->diff[1]<0.6&&material->diff[2]>0.4&&material->diff[2]<0.6)model->faces[face_index].color=1;
+    }
         for(j=0;j<3;j++)
         {
         model->faces[face_index].vertices[j]=obj_data.face_list[i]->vertex_index[j];
