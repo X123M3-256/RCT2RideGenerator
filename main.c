@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <gtk/gtk.h>
 #include "mainwindow.h"
-#include "dat.h"
+//#include "dat.h"
 /*
 //These methods are used to dump various bits of information for reversing purposes
 uint32_t flags;
@@ -160,70 +161,16 @@ int i;
 }
 
 
-
-
-void MakeRide()
-{
-int i;
-DeserializeFile("msspinner9.rgen");
-
-ObjectFile* file=LoadDat("RCT2 Reversing/Object DATs/Raw/BMFL.DAT");
-
-RideHeader* header=file->ObjectHeader;
-header->Flags|=RIDE_SEPERATE;
-//header->TrackSections=0xFFFFFFFFFFFFFFFFl;
-header->MinimumCars=1;
-header->MaximumCars=8;
-header->Cars[0].Sprites=0xF|SPRITE_BANKING;
-header->CarTypes[CAR_INDEX_DEFAULT]=0;
-header->CarTypes[CAR_INDEX_REAR]=0xFF;
-header->CarTypes[CAR_INDEX_FRONT]=0xFF;
-header->Cars[0].RiderPairs=0;
-header->Cars[0].Riders=0;
-header->Cars[0].RiderSprites=0;
-header->Cars[0].Spacing=2;
-
-header->Cars[1].Sprites=0;
-header->Cars[2].Sprites=0;
-header->Cars[3].Sprites=0;
-
-SetString(file,STRING_TABLE_NAME,1,"AAAAAAA");
-
-Animation* animations[5];
-animations[0]=GetAnimationByIndex(0);
-animations[1]=NULL;
-animations[2]=NULL;
-animations[3]=NULL;
-animations[4]=GetAnimationByIndex(1);
-RenderSprites(file,animations);
-
-SaveDat(file,".wine/drive_c/Program Files/Infogrames/RollerCoaster Tycoon 2/ObjData/TEST.DAT");
-}
-
-
 */
+
 
 int main(int argc,char**argv)
 {
-/*
-object_t* object=object_load_dat("/home/edward/RCT2 Reversing/Object DATs/Inverted Hairpin Coaster");
-string_table_set_string_by_language(object->string_tables[0],LANGUAGE_ENGLISH_US,"AAAAAAA");
-object->ride_header->track_style=2;
-object->ride_header->maximum_cars=8;
-object->ride_header->minimum_cars=3;
-object->ride_header->track_sections=0xFFFFFFFFFFFFFFFFl;
-object->ride_header->cars[0].flags|=CAR_IS_POWERED;
-object->ride_header->cars[0].powered_velocity=80;
-object->ride_header->cars[0].powered_acceleration=80;
-object_save_dat(object,"ObjData/TEST.DAT");
-*/
-
 gtk_init(&argc,&argv);
 //Create main interface
 main_window_t* main_window=main_window_new();
 gtk_main();
 main_window_free(main_window);
-
 return 0;
 }
 
