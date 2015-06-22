@@ -24,12 +24,7 @@ gtk_widget_destroy(file_dialog);
 return filename;
 }
 
-void show_error(char* message)
-{
-GtkWidget* dialog=gtk_message_dialog_new(NULL,0,GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,message);
-gtk_dialog_run (GTK_DIALOG (dialog));
-gtk_widget_destroy (dialog);
-}
+
 
 
 
@@ -188,9 +183,11 @@ void car_editor_edit_animation(GtkWidget* widget,gpointer data)
 {
 car_editor_t* editor=(car_editor_t*)data;
     if(editor->project==NULL||editor->car_settings==NULL)return;
-int req_frames=car_settings_count_required_animation_frames(editor->car_settings);
-    if(editor->car_settings->animation->num_frames<req_frames)animation_set_num_frames(editor->car_settings->animation,req_frames);
-animation_dialog_t* dialog=animation_dialog_new(editor->car_settings->animation,editor->project->models,editor->project->num_models);
+int variable_flags=0;
+    if(editor->car_settings->flags&CAR_IS_SPINNING)variable_flags|=ANIMATION_DIALOG_SPIN;
+    if(editor->car_settings->flags&CAR_IS_SWINGING)variable_flags|=ANIMATION_DIALOG_SWING;
+    if(editor->car_settings->sprites&SPRITE_RESTRAINT_ANIMATION)variable_flags|=ANIMATION_DIALOG_RESTRAINT;
+animation_dialog_t* dialog=animation_dialog_new(editor->car_settings->animation,editor->project->models,editor->project->num_models,variable_flags);
 animation_dialog_run(dialog);
 animation_dialog_free(dialog);
 }
@@ -216,6 +213,8 @@ flag_editor_add_checkbox(editor->sprite_editor,"Vertical slopes/Loops",SPRITE_VE
 flag_editor_add_checkbox(editor->sprite_editor,"Diagonal slopes",SPRITE_DIAGONAL_SLOPE);
 flag_editor_add_checkbox(editor->sprite_editor,"Banked turns",SPRITE_BANKING);
 flag_editor_add_checkbox(editor->sprite_editor,"Sloped banked turns",SPRITE_SLOPED_BANKED_TURN);
+flag_editor_add_checkbox(editor->sprite_editor,"Inline twists",SPRITE_INLINE_TWIST);
+flag_editor_add_checkbox(editor->sprite_editor,"Corkscrews",SPRITE_CORKSCREW);
 flag_editor_add_checkbox(editor->sprite_editor,"Animated restraints",SPRITE_RESTRAINT_ANIMATION);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->sprite_editor->container,FALSE,FALSE,1);
 
@@ -264,6 +263,7 @@ editor->flag_editor=flag_editor_new("Flags");
 flag_editor_add_checkbox(editor->flag_editor,"Show as seperate ride",RIDE_SEPERATE);
 flag_editor_add_checkbox(editor->flag_editor,"Ride is covered",RIDE_COVERED);
 flag_editor_add_checkbox(editor->flag_editor,"Riders get wet",RIDE_WET);
+flag_editor_add_checkbox(editor->flag_editor,"Ride slows down in water",RIDE_SLOW_IN_WATER);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->flag_editor->container,FALSE,FALSE,2);
 
 editor->excitement_editor=value_editor_new(VALUE_SIZE_BYTE,"Excitement:");
@@ -444,31 +444,7 @@ model_t* model=(model_t*)data;
         gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->name);
         }
 }
-/*
-static void main_window_add_animation(GtkWidget* widget,gpointer data)
-{
-main_window_t* main_window=(main_window_t*)data;
-    if(main_window->project==NULL)return;
-animation_t* animation=animation_new();
-project_add_animation(main_window->project,animation);
-animation_dialog_t* dialog=animation_dialog_new(animation,main_window->project->models,main_window->project->num_models);
-animation_dialog_run(dialog);
-animation_dialog_free(dialog);
-}
-*/
-/*
-static void main_window_edit_animation(GtkWidget* widget,gpointer data)
-{
-animation_t* animation=(animation_t*)data;
-        if(animation!=NULL)
-        {
-        animation_dialog_t* dialog=animation_dialog_new(animation,);
-        animation_dialog_run(dialog);
-        animation_dialog_free(dialog);
-        gtk_menu_item_set_label(GTK_MENU_ITEM(widget),animation->name);
-        }
-}
-*/
+
 
 void main_window_populate_model_menu(main_window_t* main_window)
 {
@@ -482,20 +458,7 @@ int i;
     gtk_widget_show(model_menu_item);
     }
 }
-/*
-void main_window_populate_animation_menu(main_window_t* main_window)
-{
-int i;
-    for(i=0;i<main_window->project->num_animations;i++)
-    {
-    //Add model to menu
-    GtkWidget* animation_menu_item=gtk_menu_item_new_with_label(main_window->project->animations[i]->name);
-    gtk_menu_shell_append(GTK_MENU_SHELL(main_window->animation_menu),animation_menu_item);
-//    g_signal_connect(model_menu_item,"activate",G_CALLBACK(main_window_edit_animation),main_window->project->models[i]);
-    gtk_widget_show(animation_menu_item);
-    }
-}
-*/
+
 void main_window_set_project(main_window_t* main_window,project_t* project)
 {
 main_window->project=project;
