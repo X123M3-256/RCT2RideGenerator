@@ -36,6 +36,8 @@ GtkWidget* label;
 GtkWidget* entry;
 }string_editor_t;
 
+void show_error(char* message);
+
 value_editor_t* value_editor_new(value_size_t size,const char* label);
 void value_editor_set_value(value_editor_t* editor,void* value_ptr);
 
