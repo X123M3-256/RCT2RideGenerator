@@ -14,6 +14,8 @@
 #define M_PI 3.1415926535
 #define M_PI_2 (3.1415926535/2.0)
 #define M_PI_4 (3.1415926535/4.0)
+#define M_PI_8 (3.1415926535/8.0)
+#define M_PI_12 (3.1415926535/12.0)
 #define M_SQRT1_2 (1/sqrt(2.0))
 
 #define TILE_SLOPE (1/sqrt(6))
@@ -34,7 +36,14 @@
 #define BANK M_PI_4
 #define BANK_TRANSITION (M_PI_4/2)
 
-#define PI_12 (M_PI/12.0)
+
+#define CORKSCREW_RIGHT_YAW(angle) (atan2(0.5*(1-cos(angle)),1-0.5*(1-cos(angle))))
+#define CORKSCREW_RIGHT_PITCH(angle) (-asin(-sin(angle)/sqrt(2.0)))
+#define CORKSCREW_RIGHT_ROLL(angle) (-atan2(sin(angle)/sqrt(2.0),cos(angle)))
+
+#define CORKSCREW_LEFT_YAW(angle) (-CORKSCREW_RIGHT_YAW(angle))
+#define CORKSCREW_LEFT_PITCH(angle) (-CORKSCREW_RIGHT_PITCH(-angle))
+#define CORKSCREW_LEFT_ROLL(angle) (-CORKSCREW_RIGHT_ROLL(angle))
 
 typedef enum
 {
@@ -53,6 +62,7 @@ enum
 {
 RIDE_WET=0x00000100u,
 RIDE_COVERED=0x00000400u,
+RIDE_SLOW_IN_WATER=0x00000200u,
 RIDE_SEPERATE=0x00001000u,
 RIDE_ENABLE_OR_ELSE=0x00002000u //Not setting this prevents track designs from showing in the window
 }ride_flags_t;
@@ -77,13 +87,13 @@ SPRITE_STEEP_SLOPE=0x0004,
 SPRITE_VERTICAL_SLOPE=0x0008,
 SPRITE_DIAGONAL_SLOPE=0x0010,
 SPRITE_BANKING=0x0020,
-SPRITE_UNKNOWN1=0x0040,
+SPRITE_INLINE_TWIST=0x0040,
 SPRITE_SLOPE_BANK_TRANSITION=0x0080,
 SPRITE_DIAGONAL_BANK_TRANSITION=0x0100,
 SPRITE_SLOPED_BANK_TRANSITION=0x0200,
 SPRITE_SLOPED_BANKED_TURN=0x0400,
 SPRITE_BANKED_SLOPE_TRANSITION=0x0800,
-SPRITE_UNKNOWN2=0x1000,
+SPRITE_CORKSCREW=0x1000,
 SPRITE_RESTRAINT_ANIMATION=0x2000
 }sprite_flags_t;
 
@@ -277,6 +287,7 @@ void image_list_set_num_images(image_list_t* list,uint32_t num_images);
 ride_header_t* ride_header_new();
 
 ride_structures_t* ride_structures_new();
+void ride_structures_set_num_peep_positions(ride_structures_t* structures,int car,int num);
 
 object_t* object_new_ride();
 object_t* object_load_dat(const char* filename);

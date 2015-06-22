@@ -69,7 +69,21 @@ checksum=checksum_process_byte(checksum,header[0]);/*Do first byte*/
     for(i=0;i<size;i++)checksum=checksum_process_byte(checksum,data[i]);/*Checksum rest file*/;
 return checksum;
 }
-
+uint32_t calculate_salt(uint32_t current_checksum,uint32_t target,uint8_t* salt)
+{
+target^=(current_checksum<<25)|(current_checksum>>7);
+salt[0]=(target&0x00000001)<<7;;
+salt[1]=((target&0x00200000)>>14);
+salt[2]=((target&0x000007F8)>>3);
+salt[3]=((target&0xFF000000)>>24);
+salt[4]=((target&0x00100000)>>13);
+salt[5]=(target&0x00000004)>>2;
+salt[6]=0;
+salt[7]=((target&0x000FF000)>>12);
+salt[8]=(target&0x00000002)>>1;
+salt[9]=(target&0x00C00000)>>22;
+salt[10]=(target&0x00000800)>>11;
+}
 
 
 uint8_t count_repeated_bytes(uint8_t* bytes,uint32_t pos,uint32_t size)
@@ -238,7 +252,7 @@ uint8_t* car_data=bytes+26;
     /*Load flags*/
     car->flags=*((uint32_t*)(car_data+17));
     /*Load "extra frames*/
-    car_data[21]=car->extra_swing_frames;
+    car->extra_swing_frames=car_data[21];
     /*Load spin parameters*/
     car->spin_inertia=car_data[85];
     car->spin_friction=car_data[86];
@@ -351,30 +365,37 @@ int i;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
 structures->num_default_colors=8;
 structures->default_colors=malloc(8*sizeof(color_scheme_t));
-structures->default_colors[0].colors[0]=18;
-structures->default_colors[0].colors[1]=6;
-structures->default_colors[0].colors[2]=0;
-structures->default_colors[1].colors[0]=6;
+structures->default_colors[0].colors[0]=6;
+structures->default_colors[0].colors[1]=18;
+structures->default_colors[0].colors[2]=18;
+
+structures->default_colors[1].colors[0]=0;
 structures->default_colors[1].colors[1]=18;
-structures->default_colors[1].colors[2]=0;
-structures->default_colors[2].colors[0]=2;
-structures->default_colors[2].colors[1]=0;
-structures->default_colors[2].colors[2]=0;
-structures->default_colors[3].colors[0]=0;
-structures->default_colors[3].colors[1]=1;
-structures->default_colors[3].colors[2]=0;
-structures->default_colors[4].colors[0]=10;
-structures->default_colors[4].colors[1]=6;
-structures->default_colors[4].colors[2]=0;
-structures->default_colors[5].colors[0]=6;
-structures->default_colors[5].colors[1]=0;
-structures->default_colors[5].colors[2]=0;
-structures->default_colors[6].colors[0]=7;
+structures->default_colors[1].colors[2]=28;
+
+structures->default_colors[2].colors[0]=0;
+structures->default_colors[2].colors[1]=6;
+structures->default_colors[2].colors[2]=14;
+
+structures->default_colors[3].colors[0]=28;
+structures->default_colors[3].colors[1]=6;
+structures->default_colors[3].colors[2]=1;
+
+structures->default_colors[4].colors[0]=18;
+structures->default_colors[4].colors[1]=28;
+structures->default_colors[4].colors[2]=28;
+
+structures->default_colors[5].colors[0]=2;
+structures->default_colors[5].colors[1]=6;
+structures->default_colors[5].colors[2]=28;
+
+structures->default_colors[6].colors[0]=2;
 structures->default_colors[6].colors[1]=6;
 structures->default_colors[6].colors[2]=0;
-structures->default_colors[7].colors[0]=18;
-structures->default_colors[7].colors[1]=18;
-structures->default_colors[7].colors[2]=0;
+
+structures->default_colors[7].colors[0]=6;
+structures->default_colors[7].colors[1]=10;
+structures->default_colors[7].colors[2]=9;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;
@@ -382,6 +403,14 @@ structures->default_colors[7].colors[2]=0;
     }
 return structures;
 }
+
+void ride_structures_set_num_peep_positions(ride_structures_t* structures,int car,int num)
+{
+structures->peep_positions[car].num=num;
+structures->peep_positions[car].positions=malloc(num);
+memset(structures->peep_positions[car].positions,0,num);
+}
+
 ride_structures_t* ride_structures_load(uint8_t* bytes,uint32_t* pos_ptr)
 {
 int i;
@@ -460,11 +489,14 @@ free(structures);
 string_table_t* string_table_new()
 {
 string_table_t* table=malloc(sizeof(string_table_t));
-table->num_strings=1;
-table->strings=malloc(sizeof(string_table_entry_t));
+table->num_strings=2;
+table->strings=malloc(2*sizeof(string_table_entry_t));
 table->strings[0].language=LANGUAGE_ENGLISH_UK;
 table->strings[0].str=malloc(7);
 strcpy(table->strings[0].str,"A Ride");
+table->strings[1].language=LANGUAGE_ENGLISH_US;
+table->strings[1].str=malloc(7);
+strcpy(table->strings[1].str,"A Ride");
 return table;
 }
 string_table_t* string_table_load(uint8_t* bytes,uint32_t* pos_ptr)
@@ -729,6 +761,7 @@ free(list);
 }
 
 
+
 object_t* object_new_ride()
 {
 object_t* object=malloc(sizeof(object_t));
@@ -804,7 +837,6 @@ if(header[0x10])
     }
 free(encoded_bytes);
 
-
     if(calculate_checksum(header,bytes->data,bytes->size)!=*((uint32_t*)(header+12)))
     {
     printf("Checksum does not match\n");
@@ -866,8 +898,6 @@ ride_structures_write(object->optional,decoded_file);
 /*Write images*/
 image_list_write(object->images,decoded_file);
 
-/*Encode file with RLE*/
-buffer_t* encoded_bytes=compress_data(decoded_file->data,decoded_file->size);
 
 /*Create header*/
 uint8_t header[HEADER_SIZE];
@@ -884,10 +914,23 @@ memset(header_filename,' ',8);
     }
 /*Specify that data is compressed*/
 header[0x10]=1;
+
+
+//Write checksum forcing salt
+uint32_t cur_checksum=calculate_checksum(header,decoded_file->data,decoded_file->size);
+uint8_t* salt=decoded_file->data+decoded_file->size;
+buffer_expand(decoded_file,11);
+calculate_salt(cur_checksum,0xF9DCD1C2,salt);
+
+
 /*Calculate checksum*/
-uint32_t checksum =calculate_checksum(header,decoded_file->data,decoded_file->size);
+uint32_t checksum=calculate_checksum(header,decoded_file->data,decoded_file->size);
 /*Write checksum*/
 *((uint32_t*)(header+12))=checksum;
+
+
+/*Encode file with RLE*/
+buffer_t* encoded_bytes=compress_data(decoded_file->data,decoded_file->size);
 /*Write file size*/
 *((uint32_t*)(header+17))=encoded_bytes->size;
 
