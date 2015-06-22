@@ -2,6 +2,15 @@
 #include <string.h>
 #include "interface.h"
 #include "palette.h"
+
+void show_error(char* message)
+{
+GtkWidget* dialog=gtk_message_dialog_new(NULL,0,GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,message);
+gtk_dialog_run (GTK_DIALOG (dialog));
+gtk_widget_destroy (dialog);
+}
+
+
 static void value_editor_changed(GtkWidget* widget,gpointer data)
 {
 value_editor_t* editor=(value_editor_t*)data;
