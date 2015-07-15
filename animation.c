@@ -493,6 +493,7 @@ animation_object_t* second_rider=NULL;
             else if(second_rider==NULL)second_rider=animation->objects[data->cur_object];
             else break;
         }
+    data->cur_object++;
     }
 
 
