@@ -503,6 +503,7 @@ model_dialog_t* dialog=(model_dialog_t*)data;
 dialog->model->is_rider=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->is_rider));
 }
 
+
 model_dialog_t* model_dialog_new(model_t* model)
 {
 model_dialog_t* dialog=malloc(sizeof(model_dialog_t));
@@ -524,6 +525,8 @@ gtk_box_pack_start(GTK_BOX(name_hbox),dialog->name_editor->container,TRUE,TRUE,2
 dialog->is_rider=gtk_check_button_new_with_label("Rider");
 gtk_box_pack_start(GTK_BOX(name_hbox),dialog->is_rider,FALSE,FALSE,2);
 g_signal_connect(dialog->is_rider,"toggled",G_CALLBACK(model_dialog_is_rider_changed),dialog);
+gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_rider),model->is_rider);
+
 
 gtk_box_pack_start(GTK_BOX(content_area),name_hbox,FALSE,FALSE,2);
 

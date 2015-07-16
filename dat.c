@@ -865,7 +865,7 @@ object->images=image_list_load(bytes->data,&pos);
 buffer_free(bytes);
 return object;
 }
-void object_save_dat(object_t* object,const char* filename)
+void object_save_dat(object_t* object,const char* filename,uint32_t checksum)
 {
 int i;
 /*Extract the filename from the path*/
@@ -920,11 +920,11 @@ header[0x10]=1;
 uint32_t cur_checksum=calculate_checksum(header,decoded_file->data,decoded_file->size);
 uint8_t* salt=decoded_file->data+decoded_file->size;
 buffer_expand(decoded_file,11);
-calculate_salt(cur_checksum,0xF9DCD1C2,salt);
+calculate_salt(cur_checksum,checksum,salt);
 
 
-/*Calculate checksum*/
-uint32_t checksum=calculate_checksum(header,decoded_file->data,decoded_file->size);
+/*Calculate checksum - commented out because checksum is now passed as a parameter*/
+//uint32_t checksum=calculate_checksum(header,decoded_file->data,decoded_file->size);
 /*Write checksum*/
 *((uint32_t*)(header+12))=checksum;
 

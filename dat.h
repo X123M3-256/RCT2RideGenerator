@@ -291,7 +291,7 @@ void ride_structures_set_num_peep_positions(ride_structures_t* structures,int ca
 
 object_t* object_new_ride();
 object_t* object_load_dat(const char* filename);
-void object_save_dat(object_t* object,const char* filename);
+void object_save_dat(object_t* object,const char* filename,uint32_t checksum);
 char* object_get_string(object_t* object,string_table_index_t table_num,language_t language);
 void object_set_string(object_t* object,string_table_index_t table_num,language_t language,char* new_string);
 /*void RenderSprites(object_t* file,Animation* animations[5]);*/

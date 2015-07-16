@@ -20,6 +20,7 @@ typedef struct
 {
 char* name;
 char* description;
+uint32_t id;
 uint32_t flags;
 uint8_t track_type;
 uint8_t minimum_cars;

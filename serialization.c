@@ -336,6 +336,9 @@ json_t* name=json_string(project->name);
 json_object_set_new(json,"name",name);
 json_t* description=json_string(project->description);
 json_object_set_new(json,"description",description);
+//Serialize id
+json_t* id=json_integer(project->id);
+json_object_set_new(json,"id",id);
 //Serialize flags
 json_t* flags=json_integer(project->flags);
 json_object_set_new(json,"flags",flags);
@@ -437,6 +440,9 @@ json_t* description=json_object_get(json,"description");
     project->description=realloc(project->description,json_string_length(description)+1);
     strcpy(project->description,json_string_value(description));
     }
+//Deserialize id
+json_t* id=json_object_get(json,"id");
+    if(id!=NULL)project->id=json_integer_value(id);
 //Deserialize flags
 json_t* flags=json_object_get(json,"flags");
     if(flags!=NULL)project->flags=json_integer_value(flags);

@@ -25,6 +25,7 @@ project->car_types[CAR_INDEX_DEFAULT]=0;
 project->models=NULL;
 project->num_models=0;
 project->preview_image=image_new(112,112,0);
+project->id=rand();
 int i;
     for(i=0;i<NUM_CARS;i++)
     {

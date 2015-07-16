@@ -502,7 +502,7 @@ char* filename=get_filename("Enter filename",GTK_FILE_CHOOSER_ACTION_SAVE);
     if(filename!=NULL)
     {
     object_t* object=project_export_dat(main_window->project);
-    object_save_dat(object,filename);
+    object_save_dat(object,filename,main_window->project->id);
     object_free(object);
     }
 }

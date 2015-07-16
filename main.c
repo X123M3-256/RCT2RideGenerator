@@ -166,6 +166,7 @@ int i;
 
 int main(int argc,char**argv)
 {
+srand(time(0));
 gtk_init(&argc,&argv);
 //Create main interface
 main_window_t* main_window=main_window_new();
