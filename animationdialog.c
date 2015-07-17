@@ -22,9 +22,10 @@ animation_viewer_t* animation_viewer_new()
 animation_viewer_t* viewer=malloc(sizeof(animation_viewer_t));
 viewer->animation=NULL;
 viewer->model_view=MatrixIdentity();
-viewer->model_view.Data[0]=4;
+viewer->model_view.Data[0]=-4;
 viewer->model_view.Data[5]=4;
-viewer->model_view.Data[10]=4;
+viewer->model_view.Data[10]=-4;
+
 
 viewer->grid_model=model_new_grid();
 viewer->image_viewer=image_viewer_new();
