@@ -504,6 +504,38 @@ dialog->model->is_rider=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->i
 }
 
 
+/*
+static void model_dialog_load_model(GtkWidget* widget,gpointer data)
+{
+model_dialog_t* dialog=(model_dialog_t*)data;
+
+char* filename=get_filename("Select model to load:",GTK_FILE_CHOOSER_ACTION_OPEN);
+    if(filename==NULL)return;
+
+model_t* new_model=model_load_obj(filename);
+    if(new_model==NULL)
+    {
+    show_error("Failed to load model - file may be invalid");
+    return;
+    }
+
+model_t* old_model=dialog->model;
+model_dialog_set_model(dialog,new_model);
+    if(old_model!=NULL)model_free(old_model);
+
+dialog->model=model;
+string_editor_set_string(dialog->name_editor,&(model->name));
+gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_rider),model->is_rider);
+matrix_transform_button_set_matrix(dialog->flip_x,&(model->transform));
+matrix_transform_button_set_matrix(dialog->flip_y,&(model->transform));
+matrix_transform_button_set_matrix(dialog->flip_z,&(model->transform));
+matrix_transform_button_set_matrix(dialog->rotate_x,&(model->transform));
+matrix_transform_button_set_matrix(dialog->rotate_y,&(model->transform));
+matrix_transform_button_set_matrix(dialog->rotate_z,&(model->transform));
+model_viewer_set_model(dialog->model_viewer,model);
+}
+*/
+
 model_dialog_t* model_dialog_new(model_t* model)
 {
 model_dialog_t* dialog=malloc(sizeof(model_dialog_t));
@@ -529,6 +561,24 @@ gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_rider),model->is_rider
 
 
 gtk_box_pack_start(GTK_BOX(content_area),name_hbox,FALSE,FALSE,2);
+
+//Create pivot point editor
+
+GtkWidget* pivot_hbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,1);
+gtk_box_pack_start(GTK_BOX(content_area),pivot_hbox,FALSE,FALSE,2);
+
+dialog->pivot_x=float_editor_new("X",-10,10);
+dialog->pivot_y=float_editor_new("Y",-10,10);
+dialog->pivot_z=float_editor_new("Z",-10,10);
+float_editor_set_float(dialog->pivot_x,model->transform.Data+3);
+float_editor_set_float(dialog->pivot_y,model->transform.Data+7);
+float_editor_set_float(dialog->pivot_z,model->transform.Data+11);
+g_signal_connect(dialog->pivot_x->spin_button,"value-changed",G_CALLBACK(model_dialog_update_model_viewer),dialog);
+g_signal_connect(dialog->pivot_y->spin_button,"value-changed",G_CALLBACK(model_dialog_update_model_viewer),dialog);
+g_signal_connect(dialog->pivot_z->spin_button,"value-changed",G_CALLBACK(model_dialog_update_model_viewer),dialog);
+gtk_box_pack_start(GTK_BOX(pivot_hbox),dialog->pivot_x->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(pivot_hbox),dialog->pivot_y->container,FALSE,FALSE,2);
+gtk_box_pack_start(GTK_BOX(pivot_hbox),dialog->pivot_z->container,FALSE,FALSE,2);
 
 //Create transform buttons
 GtkWidget* top_hbox=gtk_hbox_new(FALSE,1);

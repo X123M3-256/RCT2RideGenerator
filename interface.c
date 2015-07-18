@@ -66,6 +66,36 @@ gtk_widget_set_sensitive(editor->spin_button,TRUE);
 gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button),value);
 }
 
+static void float_editor_changed(GtkWidget* widget,gpointer data)
+{
+float_editor_t* editor=(float_editor_t*)data;
+    if(editor->value==NULL)return;
+*(editor->value)=gtk_spin_button_get_value(GTK_SPIN_BUTTON(editor->spin_button));
+}
+float_editor_t* float_editor_new(const char* label,float min,float max)
+{
+float_editor_t* editor=malloc(sizeof(float_editor_t));
+editor->value=NULL;
+
+editor->container=gtk_hbox_new(FALSE,1);
+editor->label=gtk_label_new(label);
+
+editor->spin_button=gtk_spin_button_new_with_range(min,max,0.01);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button),0);
+
+gtk_widget_set_sensitive(editor->spin_button,FALSE);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->label,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->spin_button,FALSE,FALSE,1);
+g_signal_connect(editor->spin_button,"value-changed",G_CALLBACK(float_editor_changed),editor);
+return editor;
+}
+void float_editor_set_float(float_editor_t* editor,float* value_ptr)
+{
+editor->value=value_ptr;
+gtk_widget_set_sensitive(editor->spin_button,TRUE);
+gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button),*value_ptr);
+}
+
 image_viewer_t* image_viewer_new()
 {
 image_viewer_t* viewer=malloc(sizeof(image_viewer_t));

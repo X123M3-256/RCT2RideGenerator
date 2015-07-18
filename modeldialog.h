@@ -68,6 +68,9 @@ uint8_t color;
 uint8_t painting;
 
 string_editor_t* name_editor;
+float_editor_t* pivot_x;
+float_editor_t* pivot_y;
+float_editor_t* pivot_z;
 matrix_transform_button_t* flip_x;
 matrix_transform_button_t* flip_y;
 matrix_transform_button_t* flip_z;
