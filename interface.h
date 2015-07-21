@@ -22,6 +22,18 @@ GtkWidget* spin_button;
 
 typedef struct
 {
+uint8_t* value;
+uint8_t values[8];
+int num_values;
+
+GtkWidget* container;
+GtkWidget* label;
+GtkWidget* select;
+}value_selector_t;
+
+
+typedef struct
+{
 image_t* image;
 
 GtkWidget* container;
@@ -49,6 +61,10 @@ void show_error(char* message);
 
 value_editor_t* value_editor_new(value_size_t size,const char* label);
 void value_editor_set_value(value_editor_t* editor,void* value_ptr);
+
+value_selector_t* value_selector_new(const char* label);
+void value_selector_set_value(value_selector_t* selector,uint8_t* value);
+void value_selector_add_selection(value_selector_t* selector,const char* name,uint8_t value);
 
 float_editor_t* float_editor_new(const char* label,float min,float max);
 void float_editor_set_float(float_editor_t* editor,float* float_ptr);

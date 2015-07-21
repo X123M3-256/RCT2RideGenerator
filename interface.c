@@ -75,6 +75,50 @@ gtk_widget_set_sensitive(editor->spin_button,TRUE);
 gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button),value);
 }
 
+void value_selector_changed(GtkWidget* widget,gpointer data)
+{
+value_selector_t* selector=(value_selector_t*)data;
+    if(selector->value==NULL)return;
+int active=gtk_combo_box_get_active(GTK_COMBO_BOX(selector->select));
+    if(active!=-1)*(selector->value)=selector->values[active];
+}
+
+value_selector_t* value_selector_new(const char* label)
+{
+value_selector_t* selector=malloc(sizeof(value_selector_t));
+selector->num_values=0;
+selector->value=NULL;
+
+selector->container=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,1);
+selector->label=gtk_label_new(label);
+selector->select=gtk_combo_box_text_new();
+
+g_signal_connect(selector->select,"changed",G_CALLBACK(value_selector_changed),selector);
+
+gtk_box_pack_start(GTK_BOX(selector->container),selector->label,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(selector->container),selector->select,FALSE,FALSE,1);
+gtk_widget_set_sensitive(selector->select,FALSE);
+return selector;
+}
+
+void value_selector_set_value(value_selector_t* selector,uint8_t* value)
+{
+selector->value=NULL;
+gtk_combo_box_set_active(GTK_COMBO_BOX(selector->select),0);
+gtk_widget_set_sensitive(selector->select,TRUE);
+selector->value=value;
+}
+
+void value_selector_add_selection(value_selector_t* selector,const char* name,uint8_t value)
+{
+if(selector->num_values==8)return;
+gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(selector->select),name);
+selector->values[selector->num_values]=value;
+selector->num_values++;
+}
+
+
+
 static void float_editor_changed(GtkWidget* widget,gpointer data)
 {
 float_editor_t* editor=(float_editor_t*)data;
