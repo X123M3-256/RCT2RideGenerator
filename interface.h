@@ -6,7 +6,8 @@
 typedef enum
 {
 VALUE_SIZE_BYTE,
-VALUE_SIZE_WORD
+VALUE_SIZE_WORD,
+VALUE_SIZE_DWORD
 }value_size_t;
 
 typedef struct

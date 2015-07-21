@@ -24,6 +24,9 @@ uint32_t value=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(editor->spin_but
     case VALUE_SIZE_WORD:
     *((uint16_t*)(editor->value))=value;
     break;
+    case VALUE_SIZE_DWORD:
+    *((uint32_t*)(editor->value))=value;
+    break;
     }
 }
 value_editor_t* value_editor_new(value_size_t size,const char* label)
@@ -41,6 +44,9 @@ editor->label=gtk_label_new(label);
     break;
     case VALUE_SIZE_WORD:
     editor->spin_button=gtk_spin_button_new_with_range(0,65535,1);
+    break;
+    case VALUE_SIZE_DWORD:
+    editor->spin_button=gtk_spin_button_new_with_range(0,4294967296,1);
     break;
     }
 gtk_widget_set_sensitive(editor->spin_button,FALSE);
@@ -60,6 +66,9 @@ uint32_t value=0;
     break;
     case VALUE_SIZE_WORD:
     value=*((uint16_t*)value_ptr);
+    break;
+    case VALUE_SIZE_DWORD:
+    value=*((uint32_t*)value_ptr);
     break;
     }
 gtk_widget_set_sensitive(editor->spin_button,TRUE);
