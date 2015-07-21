@@ -32,7 +32,9 @@ int i;
     project->cars[i].animation=animation_new();
     project->cars[i].flags=0;
     project->cars[i].sprites=SPRITE_GENTLE_SLOPE|SPRITE_STEEP_SLOPE|SPRITE_BANKING|SPRITE_SLOPED_BANKED_TURN|SPRITE_DIAGONAL_SLOPE;
-    project->cars[i].spacing=0x300;
+    project->cars[i].spacing=(32*8192)/3;
+    project->cars[i].running_sound=RUNNING_SOUND_NONE;
+    project->cars[i].secondary_sound=SECONDARY_SOUND_NONE;
     project->cars[i].z_value=8;
     project->cars[i].friction=0x2A8;
     }
@@ -482,6 +484,8 @@ memset(cars_used,0,NUM_CARS);
             }
         object->ride_header->cars[i].friction=project->cars[i].friction;
         object->ride_header->cars[i].spacing=project->cars[i].spacing;
+        object->ride_header->cars[i].running_sound=project->cars[i].running_sound;
+        object->ride_header->cars[i].secondary_sound=project->cars[i].secondary_sound;
         object->ride_header->cars[i].z_value=project->cars[i].z_value;
         //Some sprites ought be included if others are. Here we compute the minimum set of sprite flags needed that includes all the selected flags
         object->ride_header->cars[i].sprites=project->cars[i].sprites|SPRITE_FLAT_SLOPE;

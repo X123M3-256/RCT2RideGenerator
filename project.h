@@ -13,6 +13,8 @@ uint32_t flags;
 uint32_t sprites;
 uint32_t spacing;
 uint16_t friction;
+uint8_t running_sound;
+uint8_t secondary_sound;
 uint8_t z_value;
 }car_settings_t;
 
