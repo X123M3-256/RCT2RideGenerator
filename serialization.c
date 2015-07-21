@@ -351,6 +351,9 @@ json_object_set_new(json,"intensity",intensity);
 //Serialize nausea
 json_t* nausea=json_integer(project->nausea);
 json_object_set_new(json,"nausea",nausea);
+//Serialize max height adjustment
+json_t* max_height=json_integer(project->max_height);
+json_object_set_new(json,"max_height",max_height);
 //Serialize track type
 json_t* track_type=json_integer(project->track_type);
 json_object_set_new(json,"track_type",track_type);
@@ -405,6 +408,12 @@ json_t* cars=json_array();
         //Friction
         json_t* friction=json_integer(project->cars[i].friction);
         json_object_set_new(car,"friction",friction);
+        //Running sound
+        json_t* running_sound=json_integer(project->cars[i].running_sound);
+        json_object_set_new(car,"running_sound",running_sound);
+        //Secondary sound
+        json_t* secondary_sound=json_integer(project->cars[i].secondary_sound);
+        json_object_set_new(car,"secondary_sound",secondary_sound);
         //Z value
         json_t* z_value=json_integer(project->cars[i].z_value);
         json_object_set_new(car,"z_value",z_value);
@@ -455,6 +464,9 @@ json_t* intensity=json_object_get(json,"intensity");
 //Deserialize nausea
 json_t* nausea=json_object_get(json,"nausea");
     if(nausea!=NULL)project->nausea=json_integer_value(nausea);
+//Deserialize max height adjustment
+json_t* max_height=json_object_get(json,"max_height");
+    if(max_height!=NULL)project->max_height=json_integer_value(max_height);
 //Deserialize track type
 json_t* track_type=json_object_get(json,"track_type");
     if(track_type!=NULL)project->track_type=json_integer_value(track_type);
@@ -543,6 +555,12 @@ json_t* cars=json_object_get(json,"cars");
         //Friction
         json_t* friction=json_object_get(car,"friction");
             if(friction!=NULL)project->cars[i].friction=json_integer_value(friction);
+        //Running sound
+        json_t* running_sound=json_object_get(car,"running_sound");
+            if(running_sound!=NULL)project->cars[i].running_sound=json_integer_value(running_sound);
+            //Running sound
+        json_t* secondary_sound=json_object_get(car,"secondary_sound");
+            if(secondary_sound!=NULL)project->cars[i].secondary_sound=json_integer_value(secondary_sound);
         //Z value
         json_t* z_value=json_object_get(car,"z_value");
             if(z_value!=NULL)project->cars[i].z_value=json_integer_value(z_value);
