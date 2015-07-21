@@ -11,8 +11,8 @@ typedef struct
 animation_t* animation;
 uint32_t flags;
 uint32_t sprites;
+uint32_t spacing;
 uint16_t friction;
-uint16_t spacing;
 uint8_t z_value;
 }car_settings_t;
 

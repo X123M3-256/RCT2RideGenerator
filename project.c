@@ -471,11 +471,6 @@ memset(cars_used,0,NUM_CARS);
         if(cars_used[i])
         {
         //printf("%d %d %d %d %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
-        object->ride_header->cars[i].unknown[0]=216;//Running sound effect?
-        object->ride_header->cars[i].unknown[1]=57;
-        object->ride_header->cars[i].unknown[2]=0;
-        object->ride_header->cars[i].unknown[3]=1;//Splashes;
-        object->ride_header->cars[i].unknown[4]=0;
         object->ride_header->cars[i].highest_rotation_index=31;
         object->ride_header->cars[i].flags=CAR_ENABLE_ROLLING_SOUND|project->cars[i].flags;
         //Enable all extra swinging frames
@@ -517,7 +512,7 @@ memset(cars_used,0,NUM_CARS);
             {
                 if(animation->objects[model]->model->is_rider)
                 {
-                //object->optional->peep_positions[i].positions[rider]=(int8_t)(-animation->frames[0][model].position.Z*(32.0/3.0));
+//                object->optional->peep_positions[i].positions[rider]=(int8_t)(-animation->frames[0][model].position.Z*(32.0/3.0));
                 rider++;
                 }
             model++;
