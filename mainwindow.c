@@ -218,6 +218,26 @@ flag_editor_add_checkbox(editor->sprite_editor,"Corkscrews",SPRITE_CORKSCREW);
 flag_editor_add_checkbox(editor->sprite_editor,"Animated restraints",SPRITE_RESTRAINT_ANIMATION);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->sprite_editor->container,FALSE,FALSE,1);
 
+
+editor->running_sound_editor=value_selector_new("Running sound:");
+value_selector_add_selection(editor->running_sound_editor,"None",RUNNING_SOUND_NONE);
+value_selector_add_selection(editor->running_sound_editor,"Wooden coaster 1",RUNNING_SOUND_WOODEN_MODERN);
+value_selector_add_selection(editor->running_sound_editor,"Wooden coaster 2",RUNNING_SOUND_WOODEN_OLD);
+value_selector_add_selection(editor->running_sound_editor,"Steel coaster 1",RUNNING_SOUND_STEEL);
+value_selector_add_selection(editor->running_sound_editor,"Steel coaster 2",RUNNING_SOUND_STEEL_SMOOTH);
+value_selector_add_selection(editor->running_sound_editor,"Waterslide",RUNNING_SOUND_WATERSLIDE);
+value_selector_add_selection(editor->running_sound_editor,"Train",RUNNING_SOUND_TRAIN);
+value_selector_add_selection(editor->running_sound_editor,"Engine",RUNNING_SOUND_ENGINE);
+
+editor->secondary_sound_editor=value_selector_new("Secondary sound:");
+value_selector_add_selection(editor->secondary_sound_editor,"None",SECONDARY_SOUND_NONE);
+value_selector_add_selection(editor->secondary_sound_editor,"Screams 1",SECONDARY_SOUND_SCREAMS_1);
+value_selector_add_selection(editor->secondary_sound_editor,"Screams 2",SECONDARY_SOUND_SCREAMS_2);
+value_selector_add_selection(editor->secondary_sound_editor,"Screams 3",SECONDARY_SOUND_SCREAMS_3);
+value_selector_add_selection(editor->secondary_sound_editor,"Train whistle",SECONDARY_SOUND_WHISTLE);
+value_selector_add_selection(editor->secondary_sound_editor,"Bell",SECONDARY_SOUND_BELL);
+
+
 editor->spacing_editor=value_editor_new(VALUE_SIZE_DWORD,"Spacing:");
 editor->friction_editor=value_editor_new(VALUE_SIZE_WORD,"Friction:");
 editor->z_value_editor=value_editor_new(VALUE_SIZE_BYTE,"Z Value:");
@@ -226,6 +246,8 @@ editor->animation_button=gtk_button_new_with_label("Edit Animation");
 g_signal_connect(editor->animation_button,"clicked",G_CALLBACK(car_editor_edit_animation),editor);
 
 gtk_box_pack_start(GTK_BOX(editor->container),editor->animation_button,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->running_sound_editor->container,FALSE,FALSE,1);
+gtk_box_pack_start(GTK_BOX(editor->container),editor->secondary_sound_editor->container,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->spacing_editor->container,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->friction_editor->container,FALSE,FALSE,1);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->z_value_editor->container,FALSE,FALSE,1);
@@ -243,6 +265,8 @@ void car_editor_set_car(car_editor_t* editor,car_settings_t* car_settings)
 editor->car_settings=car_settings;
 flag_editor_set_flags(editor->flag_editor,&(car_settings->flags));
 flag_editor_set_flags(editor->sprite_editor,&(car_settings->sprites));
+value_selector_set_value(editor->running_sound_editor,&(car_settings->running_sound));
+value_selector_set_value(editor->secondary_sound_editor,&(car_settings->secondary_sound));
 value_editor_set_value(editor->spacing_editor,&(car_settings->spacing));
 value_editor_set_value(editor->friction_editor,&(car_settings->friction));
 value_editor_set_value(editor->z_value_editor,&(car_settings->z_value));
