@@ -104,7 +104,17 @@ return selector;
 void value_selector_set_value(value_selector_t* selector,uint8_t* value)
 {
 selector->value=NULL;
-gtk_combo_box_set_active(GTK_COMBO_BOX(selector->select),0);
+int i;
+    for(i=0;i<selector->num_values;i++)
+    {
+        if(*value==selector->values[i])
+        {
+        gtk_combo_box_set_active(GTK_COMBO_BOX(selector->select),i);
+        break;
+        }
+    }
+    if(i==selector->num_values)gtk_combo_box_set_active(GTK_COMBO_BOX(selector->select),0);
+
 gtk_widget_set_sensitive(selector->select,TRUE);
 selector->value=value;
 }
