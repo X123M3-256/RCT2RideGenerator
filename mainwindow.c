@@ -218,7 +218,7 @@ flag_editor_add_checkbox(editor->sprite_editor,"Corkscrews",SPRITE_CORKSCREW);
 flag_editor_add_checkbox(editor->sprite_editor,"Animated restraints",SPRITE_RESTRAINT_ANIMATION);
 gtk_box_pack_start(GTK_BOX(editor->container),editor->sprite_editor->container,FALSE,FALSE,1);
 
-editor->spacing_editor=value_editor_new(VALUE_SIZE_WORD,"Spacing:");
+editor->spacing_editor=value_editor_new(VALUE_SIZE_DWORD,"Spacing:");
 editor->friction_editor=value_editor_new(VALUE_SIZE_WORD,"Friction:");
 editor->z_value_editor=value_editor_new(VALUE_SIZE_BYTE,"Z Value:");
 
