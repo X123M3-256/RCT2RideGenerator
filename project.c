@@ -5,11 +5,19 @@
 
 project_t* project_new()
 {
+int i;
 project_t* project=malloc(sizeof(project_t));
 project->name=malloc(13);
 project->description=malloc(15);
 strcpy(project->name,"Unnamed ride");
 strcpy(project->description,"No description");
+project->num_color_schemes=0;
+    for(i=0;i<MAX_COLOR_SCHEMES;i++)
+    {
+    project->color_schemes[i].colors[0]=0;
+    project->color_schemes[i].colors[1]=0;
+    project->color_schemes[i].colors[2]=0;
+    }
 project->track_type=0x33;//Default to B&M track
 project->flags=RIDE_SEPERATE;
 project->minimum_cars=3;
@@ -26,7 +34,7 @@ project->models=NULL;
 project->num_models=0;
 project->preview_image=image_new(112,112,0);
 project->id=rand();
-int i;
+
     for(i=0;i<NUM_CARS;i++)
     {
     project->cars[i].animation=animation_new();
@@ -50,6 +58,8 @@ void project_set_preview(project_t* project,image_t* image)
 image_free(project->preview_image);
 project->preview_image=image;
 }
+
+
 
 void project_free(project_t* project)
 {
@@ -438,6 +448,14 @@ string_table_set_string_by_language(object->string_tables[STRING_TABLE_DESCRIPTI
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_DESCRIPTION],LANGUAGE_ENGLISH_US,project->description);
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY],LANGUAGE_ENGLISH_UK,capacity);
 string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY],LANGUAGE_ENGLISH_US,capacity);
+
+//Set color schemes
+ride_structures_set_num_default_colors(object->optional,project->num_color_schemes);
+printf("Num color schemes: %d\n",object->optional->num_default_colors);
+    for(i=0;i<project->num_color_schemes;i++)
+    {
+    object->optional->default_colors[i]=project->color_schemes[i];
+    }
 
 //Set car types
 object->ride_header->car_types[CAR_INDEX_DEFAULT]=project->car_types[CAR_INDEX_DEFAULT];

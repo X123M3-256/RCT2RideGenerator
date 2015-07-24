@@ -313,6 +313,7 @@ ride_header_t* ride_header_new();
 
 ride_structures_t* ride_structures_new();
 void ride_structures_set_num_peep_positions(ride_structures_t* structures,int car,int num);
+void ride_structures_set_num_default_colors(ride_structures_t* structures,int num);
 
 object_t* object_new_ride();
 object_t* object_load_dat(const char* filename);

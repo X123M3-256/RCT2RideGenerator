@@ -6,6 +6,8 @@
 #include "renderer.h"
 #include "animation.h"
 
+#define MAX_COLOR_SCHEMES 16
+
 typedef struct
 {
 animation_t* animation;
@@ -22,6 +24,8 @@ typedef struct
 {
 char* name;
 char* description;
+color_scheme_t color_schemes[16];
+uint32_t num_color_schemes;
 uint32_t id;
 uint32_t flags;
 uint8_t track_type;

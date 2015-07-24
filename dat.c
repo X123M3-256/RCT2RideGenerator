@@ -367,39 +367,8 @@ ride_structures_t* ride_structures_new()
 {
 int i;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
-structures->num_default_colors=8;
-structures->default_colors=malloc(8*sizeof(color_scheme_t));
-structures->default_colors[0].colors[0]=6;
-structures->default_colors[0].colors[1]=18;
-structures->default_colors[0].colors[2]=18;
-
-structures->default_colors[1].colors[0]=0;
-structures->default_colors[1].colors[1]=18;
-structures->default_colors[1].colors[2]=28;
-
-structures->default_colors[2].colors[0]=0;
-structures->default_colors[2].colors[1]=6;
-structures->default_colors[2].colors[2]=14;
-
-structures->default_colors[3].colors[0]=28;
-structures->default_colors[3].colors[1]=6;
-structures->default_colors[3].colors[2]=1;
-
-structures->default_colors[4].colors[0]=18;
-structures->default_colors[4].colors[1]=28;
-structures->default_colors[4].colors[2]=28;
-
-structures->default_colors[5].colors[0]=2;
-structures->default_colors[5].colors[1]=6;
-structures->default_colors[5].colors[2]=28;
-
-structures->default_colors[6].colors[0]=2;
-structures->default_colors[6].colors[1]=6;
-structures->default_colors[6].colors[2]=0;
-
-structures->default_colors[7].colors[0]=6;
-structures->default_colors[7].colors[1]=10;
-structures->default_colors[7].colors[2]=9;
+structures->num_default_colors=0;
+structures->default_colors=NULL;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;
@@ -413,6 +382,18 @@ void ride_structures_set_num_peep_positions(ride_structures_t* structures,int ca
 structures->peep_positions[car].num=num;
 structures->peep_positions[car].positions=malloc(num);
 memset(structures->peep_positions[car].positions,0,num);
+}
+
+void ride_structures_set_num_default_colors(ride_structures_t* structures,int num)
+{
+structures->default_colors=realloc(structures->default_colors,sizeof(color_scheme_t)*num);
+    for(int i=structures->num_default_colors;i<num;i++)
+    {
+    structures->default_colors[i].colors[0]=0;
+    structures->default_colors[i].colors[1]=0;
+    structures->default_colors[i].colors[2]=0;
+    }
+structures->num_default_colors=num;
 }
 
 ride_structures_t* ride_structures_load(uint8_t* bytes,uint32_t* pos_ptr)

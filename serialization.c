@@ -373,6 +373,18 @@ json_object_set_new(json,"car_icon_index",car_icon_index);
 json_t* preview=image_serialize(project->preview_image);
 json_object_set_new(json,"preview",preview);
 
+//Serialize default color schemes
+json_t* default_color_schemes=json_array();
+    for(i=0;i<project->num_color_schemes;i++)
+    {
+    json_t* color_scheme=json_array();
+    json_array_append_new(color_scheme,json_integer(project->color_schemes[i].colors[0]));
+    json_array_append_new(color_scheme,json_integer(project->color_schemes[i].colors[1]));
+    json_array_append_new(color_scheme,json_integer(project->color_schemes[i].colors[2]));
+    json_array_append_new(default_color_schemes,color_scheme);
+    }
+json_object_set_new(json,"default_color_schemes",default_color_schemes);
+
 //Serialize car types
 json_t* car_types=json_object();
     if(project->car_types[CAR_INDEX_DEFAULT]!=0xFF)json_object_set_new(car_types,"default",json_integer(project->car_types[CAR_INDEX_DEFAULT]));
@@ -489,6 +501,19 @@ json_t* preview=json_object_get(json,"preview");
     image_t* preview_image=image_deserialize(preview);
         if(preview_image!=NULL)project_set_preview(project,preview_image);
     }
+
+//Deserialize default color schemes
+json_t* default_color_schemes=json_object_get(json,"default_color_schemes");
+project->num_color_schemes=json_array_size(default_color_schemes)>MAX_COLOR_SCHEMES?MAX_COLOR_SCHEMES:json_array_size(default_color_schemes);
+    for(int i=0;i<project->num_color_schemes;i++)
+    {
+    json_t* color_scheme=json_array_get(default_color_schemes,i);
+        if(json_array_size(color_scheme)>0)project->color_schemes[i].colors[0]=json_integer_value(json_array_get(color_scheme,0));
+        if(json_array_size(color_scheme)>1)project->color_schemes[i].colors[1]=json_integer_value(json_array_get(color_scheme,1));
+        if(json_array_size(color_scheme)>2)project->color_schemes[i].colors[2]=json_integer_value(json_array_get(color_scheme,2));
+    }
+
+
 //Deserialize car types
 json_t* car_types=json_object_get(json,"car_types");
     if(car_types!=NULL)
