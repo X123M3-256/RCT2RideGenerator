@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<assert.h>
-#include "objLoader/obj_parser.h"//TODO make this a library
+#include "../RCT2RideGenerator/objLoader/obj_parser.h"//TODO make this a library
 #include "model.h"
 #include "palette.h"
 
@@ -185,6 +185,7 @@ int face_index=0;
         if(material->diff[0]>0.9&&material->diff[1]>0.9&&material->diff[2]<0.1)model->faces[face_index].color=COLOR_REMAP_3;
         if(material->diff[0]>0.9&&material->diff[1]>0.9&&material->diff[2]>0.9)model->faces[face_index].color=2;
         if(material->diff[0]>0.4&&material->diff[0]<0.6&&material->diff[1]>0.4&&material->diff[1]<0.6&&material->diff[2]>0.4&&material->diff[2]<0.6)model->faces[face_index].color=1;
+        if(material->diff[0]<0.1&&material->diff[1]<0.1&&material->diff[2]<0.1)model->faces[face_index].color=0;
     }
         for(j=0;j<3;j++)
         {
