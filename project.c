@@ -435,7 +435,7 @@ image_list_set_image(object->images,2,image_new(1,1,0));
 object_t* project_export_dat(project_t* project)
 {
 int i;
-object_t* object=object_new_ride();//object_load_dat("ObjData/CSTBOAT.DAT");//;
+object_t* object=object_new_ride();
 
 object->ride_header->track_style=project->track_type;
 
@@ -530,11 +530,15 @@ memset(cars_used,0,NUM_CARS);
         ride_structures_set_num_peep_positions(object->optional,i,num_riders);
         int rider=0;
         int model=0;
+        float variables[ANIMATION_NUM_VARIABLES]={0,0,0,0,0,0,0};
+        variables[VAR_RESTRAINT]=1;
+
             while(rider<num_riders&&model<animation->num_objects)
             {
                 if(animation->objects[model]->model->is_rider)
                 {
-//                object->optional->peep_positions[i].positions[rider]=(int8_t)(-animation->frames[0][model].position.Z*(32.0/3.0));
+                int8_t peep_position=(int8_t)(-animation_expression_evaluate(animation->objects[model]->position[2],variables)*(32.0/3.0));
+                object->optional->peep_positions[i].positions[rider]=*((uint8_t*)(&peep_position));
                 rider++;
                 }
             model++;
