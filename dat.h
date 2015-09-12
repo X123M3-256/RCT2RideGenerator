@@ -239,7 +239,7 @@ typedef struct
 {
 uint32_t flags;
 uint32_t spacing;
-uint16_t unknown[5];
+uint16_t unknown[9];
 uint16_t sprites;
 uint16_t friction;
 uint8_t running_sound;
@@ -306,8 +306,12 @@ string_table_t* string_table_new();
 char* string_table_get_string_by_language(string_table_t* table,language_t language);
 void string_table_set_string_by_language(string_table_t* table,language_t language,char* str);
 
+image_list_t* image_list_new();
+image_list_t* image_list_load(uint8_t* bytes,uint32_t* pos_ptr);
+void image_list_write(image_list_t* list,buffer_t* buffer);
 void image_list_set_image(image_list_t* list,int index,image_t* image);
 void image_list_set_num_images(image_list_t* list,uint32_t num_images);
+void image_list_free(image_list_t* list);
 
 ride_header_t* ride_header_new();
 

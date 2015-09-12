@@ -187,6 +187,7 @@ return ride_header;
 ride_header_t* ride_header_load(uint8_t* bytes,uint32_t* pos_ptr)
 {
 int i;
+
 ride_header_t* ride_header=malloc(sizeof(ride_header_t));
 /*Read flags*/
 ride_header->flags=*((uint32_t*)(bytes+8));
@@ -267,6 +268,11 @@ uint8_t* car_data=bytes+26;
     car->unknown[1]=*((uint16_t*)(car_data+96));
     car->unknown[2]=(uint16_t)car_data[88];
     car->unknown[3]=(uint16_t)car_data[90];
+    car->unknown[4]=(uint16_t)car_data[10];
+    car->unknown[5]=(uint16_t)car_data[14];
+    car->unknown[6]=(uint16_t)car_data[15];
+    car->unknown[7]=(uint16_t)car_data[16];
+    car->unknown[8]=(uint16_t)car_data[93];
     /*Move to next car structure*/
     car_data+=101;
     }
@@ -340,7 +346,7 @@ uint8_t* car_data=header_bytes+26;
     car_data[86]=car->spin_friction;
     /*Write sound effects*/
     car_data[87]=car->running_sound;
-    *((uint16_t*)(car_data+89))=car->secondary_sound;
+    car_data[89]=car->secondary_sound;
 
 
     /*Write powered velocity*/
@@ -353,6 +359,11 @@ uint8_t* car_data=header_bytes+26;
     *((uint16_t*)(car_data+96))=car->unknown[1];
     car_data[88]=(uint8_t)car->unknown[2];
     car_data[90]=(uint8_t)car->unknown[3];
+    car_data[10]=(uint8_t)car->unknown[4];
+    car_data[14]=(uint8_t)car->unknown[5];
+    car_data[15]=(uint8_t)car->unknown[6];
+    car_data[16]=(uint8_t)car->unknown[7];
+    car_data[93]=(uint8_t)car->unknown[8];
     /*Move to next car*/
     car_data+=101;
     }
@@ -423,6 +434,7 @@ pos++;
         if (len==0xFF)
         {
         len=*((uint16_t*)(bytes+pos));
+        printf("Structure length is actually %d\n",len);
         pos+=2;
         }
     structures->peep_positions[i].num=len;
@@ -932,6 +944,7 @@ printf("File saved with filename %s\n",filename);
 }
 void object_free(object_t* object)
 {
+printf("Freeing object\n");
 ride_header_free(object->ride_header);
 string_table_free(object->string_tables[0]);
 string_table_free(object->string_tables[1]);
