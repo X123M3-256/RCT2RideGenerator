@@ -24,6 +24,7 @@ OP_EXP=5,
 OP_LN=6,
 OP_SIN=7,
 OP_COS=8,
+OP_CLAMP=9,
 OP_LOD_IMM,
 OP_LOD_VAR,
 OP_OPEN_PAREN,//Not opcodes, but it saves having a seperate datatype for tokens

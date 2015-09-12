@@ -51,16 +51,16 @@ int identifier_length=0;
 identifier[identifier_length]=0;
 
 //List of valid identifiers and their lengths
-char* identifiers[11]={"pitch","yaw","roll","spin","swing","flip","restraint","exp","ln","sin","cos"};
+char* identifiers[12]={"pitch","yaw","roll","spin","swing","flip","restraint","exp","ln","sin","cos","clamp"};
 
 //Find the index of the input identifier in aformentioned list
 int index;
-    for(index=0;index<11;index++)
+    for(index=0;index<12;index++)
     {
         if(strcmp(identifier,identifiers[index])==0)break;
     }
 //If valid identifier not found, error
-    if(index>=11)
+    if(index>=12)
     {
     state->error="Unrecognized identifier";
     return instruction;
@@ -218,6 +218,7 @@ int stack_top=-1;
         case OP_LN:
         case OP_SIN:
         case OP_COS:
+        case OP_CLAMP:
         case OP_OPEN_PAREN:
         stack_top++;
         stack[stack_top]=instruction;
@@ -345,6 +346,11 @@ int stack_top=-1;
         case OP_COS:
         assert(stack_top>=0);
         stack[stack_top]=cos(stack[stack_top]);
+        break;
+        case OP_CLAMP:
+        assert(stack_top>=0);
+            if(stack[stack_top]<0)stack[stack_top]=0;
+            else if(stack[stack_top]>1)stack[stack_top]=1;
         break;
         default:
         fprintf(stderr,"animation_expression_evaluate: Attempt to execute invalid opcode");
