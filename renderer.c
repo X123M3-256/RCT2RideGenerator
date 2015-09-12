@@ -12,6 +12,7 @@
 #define LUMINANCE_REGRESSION_GRADIENT 0.069605
 
 //3 metres per tile
+#define SQRT_2 1.4142135623731
 #define SQRT1_2 0.707106781
 #define SQRT_3 1.73205080757
 #define SQRT_6 2.44948974278
@@ -441,6 +442,19 @@ int i,j;
     }
 free(transformed_vertices);
 free(transformed_normals);
+}
+
+void renderer_cut(Vector point,Vector normal)
+{
+Vector projected_point,projected_normal;
+transform_vectors(projection,&point,&projected_point,1,1.0);
+transform_vectors(projection,&normal,&projected_normal,1,0.0);
+    for(int x=0;x<FRAME_BUFFER_SIZE;x++)
+    for(int y=0;y<FRAME_BUFFER_SIZE;y++)
+    {
+    Vector pixel_to_point=VectorSubtract(VectorFromComponents(x,y,depth_buffer[x][y]),projected_point);
+        if(VectorDotProduct(pixel_to_point,projected_normal)<0)color_buffer[x][y]=TRANSPARENT;
+    }
 }
 
 
