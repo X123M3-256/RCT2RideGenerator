@@ -462,6 +462,12 @@ float largest_depth=-INFINITY;
 }
 
 
+static void animation_dialog_expression_changed(GtkWidget* widget,gpointer user_data)
+{
+animation_dialog_t* dialog=(animation_dialog_t*)user_data;
+animation_viewer_update(dialog->animation_viewer);
+}
+
 static void animation_dialog_update_variables(GtkWidget *widget, gpointer user_data)
 {
 animation_dialog_t* dialog=(animation_dialog_t*)user_data;
@@ -501,6 +507,12 @@ animation_viewer_set_animation(dialog->animation_viewer,animation);
 gtk_box_pack_start(GTK_BOX(main_hbox),dialog->animation_viewer->container,FALSE,FALSE,2);
 
 dialog->object_editor=animation_object_editor_new(animation->objects,animation->num_objects);
+g_signal_connect(dialog->object_editor->x_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
+g_signal_connect(dialog->object_editor->y_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
+g_signal_connect(dialog->object_editor->z_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
+g_signal_connect(dialog->object_editor->pitch_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
+g_signal_connect(dialog->object_editor->yaw_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
+g_signal_connect(dialog->object_editor->roll_entry,"changed",G_CALLBACK(animation_dialog_expression_changed),dialog);
 gtk_box_pack_start(GTK_BOX(main_hbox),dialog->object_editor->container,FALSE,FALSE,2);
 
 gtk_box_pack_start(GTK_BOX(content_area),main_hbox,FALSE,FALSE,2);
