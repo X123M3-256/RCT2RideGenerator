@@ -13,6 +13,7 @@ uint8_t** data;
 }image_t;
 
 image_t* image_new(uint8_t width,uint8_t height,uint8_t color);
+image_t* image_copy(image_t* source);
 void image_free(image_t* image);
 //GdkPixbuf* CreateBlankPixbuf();
 //void ShowImageInPixbuf(GdkPixbuf* pixbuf,Image* image);

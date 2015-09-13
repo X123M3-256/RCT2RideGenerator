@@ -176,7 +176,7 @@ ride_header_t* header=object->ride_header;
 
 //Render preview images
 image_list_set_num_images(object->images,3);
-image_list_set_image(object->images,0,project->preview_image);
+image_list_set_image(object->images,0,image_copy(project->preview_image));
 image_list_set_image(object->images,1,image_new(1,1,0));
 image_list_set_image(object->images,2,image_new(1,1,0));
 
@@ -451,7 +451,6 @@ string_table_set_string_by_language(object->string_tables[STRING_TABLE_CAPACITY]
 
 //Set color schemes
 ride_structures_set_num_default_colors(object->optional,project->num_color_schemes);
-printf("Num color schemes: %d\n",object->optional->num_default_colors);
     for(i=0;i<project->num_color_schemes;i++)
     {
     object->optional->default_colors[i]=project->color_schemes[i];
