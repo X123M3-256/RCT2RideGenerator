@@ -42,7 +42,7 @@ track_type_editor_t* track_type_editor_new()
 int i;
 track_type_editor_t* editor=malloc(sizeof(track_type_editor_t));
 editor->track_type=NULL;
-editor->container=gtk_hbox_new(FALSE,1);
+editor->container=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,1);
 editor->label=gtk_label_new("Track type:");
 editor->select=gtk_combo_box_text_new();
 gtk_widget_set_sensitive(editor->select,FALSE);
@@ -144,7 +144,7 @@ car_type_editor_t* car_type_editor_new(const char* label)
 int i;
 car_type_editor_t* editor=malloc(sizeof(car_type_editor_t));
 editor->car_type=NULL;
-editor->container=gtk_hbox_new(FALSE,1);
+editor->container=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,1);
 editor->label=gtk_label_new(label);
 editor->car_select=gtk_combo_box_text_new();
 gtk_widget_set_sensitive(editor->car_select,FALSE);
@@ -440,6 +440,28 @@ gtk_main_quit();
 }
 
 
+
+static void main_window_edit_model(GtkWidget* widget,gpointer data)
+{
+model_t* model=(model_t*)data;
+        if(model!=NULL)
+        {
+        model_dialog_t* dialog=model_dialog_new(model);
+        model_dialog_run(dialog);
+        model_dialog_free(dialog);
+        gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->name);
+        }
+}
+
+
+void main_window_add_model_to_menu(main_window_t* main_window,model_t* model)
+{
+    GtkWidget* model_menu_item=gtk_menu_item_new_with_label(model->name);
+    gtk_menu_shell_append(GTK_MENU_SHELL(main_window->model_menu),model_menu_item);
+    g_signal_connect(model_menu_item,"activate",G_CALLBACK(main_window_edit_model),model);
+    gtk_widget_show(model_menu_item);
+}
+
 static void main_window_add_model(GtkWidget* widget,gpointer data)
 {
 main_window_t* main_window=(main_window_t*)data;
@@ -454,32 +476,20 @@ char* filename=get_filename("Select file to open",GTK_FILE_CHOOSER_ACTION_OPEN);
         model_dialog_t* dialog=model_dialog_new(model);
         model_dialog_run(dialog);
         model_dialog_free(dialog);
+        main_window_add_model_to_menu(main_window,model);
         }
     }
-}
-static void main_window_edit_model(GtkWidget* widget,gpointer data)
-{
-model_t* model=(model_t*)data;
-        if(model!=NULL)
-        {
-        model_dialog_t* dialog=model_dialog_new(model);
-        model_dialog_run(dialog);
-        model_dialog_free(dialog);
-        gtk_menu_item_set_label(GTK_MENU_ITEM(widget),model->name);
-        }
 }
 
 
 void main_window_populate_model_menu(main_window_t* main_window)
 {
-int i;
-    for(i=0;i<main_window->project->num_models;i++)
+    if(main_window->project==NULL)return;
+
+    for(int i=0;i<main_window->project->num_models;i++)
     {
     //Add model to menu
-    GtkWidget* model_menu_item=gtk_menu_item_new_with_label(main_window->project->models[i]->name);
-    gtk_menu_shell_append(GTK_MENU_SHELL(main_window->model_menu),model_menu_item);
-    g_signal_connect(model_menu_item,"activate",G_CALLBACK(main_window_edit_model),main_window->project->models[i]);
-    gtk_widget_show(model_menu_item);
+    main_window_add_model_to_menu(main_window,main_window->project->models[i]);
     }
 }
 
