@@ -327,5 +327,6 @@ void object_set_string(object_t* object,string_table_index_t table_num,language_
 /*void RenderSprites(object_t* file,Animation* animations[5]);*/
 void object_free(object_t* object);
 void track_encode(buffer_t* data,char* filename);
+buffer_t* load_file(char* filename);
 buffer_t* track_decode(char* file);
 #endif /*BACKEND_H_INCLUDED*/
