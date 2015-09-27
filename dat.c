@@ -378,8 +378,11 @@ ride_structures_t* ride_structures_new()
 {
 int i;
 ride_structures_t* structures=malloc(sizeof(ride_structures_t));
-structures->num_default_colors=0;
-structures->default_colors=NULL;
+structures->num_default_colors=1;
+structures->default_colors=malloc(sizeof(color_scheme_t));
+structures->default_colors->colors[0]=0;
+structures->default_colors->colors[1]=0;
+structures->default_colors->colors[2]=0;
     for(i=0;i<4;i++)
     {
     structures->peep_positions[i].num=0;
@@ -434,7 +437,6 @@ pos++;
         if (len==0xFF)
         {
         len=*((uint16_t*)(bytes+pos));
-        printf("Structure length is actually %d\n",len);
         pos+=2;
         }
     structures->peep_positions[i].num=len;
@@ -944,7 +946,6 @@ printf("File saved with filename %s\n",filename);
 }
 void object_free(object_t* object)
 {
-printf("Freeing object\n");
 ride_header_free(object->ride_header);
 string_table_free(object->string_tables[0]);
 string_table_free(object->string_tables[1]);
@@ -953,7 +954,20 @@ ride_structures_free(object->optional);
 image_list_free(object->images);
 }
 
-
+buffer_t* load_file(char* filename)
+{
+FILE* file=fopen(filename,"rb");
+fseek(file,0,SEEK_END);
+int file_size=ftell(file);
+fseek(file,SEEK_SET,0);
+//Allocate buffer
+buffer_t* buffer=buffer_new(file_size);
+buffer_expand(buffer,file_size);
+//Read data into buffer
+fread(buffer->data,file_size,1,file);
+fclose(file);
+return buffer;
+}
 
 buffer_t* track_decode(char* filename)
 {
