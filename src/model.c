@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<assert.h>
-#include "../RCT2RideGenerator/objLoader/obj_parser.h"//TODO make this a library
+#include "objLoader/obj_parser.h"//TODO make this a library
 #include "model.h"
 #include "palette.h"
 
