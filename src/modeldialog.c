@@ -1,8 +1,8 @@
+#include "math_defines.h"
 #include "modeldialog.h"
 #include "image.h"
 #include "palette.h"
 #include "renderer.h"
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 

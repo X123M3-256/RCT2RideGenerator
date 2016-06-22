@@ -1,7 +1,7 @@
 #ifndef BACKEND_H_INCLUDED
 #define BACKEND_H_INCLUDED
 #include "image.h"
-#include <math.h>
+#include "math_defines.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +9,6 @@
 #define NUM_STRING_TABLES 3
 #define NUM_LANGUAGES 11
 #define NUM_CARS 4
-
-#define M_PI_8 (M_PI / 8.0)
-#define M_PI_12 (M_PI / 12.0)
 
 #define TILE_SLOPE (1 / sqrt(6))
 
