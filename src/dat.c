@@ -640,6 +640,7 @@ image_list_t* image_list_load(uint8_t* bytes, uint32_t* pos_ptr)
                     /*Check that this element isn't outside the bounds of the image*/
                     if (x_displacement + length > image->width) {
                         printf("File contains invalid bitmaps\n");
+                        image_list_free(list);
                         return NULL;
                     }
                     memcpy(image->data[j] + x_displacement, bytes + row_offset, length);
@@ -965,5 +966,6 @@ void track_encode(buffer_t* data, char* filename)
     buffer_t* buffer = compress_data(data->data, data->size);
     FILE* file = fopen(filename, "w");
     fwrite(buffer->data, buffer->size, 1, file);
+    buffer_free(buffer);
     fclose(file);
 }

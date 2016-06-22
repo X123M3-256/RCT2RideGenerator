@@ -79,7 +79,7 @@ image_t* renderer_get_image()
     image->height = b_h;
     image->x_offset = b_x - FRAME_BUFFER_SIZE / 2;
     image->y_offset = b_y - FRAME_BUFFER_SIZE / 2;
-    image->data = malloc(FRAME_BUFFER_SIZE * sizeof(char*));
+    image->data = malloc(FRAME_BUFFER_SIZE * sizeof(uint8_t*));
     image->flags = 5;
     int x, y;
     for (y = 0; y < image->height; y++) {
