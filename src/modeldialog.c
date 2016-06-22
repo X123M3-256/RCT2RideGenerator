@@ -6,11 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define M_PI 3.1415926535
-#define M_PI_2 (3.1415926535 / 2.0)
-#define M_SQRT2 sqrt(2.0)
-#define M_SQRT1_2 (1.0 / sqrt(2.0))
-
 /*
 static void ScaleChanged(GtkSpinButton *spinbutton,gpointer user_data)
 {

@@ -10,12 +10,8 @@
 #define NUM_LANGUAGES 11
 #define NUM_CARS 4
 
-#define M_PI 3.1415926535
-#define M_PI_2 (3.1415926535 / 2.0)
-#define M_PI_4 (3.1415926535 / 4.0)
-#define M_PI_8 (3.1415926535 / 8.0)
-#define M_PI_12 (3.1415926535 / 12.0)
-#define M_SQRT1_2 (1 / sqrt(2.0))
+#define M_PI_8 (M_PI / 8.0)
+#define M_PI_12 (M_PI / 12.0)
 
 #define TILE_SLOPE (1 / sqrt(6))
 
