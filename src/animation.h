@@ -9,7 +9,8 @@ typedef enum {
     VAR_SPIN = 3,
     VAR_SWING = 4,
     VAR_FLIP = 5,
-    VAR_RESTRAINT = 6
+    VAR_RESTRAINT = 6,
+    VAR_ANIMATION = 7
 } animation_variable_t;
 
 typedef enum {
@@ -30,7 +31,7 @@ typedef enum {
     OP_CLOSE_PAREN
 } animation_opcode_t;
 
-#define ANIMATION_NUM_VARIABLES 7
+#define ANIMATION_NUM_VARIABLES 8
 #define ANIMATION_MAX_OBJECTS 32
 typedef struct {
     animation_opcode_t opcode;

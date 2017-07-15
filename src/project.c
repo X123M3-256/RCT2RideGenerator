@@ -70,6 +70,16 @@ void project_free(project_t* project)
     free(project);
 }
 
+
+int count_sprites_per_view(uint32_t flags)
+{
+int sprites_per_view=1;
+		if(flags & CAR_IS_SWINGING)sprites_per_view=13;
+		if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
+return sprites_per_view;
+}
+
+
 void render_rotation(image_list_t* image_list,
     animation_t* animation,
     uint32_t flags,
@@ -87,7 +97,7 @@ void render_rotation(image_list_t* image_list,
     variables[VAR_YAW] = -yaw;
     variables[VAR_ROLL] = -roll;
 
-    int sprites_per_view = (flags & CAR_IS_SWINGING) ? 13 : 1;
+    int sprites_per_view = count_sprites_per_view(flags);
 
     double rotation = 0;
     double step = 2 * 3.141592654 / num_frames;
@@ -98,17 +108,16 @@ void render_rotation(image_list_t* image_list,
         rotation_matrix.Data[8] = sin(rotation);
         rotation_matrix.Data[10] = cos(rotation);
 
+	variables[VAR_ANIMATION]=0.0;
+
         for (int frame = 0; frame < sprites_per_view; frame++) {
             renderer_clear_buffers();
-            render_data_t render_data = animation_split_render_begin(
-                animation, MatrixMultiply(rotation_matrix, transform_matrix),
-                variables);
+            render_data_t render_data = animation_split_render_begin(animation, MatrixMultiply(rotation_matrix, transform_matrix),variables);
             for (int image = 0; image < images; image++) {
-                image_list_set_image(image_list,
-                    base_frame + image * sprites_per_image + view * sprites_per_view + frame,
-                    renderer_get_image());
+                image_list_set_image(image_list,base_frame + image * sprites_per_image + view * sprites_per_view + frame,renderer_get_image());
                 animation_split_render_next_image(animation, &render_data);
             }
+	    if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=0.25;
         }
 
         rotation += step;
@@ -149,15 +158,6 @@ void render_loading(image_list_t* image_list,
     }
 }
 
-int car_settings_count_required_animation_frames(car_settings_t* car)
-{
-    int frames = 1;
-    if (car->flags & CAR_FAKE_SPINNING)
-        frames += 31;
-    if (car->sprites & SPRITE_RESTRAINT_ANIMATION)
-        frames += 3;
-    return frames;
-}
 
 int count_sprites_from_flags(uint16_t sprites)
 {
@@ -192,6 +192,7 @@ int count_sprites_from_flags(uint16_t sprites)
         count += 12;
     return count;
 }
+
 void project_render_sprites(project_t* project, object_t* object)
 {
     int i;
@@ -214,7 +215,7 @@ void project_render_sprites(project_t* project, object_t* object)
         // Number of angles that need to be rendered for each image
         int views_per_image = count_sprites_from_flags(sprite_flags);
         // Number of sprites that must be rendered for each angle of an image
-        int sprites_per_view = (flags & CAR_IS_SWINGING) ? 13 : 1;
+        int sprites_per_view = count_sprites_per_view(flags);
         // Total sprites for each image
         int sprites_per_image = sprites_per_view * views_per_image;
         // Total sprites related to this car
@@ -641,13 +642,21 @@ object_t* project_export_dat(project_t* project)
             // printf("%d %d %d %d
             // %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
             object->ride_header->cars[i].highest_rotation_index = 31;
-            object->ride_header->cars[i].flags = CAR_ENABLE_ROLLING_SOUND | project->cars[i].flags;
+            object->ride_header->cars[i].flags = project->cars[i].flags;//CAR_ENABLE_ROLLING_SOUND | ;
             // Enable all extra swinging frames
-
+		printf("flags %x\n",project->cars[i].flags);
             if (project->cars[i].flags & CAR_IS_SWINGING) {
                 object->ride_header->cars[i].flags |= 0x20000000;
                 object->ride_header->cars[i].extra_swing_frames = 0x08;
             }
+            if (project->cars[i].flags & CAR_IS_ANIMATED) {
+                object->ride_header->cars[i].flags |= CAR_STEAM_EFFECT;
+            }
+            if (project->cars[i].flags & CAR_IS_POWERED) {
+            object->ride_header->cars[i].powered_velocity = 25;
+            object->ride_header->cars[i].powered_acceleration = 50;
+            }
+
             object->ride_header->cars[i].friction = project->cars[i].friction;
             object->ride_header->cars[i].spacing = project->cars[i].spacing;
             object->ride_header->cars[i].running_sound = project->cars[i].running_sound;

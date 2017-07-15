@@ -48,7 +48,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
 
     // List of valid identifiers and their lengths
     char* identifiers[12] = { "pitch", "yaw", "roll", "spin",
-        "swing", "flip", "restraint", "exp",
+        "swing", "flip", "restraint", "animation", "exp",
         "ln", "sin", "cos", "clamp" };
 
     // Find the index of the input identifier in aformentioned list
@@ -63,7 +63,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
         return instruction;
     }
 
-    if (index <= 6) {
+    if (index < ANIMATION_NUM_VARIABLES) {
         instruction.opcode = OP_LOD_VAR;
         instruction.operand.variable = index;
     } else

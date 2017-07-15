@@ -201,6 +201,8 @@ void car_editor_edit_animation(GtkWidget* widget, gpointer data)
         variable_flags |= ANIMATION_DIALOG_SPIN;
     if (editor->car_settings->flags & CAR_IS_SWINGING)
         variable_flags |= ANIMATION_DIALOG_SWING;
+    if (editor->car_settings->flags & CAR_IS_ANIMATED)
+        variable_flags |= ANIMATION_DIALOG_ANIMATION;
     if (editor->car_settings->sprites & SPRITE_RESTRAINT_ANIMATION)
         variable_flags |= ANIMATION_DIALOG_RESTRAINT;
     animation_dialog_t* dialog = animation_dialog_new(
@@ -222,9 +224,13 @@ car_editor_t* car_editor_new()
     flag_editor_add_checkbox(editor->flag_editor, "Enable remap color 3",
         CAR_ENABLE_REMAP3);
     flag_editor_add_checkbox(editor->flag_editor, "No upstops", CAR_NO_UPSTOPS);
-    flag_editor_add_checkbox(editor->flag_editor, "Fake spinning",
-        CAR_FAKE_SPINNING);
+    flag_editor_add_checkbox(editor->flag_editor, "Animated",
+        CAR_IS_ANIMATED);
     flag_editor_add_checkbox(editor->flag_editor, "Swinging", CAR_IS_SWINGING);
+    flag_editor_add_checkbox(editor->flag_editor, "Steam effect", CAR_STEAM_EFFECT);
+    gtk_box_pack_start(GTK_BOX(editor->container), editor->flag_editor->container,
+        FALSE, FALSE, 1);
+    flag_editor_add_checkbox(editor->flag_editor, "Powered", CAR_IS_POWERED);
     gtk_box_pack_start(GTK_BOX(editor->container), editor->flag_editor->container,
         FALSE, FALSE, 1);
 

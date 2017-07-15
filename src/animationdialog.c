@@ -521,6 +521,8 @@ static void animation_dialog_update_variables(GtkWidget* widget,
         dialog->animation_viewer->variables[VAR_SWING] = gtk_range_get_value(GTK_RANGE(dialog->swing_slider));
     if (dialog->flip_slider != NULL)
         dialog->animation_viewer->variables[VAR_FLIP] = gtk_range_get_value(GTK_RANGE(dialog->flip_slider));
+    if (dialog->animation_slider != NULL)
+        dialog->animation_viewer->variables[VAR_ANIMATION] = gtk_range_get_value(GTK_RANGE(dialog->animation_slider));	
     if (dialog->restraint_slider != NULL)
         dialog->animation_viewer->variables[VAR_RESTRAINT] = gtk_range_get_value(GTK_RANGE(dialog->restraint_slider));
     animation_viewer_update(dialog->animation_viewer);
@@ -614,6 +616,18 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->restraint_slider, 1,
             2, 4, 5);
         g_signal_connect(dialog->restraint_slider, "value-changed",
+            G_CALLBACK(animation_dialog_update_variables), dialog);
+    } else
+        dialog->restraint_slider = NULL;
+
+    if (variable_flags & ANIMATION_DIALOG_ANIMATION) {
+        GtkWidget* animation_label = gtk_label_new("Animation:");
+        dialog->animation_slider = gtk_hscale_new_with_range(0, 1, 0.1);
+        gtk_table_attach(GTK_TABLE(var_table), animation_label, 0, 1, 4, 5,
+            GTK_SHRINK, GTK_FILL, 1, 1);
+        gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->animation_slider, 1,
+            2, 4, 5);
+        g_signal_connect(dialog->animation_slider, "value-changed",
             G_CALLBACK(animation_dialog_update_variables), dialog);
     } else
         dialog->restraint_slider = NULL;
