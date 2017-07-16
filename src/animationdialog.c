@@ -630,7 +630,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
         g_signal_connect(dialog->animation_slider, "value-changed",
             G_CALLBACK(animation_dialog_update_variables), dialog);
     } else
-        dialog->restraint_slider = NULL;
+        dialog->animation_slider = NULL;
 
     if (variable_flags & ANIMATION_DIALOG_SPIN) {
         GtkWidget* spin_label = gtk_label_new("Spin:");
