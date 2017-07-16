@@ -47,7 +47,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
     identifier[identifier_length] = 0;
 
     // List of valid identifiers and their lengths
-    char* identifiers[12] = { "pitch", "yaw", "roll", "spin",
+    char* identifiers[13] = { "pitch", "yaw", "roll", "spin",
         "swing", "flip", "restraint", "animation", "exp",
         "ln", "sin", "cos", "clamp" };
 
