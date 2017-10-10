@@ -53,6 +53,7 @@ typedef struct animation_object_s {
     animation_expression_t* position[3];
     animation_expression_t* rotation[3];
     Matrix transform;
+    //unsigned short is_in_rider_tree; //unsigned ints are booleans now?
 } animation_object_t;
 
 typedef struct {
@@ -82,6 +83,7 @@ void animation_calculate_object_transforms(
     animation_t* animation,
     float variables[ANIMATION_NUM_VARIABLES]);
 void animation_add_new_object(animation_t* animation, model_t* model);
+void animation_add_existing_object(animation_t* animation, animation_object_t* object);
 int animation_count_riders(animation_t* animation);
 void animation_render(animation_t* animation,
     Matrix model_view,

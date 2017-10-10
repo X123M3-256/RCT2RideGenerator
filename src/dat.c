@@ -333,7 +333,7 @@ void ride_header_write(ride_header_t* header, buffer_t* buffer)
         /*Write flags*/
         *((uint32_t*)(car_data + 17)) = car->flags;
         /*Write "extra frames"*/
-        car_data[21] = car->extra_swing_frames;
+        car_data[21] = car->extra_swing_frames; //this should be a flag!!!
         /*Write spin parameters*/
         car_data[85] = car->spin_inertia;
         car_data[86] = car->spin_friction;
@@ -347,7 +347,7 @@ void ride_header_write(ride_header_t* header, buffer_t* buffer)
         /*Write Z value*/
         car_data[95] = car->z_value;
         /*Write unknown fields*/
-        car_data[94] = (uint8_t)car->unknown[0];
+        car_data[94] = (uint8_t)car->unknown[0];// splash types: 0x01 no splash, 0x0B river rafts 0x0C log flume 0x0D splash boats
         *((uint16_t*)(car_data + 96)) = car->unknown[1];
         car_data[88] = (uint8_t)car->unknown[2];
         car_data[90] = (uint8_t)car->unknown[3];
