@@ -385,8 +385,8 @@ int animation_object_set_parent(animation_object_t* object,
         animation_object_t* cur_object = parent;
         while (cur_object != object && cur_object->parent != NULL)
             cur_object = cur_object->parent;
-			if (cur_object == object)
-				return 0;
+            if (cur_object == object)
+                return 0;
     }
     object->parent = parent;
     return 1;
@@ -509,6 +509,7 @@ render_data_t animation_split_render_begin(
         data.variables[i] = variables[i];
 
     animation_calculate_object_transforms(animation, variables);
+
     for (int i = 0; i < animation->num_objects; i++) {
         if (animation_object_is_descendant_of_rider(animation->objects[i])==0){
             renderer_render_model(
