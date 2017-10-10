@@ -470,10 +470,10 @@ int animation_object_is_descendant_of_object(animation_object_t* object,
     if (object->parent != NULL && object->parent != object) {//self-parent check is not necessary with the do/while loop structure but it saves on calculations
         animation_object_t* cur_object = object;
         do {
+            cur_object = cur_object->parent;
             if (cur_object == parent) {
                 return 1;
             }
-            cur_object = cur_object->parent;
         } while (cur_object != object && cur_object->parent != NULL)
     }
     return 0;
@@ -487,10 +487,10 @@ int animation_object_is_descendant_of_rider(animation_object_t* object)
     if (object->parent != NULL && object->parent != object) {
         animation_object_t* cur_object = object;
         do {
+            cur_object = cur_object->parent;
             if (cur_object->model->is_rider) {
                 return 1;
             }
-            cur_object = cur_object->parent;
         while (cur_object != object && cur_object->parent != NULL) {
         }
     }
