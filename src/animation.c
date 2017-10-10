@@ -464,36 +464,36 @@ void animation_render(animation_t* animation,
 int animation_object_is_descendant_of_object(animation_object_t* object,
     animation_object_t* parent)
 {
-	if (parent == object) {
-		return 1;
-	}
-	if (object->parent != NULL) {
-		animation_object_t* cur_object = object->parent;
-		while (cur_object != object && cur_object->parent != NULL) {
-			if (cur_object == parent) {
-				return 1;
-			}
-			cur_object = cur_object->parent;
-		}
-	}
-	//printf("no ancestry found\n");
+    if (parent == object) {
+        return 1;
+    }
+    if (object->parent != NULL) {
+        animation_object_t* cur_object = object->parent;
+        while (cur_object != object && cur_object->parent != NULL) {
+            if (cur_object == parent) {
+                return 1;
+            }
+            cur_object = cur_object->parent;
+        }
+    }
+    //printf("no ancestry found\n");
     return 0;
 }
 
 int animation_object_is_descendant_of_rider(animation_object_t* object)
 {
-	if (object->model->is_rider) {
-		return 1;
-	}
-	if (object->parent != NULL) {
-		animation_object_t* cur_object = object->parent;
-		while (cur_object != object && cur_object->parent != NULL) {
-			if (cur_object->model->is_rider) {
-				return 1;
-			}
-			cur_object = cur_object->parent;
-		}
-	}
+    if (object->model->is_rider) {
+        return 1;
+    }
+    if (object->parent != NULL) {
+        animation_object_t* cur_object = object->parent;
+        while (cur_object != object && cur_object->parent != NULL) {
+            f (cur_object->model->is_rider) {
+                return 1;
+            }
+            cur_object = cur_object->parent;
+        }
+    }
     return 0;
 }
 
@@ -509,13 +509,13 @@ render_data_t animation_split_render_begin(
         data.variables[i] = variables[i];
 
     animation_calculate_object_transforms(animation, variables);
-	for (int i = 0; i < animation->num_objects; i++) {
-		if (animation_object_is_descendant_of_rider(animation->objects[i])==0){
+    for (int i = 0; i < animation->num_objects; i++) {
+        if (animation_object_is_descendant_of_rider(animation->objects[i])==0){
             renderer_render_model(
                 animation->objects[i]->model,
                 MatrixMultiply(model_view, animation->objects[i]->transform));
-		}
-	}
+        }
+    }
     return data;
 }
 
@@ -541,26 +541,26 @@ void animation_split_render_next_image(animation_t* animation,
 
     // Render pair of riders
     if (second_rider != NULL) {
-		for (int i=0;i<animation->num_objects;i++){
-			if (animation_object_is_descendant_of_object(animation->objects[i],second_rider)==1) {
-				renderer_render_model(
-					animation->objects[i]->model,
-					MatrixMultiply(data->model_view, animation->objects[i]->transform));
-				renderer_remap_color(COLOR_PEEP_REMAP_1, COLOR_PEEP_REMAP_2);
-				renderer_remap_color(COLOR_REMAP_1, COLOR_REMAP_2);
-			}
-		}
-	}
+        for (int i=0;i<animation->num_objects;i++){
+            if (animation_object_is_descendant_of_object(animation->objects[i],second_rider)==1) {
+                renderer_render_model(
+                    animation->objects[i]->model,
+                    MatrixMultiply(data->model_view, animation->objects[i]->transform));
+                renderer_remap_color(COLOR_PEEP_REMAP_1, COLOR_PEEP_REMAP_2);
+                renderer_remap_color(COLOR_REMAP_1, COLOR_REMAP_2);
+            }
+        }
+    }
     if (first_rider != NULL) {
-		for (int i=0;i<animation->num_objects;i++){
-			if (animation_object_is_descendant_of_object(animation->objects[i],first_rider)==1) {
-				renderer_render_model(
-					animation->objects[i]->model,
-					MatrixMultiply(data->model_view, animation->objects[i]->transform));
-					//can't have renderer_remap_color down here because otherwise both models get remapped
-			}
-		}
-	}
+        for (int i=0;i<animation->num_objects;i++){
+            if (animation_object_is_descendant_of_object(animation->objects[i],first_rider)==1) {
+                renderer_render_model(
+                    animation->objects[i]->model,
+                    MatrixMultiply(data->model_view, animation->objects[i]->transform));
+                    //can't have renderer_remap_color down here because otherwise both models get remapped
+            }
+        }
+    }
 }
 
 int animation_count_riders(animation_t* animation)
@@ -571,24 +571,3 @@ int animation_count_riders(animation_t* animation)
             riders++;
     return riders;
 }
-/*
-animation_t* animation_object_get_submodel(animation_t* animation, animation_object_t* parent)
-{
-	animation_t* submodel;
-	submodel = animation_new();
-	animation_add_existing_object(submodel,parent);
-	get_submodel_recurse(animation,parent,submodel);
-	return submodel;
-}
-
-void get_submodel_recurse(animation_t* animation, animation_object_t* parent, animation_t* submodel) //My First C Code
-{
-	int cur_object = 0;
-	while (cur_object < animation->num_objects) {
-		if (animation->objects[cur_object]->parent == parent) {
-			animation_add_existing_object(submodel,animation->objects[cur_object]);
-			animation_get_children(animation,animation->objects[cur_object],submodel);
-		}
-		cur_object++;
-	}
-}*/

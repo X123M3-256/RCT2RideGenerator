@@ -117,7 +117,7 @@ void render_rotation(image_list_t* image_list,
                 image_list_set_image(image_list,base_frame + image * sprites_per_image + view * sprites_per_view + frame,renderer_get_image());
                 animation_split_render_next_image(animation, &render_data);
             }
-	    if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=0.25;
+        if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=0.25;
         }
 
         rotation += step;
@@ -644,7 +644,7 @@ object_t* project_export_dat(project_t* project)
             object->ride_header->cars[i].highest_rotation_index = 31;
             object->ride_header->cars[i].flags = project->cars[i].flags;//CAR_ENABLE_ROLLING_SOUND | ;
             // Enable all extra swinging frames
-		// printf("flags %x\n",project->cars[i].flags);
+        // printf("flags %x\n",project->cars[i].flags);
             if (project->cars[i].flags & CAR_IS_SWINGING) {
                 object->ride_header->cars[i].flags |= 0x20000000;
                 object->ride_header->cars[i].extra_swing_frames = 0x08; //swinging FLAG
@@ -653,20 +653,20 @@ object_t* project_export_dat(project_t* project)
                 object->ride_header->cars[i].flags |= CAR_STEAM_EFFECT;
             }
             if (project->cars[i].flags & CAR_IS_POWERED) {
-				object->ride_header->cars[i].powered_velocity = 15;
-				object->ride_header->cars[i].powered_acceleration = 60;
-				//slow boat to china: 5/200
-				//slow motorboat: 8/45
-				//speedboat: 12/33
-				// steam tractor: 10/60
+                object->ride_header->cars[i].powered_velocity = 15;
+                object->ride_header->cars[i].powered_acceleration = 60;
+                //slow boat to china: 5/200
+                //slow motorboat: 8/45
+                //speedboat: 12/33
+                // steam tractor: 10/60
             }
-			if (project->flags & RIDE_WET) {
+            if (project->flags & RIDE_WET) {
                 //object->ride_header->cars[i].flags |= 0x000010; //splashing sound effect
                 object->ride_header->cars[i].extra_swing_frames |= 0x20u; // coasting FLAG
-			}
-			
-		   // printf("flags of car %x: %x %x\n",i,object->ride_header->cars[i].flags,object->ride_header->cars[i].extra_swing_frames);
-			
+            }
+
+        // printf("flags of car %x: %x %x\n",i,object->ride_header->cars[i].flags,object->ride_header->cars[i].extra_swing_frames);
+
             // object->ride_header->cars[i].flags |= CAR_COASTING_POWER;
 
             object->ride_header->cars[i].friction = project->cars[i].friction;
