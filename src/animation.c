@@ -467,16 +467,15 @@ int animation_object_is_descendant_of_object(animation_object_t* object,
     if (parent == object) {
         return 1;
     }
-    if (object->parent != NULL) {
-        animation_object_t* cur_object = object->parent;
-        while (cur_object != object && cur_object->parent != NULL) {
+    if (object->parent != NULL && object->parent != object) {//self-parent check is not necessary with the do/while loop structure but it saves on calculations
+        animation_object_t* cur_object = object;
+        do {
             if (cur_object == parent) {
                 return 1;
             }
             cur_object = cur_object->parent;
-        }
+        } while (cur_object != object && cur_object->parent != NULL)
     }
-    //printf("no ancestry found\n");
     return 0;
 }
 
@@ -485,13 +484,14 @@ int animation_object_is_descendant_of_rider(animation_object_t* object)
     if (object->model->is_rider) {
         return 1;
     }
-    if (object->parent != NULL) {
-        animation_object_t* cur_object = object->parent;
-        while (cur_object != object && cur_object->parent != NULL) {
-            f (cur_object->model->is_rider) {
+    if (object->parent != NULL && object->parent != object) {
+        animation_object_t* cur_object = object;
+        do {
+            if (cur_object->model->is_rider) {
                 return 1;
             }
             cur_object = cur_object->parent;
+        while (cur_object != object && cur_object->parent != NULL) {
         }
     }
     return 0;
