@@ -491,7 +491,7 @@ int animation_object_is_descendant_of_rider(animation_object_t* object)
             if (cur_object->model->is_rider) {
                 return 1;
             }
-        while (cur_object != object && cur_object->parent != NULL);
+        } while (cur_object != object && cur_object->parent != NULL);
     }
     return 0;
 }
