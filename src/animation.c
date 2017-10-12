@@ -385,8 +385,8 @@ int animation_object_set_parent(animation_object_t* object,
         animation_object_t* cur_object = parent;
         while (cur_object != object && cur_object->parent != NULL)
             cur_object = cur_object->parent;
-        if (cur_object == object)
-            return 0;
+            if (cur_object == object)
+                return 0;
     }
     object->parent = parent;
     return 1;
@@ -461,6 +461,41 @@ void animation_render(animation_t* animation,
             MatrixMultiply(model_view, animation->objects[i]->transform));
 }
 
+int animation_object_is_descendant_of_object(animation_object_t* object,
+    animation_object_t* parent)
+{
+    if (parent == object) {
+        return 1;
+    }
+    if (object->parent != NULL && object->parent != object) {//self-parent check is not necessary with the do/while loop structure but it saves on calculations
+        animation_object_t* cur_object = object;
+        do {
+            cur_object = cur_object->parent;
+            if (cur_object == parent) {
+                return 1;
+            }
+        } while (cur_object != object && cur_object->parent != NULL);
+    }
+    return 0;
+}
+
+int animation_object_is_descendant_of_rider(animation_object_t* object)
+{
+    if (object->model->is_rider) {
+        return 1;
+    }
+    if (object->parent != NULL && object->parent != object) {
+        animation_object_t* cur_object = object;
+        do {
+            cur_object = cur_object->parent;
+            if (cur_object->model->is_rider) {
+                return 1;
+            }
+        } while (cur_object != object && cur_object->parent != NULL);
+    }
+    return 0;
+}
+
 render_data_t animation_split_render_begin(
     animation_t* animation,
     Matrix model_view,
@@ -475,7 +510,7 @@ render_data_t animation_split_render_begin(
     animation_calculate_object_transforms(animation, variables);
 
     for (int i = 0; i < animation->num_objects; i++) {
-        if (!animation->objects[i]->model->is_rider) {
+        if (animation_object_is_descendant_of_rider(animation->objects[i])==0){
             renderer_render_model(
                 animation->objects[i]->model,
                 MatrixMultiply(model_view, animation->objects[i]->transform));
@@ -506,15 +541,26 @@ void animation_split_render_next_image(animation_t* animation,
 
     // Render pair of riders
     if (second_rider != NULL) {
-        renderer_render_model(
-            second_rider->model,
-            MatrixMultiply(data->model_view, second_rider->transform));
-        renderer_remap_color(COLOR_PEEP_REMAP_1, COLOR_PEEP_REMAP_2);
+        for (int i=0;i<animation->num_objects;i++){
+            if (animation_object_is_descendant_of_object(animation->objects[i],second_rider)==1) {
+                renderer_render_model(
+                    animation->objects[i]->model,
+                    MatrixMultiply(data->model_view, animation->objects[i]->transform));
+                renderer_remap_color(COLOR_PEEP_REMAP_1, COLOR_PEEP_REMAP_2);
+                renderer_remap_color(COLOR_REMAP_1, COLOR_REMAP_2);
+            }
+        }
     }
-    if (first_rider != NULL)
-        renderer_render_model(
-            first_rider->model,
-            MatrixMultiply(data->model_view, first_rider->transform));
+    if (first_rider != NULL) {
+        for (int i=0;i<animation->num_objects;i++){
+            if (animation_object_is_descendant_of_object(animation->objects[i],first_rider)==1) {
+                renderer_render_model(
+                    animation->objects[i]->model,
+                    MatrixMultiply(data->model_view, animation->objects[i]->transform));
+                    //can't have renderer_remap_color down here because otherwise both models get remapped
+            }
+        }
+    }
 }
 
 int animation_count_riders(animation_t* animation)

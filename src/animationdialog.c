@@ -586,9 +586,9 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
     GtkWidget* pitch_label = gtk_label_new("Pitch:");
     GtkWidget* yaw_label = gtk_label_new("Yaw:");
     GtkWidget* roll_label = gtk_label_new("Roll:");
-    dialog->pitch_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
-    dialog->yaw_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
-    dialog->roll_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
+    dialog->pitch_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
+    dialog->yaw_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
+    dialog->roll_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
     gtk_table_attach(GTK_TABLE(var_table), pitch_label, 0, 1, 1, 2, GTK_SHRINK,
         GTK_FILL, 1, 1);
     gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->pitch_slider, 1, 2, 1,
@@ -610,7 +610,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
 
     if (variable_flags & ANIMATION_DIALOG_RESTRAINT) {
         GtkWidget* restraint_label = gtk_label_new("Restraint:");
-        dialog->restraint_slider = gtk_hscale_new_with_range(0, 1, 0.1);
+        dialog->restraint_slider = gtk_hscale_new_with_range(0, 1, 0.25);
         gtk_table_attach(GTK_TABLE(var_table), restraint_label, 0, 1, 4, 5,
             GTK_SHRINK, GTK_FILL, 1, 1);
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->restraint_slider, 1,
@@ -622,7 +622,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
 
     if (variable_flags & ANIMATION_DIALOG_ANIMATION) {
         GtkWidget* animation_label = gtk_label_new("Animation:");
-        dialog->animation_slider = gtk_hscale_new_with_range(0, 1, 0.1);
+        dialog->animation_slider = gtk_hscale_new_with_range(0, 1, 0.25);
         gtk_table_attach(GTK_TABLE(var_table), animation_label, 0, 1, 4, 5,
             GTK_SHRINK, GTK_FILL, 1, 1);
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->animation_slider, 1,
@@ -634,7 +634,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
 
     if (variable_flags & ANIMATION_DIALOG_SPIN) {
         GtkWidget* spin_label = gtk_label_new("Spin:");
-        dialog->spin_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
+        dialog->spin_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
         gtk_table_attach(GTK_TABLE(var_table), spin_label, 0, 1, 5, 6, GTK_SHRINK,
             GTK_FILL, 1, 1);
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->spin_slider, 1, 2,
@@ -646,7 +646,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
 
     if (variable_flags & ANIMATION_DIALOG_SWING) {
         GtkWidget* swing_label = gtk_label_new("Swing:");
-        dialog->swing_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
+        dialog->swing_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
         gtk_table_attach(GTK_TABLE(var_table), swing_label, 0, 1, 6, 7, GTK_SHRINK,
             GTK_FILL, 1, 1);
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->swing_slider, 1, 2,
@@ -658,7 +658,7 @@ animation_dialog_t* animation_dialog_new(animation_t* animation,
 
     if (variable_flags & ANIMATION_DIALOG_FLIP) {
         GtkWidget* flip_label = gtk_label_new("Flip:");
-        dialog->flip_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.1);
+        dialog->flip_slider = gtk_hscale_new_with_range(-3.14, 3.14, 0.01);
         gtk_table_attach(GTK_TABLE(var_table), flip_label, 0, 1, 7, 8, GTK_SHRINK,
             GTK_FILL, 1, 1);
         gtk_table_attach_defaults(GTK_TABLE(var_table), dialog->flip_slider, 1, 2,
