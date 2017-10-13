@@ -1,4 +1,5 @@
 #include "serialization.h"
+#include "dat.h"
 #include <assert.h>
 #include <string.h>
 
@@ -421,13 +422,16 @@ json_t* project_serialize(project_t* project)
     // Determine which cars are used
     unsigned char cars_used[NUM_CARS];
     memset(cars_used, 0, NUM_CARS);
-    for (i = 0; i < 5; i++)
-        if (project->car_types[i] != 0xFF)
+    for (i = 0; i < 5; i++) {
+        if (project->car_types[i] != 0xFF) {
             cars_used[project->car_types[i]] = 1;
+        }
+    }
     json_t* cars = json_array();
     for (i = 0; i < NUM_CARS; i++) {
         json_t* car;
-        if (cars_used[i]) {
+        if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
+            printf("Lets save car %d\n",i);
             car = json_object();
             // Animation
             json_t* anim = animation_serialize(project->cars[i].animation,

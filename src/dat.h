@@ -47,24 +47,83 @@ typedef enum { LANGUAGE_ENGLISH_UK = 0,
     LANGUAGE_ENGLISH_US = 1 } language_t;
 
 enum {
-    RIDE_WET = 0x00000100u,
+    RIDE_VEHICLE_TAB_SCALE_HALF = 0x00000001u,
+    RIDE_NO_INVERSIONS = 0x00000002u,
+    RIDE_NO_BANKED_TRACK = 0x00000004u,
+    RIDE_CHUFFING_ON_DEPART = 0x00000008u,
+    RIDE_SWING_MODE_1 =0x00000010u,
+    RIDE_ROTATION_MODE_1 = 0x00000020u, //twist
+    RIDE_ROTATION_MODE_2 = 0x00000040u, //enterprise
+    RIDE_FLAG_7 = 0x0000080u,
+    RIDE_PLAY_SPLASH_SOUND = 0x00000100u,
+    RIDE_PLAY_SPLASH_SOUND_SLIDE = 0x00000200u,
     RIDE_COVERED = 0x00000400u,
+    RIDE_LIMIT_AIRTIME_BONUS = 0x00000800u,
+    RIDE_SEPARATE_RIDE_DEPRECATED = 0x00001000u,
+    RIDE_SEPARATE_RIDE = 0x00002000u,//this enables track designs
+    RIDE_CANNOT_BREAK_DOWN = 0x00004000u,
+    RIDE_DISABLE_LAST_OPERATING_MODE = 0x00008000u,
+    RIDE_FLAG_16 = 0x00010000u,
+    RIDE_DISABLE_FIRST_TWO_OPERATING_MODES = 0x00020000u,
+    RIDE_FLAG_18 = 0x00040000u,
+    RIDE_DISABLE_COLOR_TAB = 0x00080000u,
+    RIDE_ALTERNATIVE_SWING_MODE_2 = 0x00100000u,
+    RIDE_WET = 0x00000100u,
     RIDE_SLOW_IN_WATER = 0x00000200u,
-    RIDE_SEPERATE = 0x00001000u,
-    RIDE_ENABLE_OR_ELSE = 0x00002000u // Not setting this prevents track designs
+    RIDE_SEPERATE = 0x00001000u
     // from showing in the window
 } ride_flags_t;
 
 enum {
-    CAR_ENABLE_REMAP2 = 0x01000000u,
-    CAR_ENABLE_REMAP3 = 0x00020000u,
-    CAR_IS_SWINGING = 0x02000000u,
-    CAR_IS_SPINNING = 0x04000000u,
-    CAR_IS_POWERED = 0x08000000u,
-    CAR_NO_UPSTOPS = 0x00000400u,
-    CAR_IS_ANIMATED = 0x80000000u,
-    CAR_ENABLE_ROLLING_SOUND = 0x10000000u,//No clue what this does
-    CAR_STEAM_EFFECT = 0x00000001u
+    CAR_ANIMATION_NONE = 0x00u,//1 vehicle sprite, 1 peep sprite
+    CAR_ANIMATION_STEAM = 0x01u,//4 vehicle sprites, uknown peep sprites, slow animation
+    CAR_ANIMATION_2 = 0x02u,//unknown, possibly 3 
+    CAR_ANIMATION_ROWING = 0x03u,// 1 vehicle sprite, 6 peep sprites
+    CAR_ANIMATION_4 = 0x04u,//unknown
+    CAR_ANIMATION_5 = 0x05u,//unknown, possibly 2 frames?
+    CAR_ANIMATION_OBSERVATION = 0x06u,//8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
+    CAR_ANIMATION_GENERIC = 0x07u,//4 vehicle sprites, 4 peep sprites, fast animation speed
+    CAR_ANIMATION_BICYCLE = 0x08u,//4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
+    CAR_ANIMATION_4D = 0x09u,// unknown
+    
+} car_animation_t;
+
+enum {
+    CAR_FLAG_1 =                      0x1u << 8,//these are all bit-shifted 8 because the flags field is offset one byte
+    CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u << 8,
+    CAR_NO_UPSTOPS =                  0x4u << 8,//bobsled-style with 0.05 extra G's
+    CAR_IS_MINIGOLFER =               0x8u << 8,
+    CAR_FLAG_4 =                     0x01u << 8,
+    CAR_FLAG_5 =                     0x02u << 8,
+    CAR_CAN_INVERT =                 0x04u << 8,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
+    CAR_FLAG_7 =                     0x80u << 8,
+    CAR_OPENS_DOORS =                0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_ENABLE_REMAP3 =             0x200u << 8,
+    CAR_FLAG_10 =                   0x400u << 8,
+    CAR_FLAG_11 =                   0x800u << 8,
+    CAR_OVERRIDE_VERTICAL_FRAMES = 0x1000u << 8,//this is set on all 3 swinging rides (dingys, bobsled, suspended), with an override value of 0
+    CAR_FLAG_13 =                  0x2000u << 8,
+    CAR_FLAG_14 =                  0x4000u << 8,
+    CAR_FLAG_15 =                  0x8000u << 8,
+    CAR_ENABLE_REMAP2 =           0x10000u << 8,
+    CAR_IS_SWINGING =             0x20000u << 8,
+    CAR_IS_SPINNING =             0x40000u << 8,
+    CAR_IS_POWERED =              0x80000u << 8,
+    CAR_ENABLE_ROLLING_SOUND =   0x100000u << 8,//riders can scream?
+    CAR_FLAG_21 =                0x200000u << 8,//related to swinging sprites - I believe this is set automatically
+    CAR_FLAG_22 =                0x400000u << 8,
+    CAR_IS_ANIMATED =            0x800000u << 8,
+    /*
+    CAR_FLAG_24 = 1 << 24,
+    CAR_FLAG_25 = 1 << 25,// related to swinging sprites?
+    CAR_FLAG_26 = 1 << 26,
+    CAR_FLAG_27 = 1 << 27,// related to swinging sprites
+    CAR_REVERSE_THRUST_DISABLED = 1 << 28,//allows cars to accelerate down slopes like water rides and ghost train
+    CAR_FLAG_29 = 1 << 20,
+    CAR_FLAG_30 = 1 << 30,
+    CAR_FLAG_31 = 1u << 31
+    */
+    CAR_STEAM_EFFECT =                0x1u//this should be an animation type
 } car_flags_t;
 
 enum {

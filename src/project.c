@@ -1,4 +1,5 @@
 #include "project.h"
+#include "dat.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +19,7 @@ project_t* project_new()
         project->color_schemes[i].colors[2] = 0;
     }
     project->track_type = 0x33; // Default to B&M track
-    project->flags = RIDE_SEPERATE;
+    project->flags = RIDE_SEPARATE_RIDE_DEPRECATED | RIDE_SEPARATE_RIDE;
     project->minimum_cars = 3;
     project->maximum_cars = 8;
     project->zero_cars = 0;
@@ -37,11 +38,11 @@ project_t* project_new()
     for (i = 0; i < NUM_CARS; i++) {
         project->cars[i].animation = animation_new();
         project->cars[i].flags = 0;
-        project->cars[i].sprites = SPRITE_GENTLE_SLOPE | SPRITE_STEEP_SLOPE | SPRITE_BANKING | SPRITE_SLOPED_BANKED_TURN | SPRITE_DIAGONAL_SLOPE;
+        project->cars[i].sprites = SPRITE_GENTLE_SLOPE | SPRITE_STEEP_SLOPE | SPRITE_DIAGONAL_SLOPE;
         project->cars[i].spacing = (32 * 8192) / 3;
         project->cars[i].running_sound = RUNNING_SOUND_NONE;
         project->cars[i].secondary_sound = SECONDARY_SOUND_NONE;
-        project->cars[i].z_value = 8;
+        project->cars[i].z_value = 5;
         project->cars[i].friction = 0x2A8;
     }
     return project;
@@ -74,8 +75,8 @@ void project_free(project_t* project)
 int count_sprites_per_view(uint32_t flags)
 {
 int sprites_per_view=1;
-		if(flags & CAR_IS_SWINGING)sprites_per_view=13;
-		if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
+        if(flags & CAR_IS_SWINGING)sprites_per_view=7;
+        if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
 return sprites_per_view;
 }
 
@@ -92,7 +93,7 @@ void render_rotation(image_list_t* image_list,
     double yaw)
 {
     Matrix transform_matrix = MatrixFromEulerAngles(VectorFromComponents(-pitch, -yaw, -roll));
-    float variables[ANIMATION_NUM_VARIABLES] = { 0, 0, 0, 0, 0, 0, 0 };
+    float variables[ANIMATION_NUM_VARIABLES] = { 0, 0, 0, 0, 0, 0, 0, 0};
     variables[VAR_PITCH] = -pitch;
     variables[VAR_YAW] = -yaw;
     variables[VAR_ROLL] = -roll;
@@ -101,6 +102,7 @@ void render_rotation(image_list_t* image_list,
 
     double rotation = 0;
     double step = 2 * 3.141592654 / num_frames;
+    double swingstep = (sprites_per_view > 1)?3.141592654/(sprites_per_view-1):0;
     for (int view = 0; view < num_frames; view++) {
         Matrix rotation_matrix = MatrixIdentity();
         rotation_matrix.Data[0] = cos(rotation);
@@ -108,16 +110,18 @@ void render_rotation(image_list_t* image_list,
         rotation_matrix.Data[8] = sin(rotation);
         rotation_matrix.Data[10] = cos(rotation);
 
-	variables[VAR_ANIMATION]=0.0;
+        variables[VAR_ANIMATION]=0.0;
+        variables[VAR_SWING]=0.0;
 
-        for (int frame = 0; frame < sprites_per_view; frame++) {
+        for (int frame = 0; frame < sprites_per_view; frame++) {//this assumes swinging and animation is mutually exclusive
             renderer_clear_buffers();
             render_data_t render_data = animation_split_render_begin(animation, MatrixMultiply(rotation_matrix, transform_matrix),variables);
             for (int image = 0; image < images; image++) {
                 image_list_set_image(image_list,base_frame + image * sprites_per_image + view * sprites_per_view + frame,renderer_get_image());
                 animation_split_render_next_image(animation, &render_data);
             }
-        if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=0.25;
+        if(flags & CAR_IS_SWINGING)variables[VAR_SWING]+= (frame%2==0)?swingstep*(frame):-swingstep*(frame);
+        if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=1.0/sprites_per_view;
         }
 
         rotation += step;
@@ -138,7 +142,7 @@ void render_loading(image_list_t* image_list,
     yaw_matrix.Data[8] = 1;
     yaw_matrix.Data[10] = 0;
 
-    float variables[ANIMATION_NUM_VARIABLES] = { 0, 0, 0, 0, 0, 0, 0 };
+    float variables[ANIMATION_NUM_VARIABLES] = { 0, 0, 0, 0, 0, 0, 0, 0};
 
     for (int anim_frame = 0; anim_frame < 3; anim_frame++) {
         variables[VAR_RESTRAINT] += 0.25;
@@ -613,12 +617,12 @@ object_t* project_export_dat(project_t* project)
     object->ride_header->car_types[CAR_INDEX_THIRD] = project->car_types[CAR_INDEX_THIRD];
     object->ride_header->car_types[CAR_INDEX_REAR] = project->car_types[CAR_INDEX_REAR];
 
-    object->ride_header->flags = project->flags | RIDE_ENABLE_OR_ELSE;
+    object->ride_header->flags = project->flags | RIDE_SEPARATE_RIDE;//this is kept for backwards compatability
 
     // Set categories
-    object->ride_header->categories[0] = CATEGORY_THRILL_RIDE;
+    object->ride_header->categories[0] = CATEGORY_GENTLE_RIDE;
     object->ride_header->categories[1] = (project->flags & RIDE_WET) ? CATEGORY_WATER_RIDE : 0xFF;
-    object->ride_header->track_sections = 0xFFFFFFFFFFFFFFFFl;
+    object->ride_header->track_sections = 0xFFFFFFFFFFFFFFFFl;//refer to dat.h for what flags are what
 
     object->ride_header->minimum_cars = project->minimum_cars;
     object->ride_header->maximum_cars = project->maximum_cars;
@@ -638,7 +642,8 @@ object_t* project_export_dat(project_t* project)
         if (project->car_types[i] != 0xFF)
             cars_used[project->car_types[i]] = 1;
     for (i = 0; i < NUM_CARS; i++) {
-        if (cars_used[i]) {
+        if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
+            printf("rendering car %d\n",i);
             // printf("%d %d %d %d
             // %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
             object->ride_header->cars[i].highest_rotation_index = 31;
@@ -646,15 +651,32 @@ object_t* project_export_dat(project_t* project)
             // Enable all extra swinging frames
         // printf("flags %x\n",project->cars[i].flags);
             if (project->cars[i].flags & CAR_IS_SWINGING) {
-                object->ride_header->cars[i].flags |= 0x20000000;
-                object->ride_header->cars[i].extra_swing_frames = 0x08; //swinging FLAG
+                //see RideObject.cpp for details
+                /*
+                if VEHICLE_ENTRY_FLAG_SWINGING set;
+                    if neither FLAG_21 nor FLAG_27 are set
+                        if FLAG_25 is set
+                            3 swinging frames
+                        else
+                            5 swinging frames
+                    else if FLAG_21 -Nand- FLAG_27 are set
+                            7 swinging frames
+                        else
+                            13 swinging frames
+                else
+                    1 swinging frame
+                */
+                if (i%2) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
+                object->ride_header->cars[i].flags |= (CAR_IS_SWINGING | CAR_FLAG_21); //| (0x30000u << 8);//this is 1<<17 (swinging)
+                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
-                object->ride_header->cars[i].flags |= CAR_STEAM_EFFECT;
+                object->ride_header->cars[i].flags |= 0x01;//animation type!!!
             }
             if (project->cars[i].flags & CAR_IS_POWERED) {
-                object->ride_header->cars[i].powered_velocity = 15;
-                object->ride_header->cars[i].powered_acceleration = 60;
+                object->ride_header->cars[i].powered_velocity = 9;
+                object->ride_header->cars[i].powered_acceleration = 40;
+                object->ride_header->cars[i].extra_swing_frames |= 0x20u; // coasting FLAG
                 //slow boat to china: 5/200
                 //slow motorboat: 8/45
                 //speedboat: 12/33
