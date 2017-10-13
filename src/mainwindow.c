@@ -231,6 +231,7 @@ car_editor_t* car_editor_new()
     gtk_box_pack_start(GTK_BOX(editor->container), editor->flag_editor->container,
         FALSE, FALSE, 1);
     flag_editor_add_checkbox(editor->flag_editor, "Powered", CAR_IS_POWERED);
+    flag_editor_add_checkbox(editor->flag_editor, "Can invert for long periods", CAR_CAN_INVERT);
     gtk_box_pack_start(GTK_BOX(editor->container), editor->flag_editor->container,
         FALSE, FALSE, 1);
 
