@@ -75,8 +75,20 @@ void project_free(project_t* project)
 int count_sprites_per_view(uint32_t flags)
 {
 int sprites_per_view=1;
-        if(flags & CAR_IS_SWINGING)sprites_per_view=7;
-        if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
+    if(flags & CAR_IS_SWINGING) {
+        sprites_per_view=13;
+        /*
+        printf("flags: %x ",flags);
+        if (flags & CAR_FLAG_21) {
+            sprites_per_view=7;
+        }
+        else {
+            sprites_per_view=5;
+        }
+        printf("sprites per view for this swinging car: %d\n",sprites_per_view);
+        */
+    }
+    if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
 return sprites_per_view;
 }
 
@@ -650,25 +662,26 @@ object_t* project_export_dat(project_t* project)
             object->ride_header->cars[i].flags = project->cars[i].flags;//CAR_ENABLE_ROLLING_SOUND | ;
             // Enable all extra swinging frames
         // printf("flags %x\n",project->cars[i].flags);
+            if (!project->cars[i].flags & CAR_CAN_INVERT || i%2==0) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
+
             if (project->cars[i].flags & CAR_IS_SWINGING) {
                 //see RideObject.cpp for details
                 /*
-                if VEHICLE_ENTRY_FLAG_SWINGING set;
-                    if neither FLAG_21 nor FLAG_27 are set
-                        if FLAG_25 is set
-                            3 swinging frames
-                        else
-                            5 swinging frames
-                    else if FLAG_21 -Nand- FLAG_27 are set
-                            7 swinging frames
-                        else
-                            13 swinging frames
-                else
-                    1 swinging frame
+                Swinging flags karnaugh map
+                FLAG_21 | FLAG_25 | FLAG_27 | number of flags
+                    -         -         -        5
+                    -         -         1        7
+                    -         1         -        3
+                    -         1         1        7
+                    1         -         -        7
+                    1         -         1       13
+                    1         1         -        7
+                    1         1         1       13
                 */
-                if (i%2) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
-                object->ride_header->cars[i].flags |= (CAR_IS_SWINGING | CAR_FLAG_21); //| (0x30000u << 8);//this is 1<<17 (swinging)
-                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
+                object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
+                //if (i%2==0) 
+                object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
+                object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
                 object->ride_header->cars[i].flags |= 0x01;//animation type!!!

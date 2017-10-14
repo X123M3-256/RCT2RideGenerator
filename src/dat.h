@@ -47,30 +47,30 @@ typedef enum { LANGUAGE_ENGLISH_UK = 0,
     LANGUAGE_ENGLISH_US = 1 } language_t;
 
 enum {
-    RIDE_VEHICLE_TAB_SCALE_HALF = 0x00000001u,
-    RIDE_NO_INVERSIONS = 0x00000002u,
-    RIDE_NO_BANKED_TRACK = 0x00000004u,
-    RIDE_CHUFFING_ON_DEPART = 0x00000008u,
-    RIDE_SWING_MODE_1 =0x00000010u,
-    RIDE_ROTATION_MODE_1 = 0x00000020u, //twist
-    RIDE_ROTATION_MODE_2 = 0x00000040u, //enterprise
-    RIDE_FLAG_7 = 0x0000080u,
-    RIDE_PLAY_SPLASH_SOUND = 0x00000100u,
-    RIDE_PLAY_SPLASH_SOUND_SLIDE = 0x00000200u,
-    RIDE_COVERED = 0x00000400u,
-    RIDE_LIMIT_AIRTIME_BONUS = 0x00000800u,
+    RIDE_VEHICLE_TAB_SCALE_HALF =   0x00000001u,
+    RIDE_NO_INVERSIONS =            0x00000002u,
+    RIDE_NO_BANKED_TRACK =          0x00000004u,
+    RIDE_CHUFFING_ON_DEPART =       0x00000008u,
+    RIDE_SWING_MODE_1 =             0x00000010u,
+    RIDE_ROTATION_MODE_1 =          0x00000020u, //twist
+    RIDE_ROTATION_MODE_2 =          0x00000040u, //enterprise
+    RIDE_FLAG_7 =                   0x0000080u,
+    RIDE_PLAY_SPLASH_SOUND =        0x00000100u,
+    RIDE_PLAY_SPLASH_SOUND_SLIDE =  0x00000200u,
+    RIDE_COVERED =                  0x00000400u,
+    RIDE_LIMIT_AIRTIME_BONUS =      0x00000800u,
     RIDE_SEPARATE_RIDE_DEPRECATED = 0x00001000u,
-    RIDE_SEPARATE_RIDE = 0x00002000u,//this enables track designs
-    RIDE_CANNOT_BREAK_DOWN = 0x00004000u,
+    RIDE_SEPARATE_RIDE =            0x00002000u,//this enables track designs
+    RIDE_CANNOT_BREAK_DOWN =        0x00004000u,
     RIDE_DISABLE_LAST_OPERATING_MODE = 0x00008000u,
-    RIDE_FLAG_16 = 0x00010000u,
+    RIDE_FLAG_16 =                  0x00010000u,
     RIDE_DISABLE_FIRST_TWO_OPERATING_MODES = 0x00020000u,
-    RIDE_FLAG_18 = 0x00040000u,
-    RIDE_DISABLE_COLOR_TAB = 0x00080000u,
+    RIDE_FLAG_18 =                  0x00040000u,
+    RIDE_DISABLE_COLOR_TAB =        0x00080000u,
     RIDE_ALTERNATIVE_SWING_MODE_2 = 0x00100000u,
-    RIDE_WET = 0x00000100u,
-    RIDE_SLOW_IN_WATER = 0x00000200u,
-    RIDE_SEPERATE = 0x00001000u
+    RIDE_WET =                      0x00000100u,
+    RIDE_SLOW_IN_WATER =            0x00000200u,
+    RIDE_SEPERATE =                 0x00001000u
     // from showing in the window
 } ride_flags_t;
 
@@ -93,11 +93,11 @@ enum {
     CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u << 8,
     CAR_NO_UPSTOPS =                  0x4u << 8,//bobsled-style with 0.05 extra G's
     CAR_IS_MINIGOLFER =               0x8u << 8,
-    CAR_FLAG_4 =                     0x01u << 8,
-    CAR_FLAG_5 =                     0x02u << 8,
-    CAR_CAN_INVERT =                 0x04u << 8,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
+    CAR_FLAG_4 =                     0x10u << 8,
+    CAR_FLAG_5 =                     0x20u << 8,
+    CAR_CAN_INVERT =                 0x40u << 8,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
     CAR_FLAG_7 =                     0x80u << 8,
-    CAR_OPENS_DOORS =                0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_OPENS_DOORS =               0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
     CAR_ENABLE_REMAP3 =             0x200u << 8,
     CAR_FLAG_10 =                   0x400u << 8,
     CAR_FLAG_11 =                   0x800u << 8,
