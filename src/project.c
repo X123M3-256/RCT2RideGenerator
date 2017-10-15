@@ -76,7 +76,7 @@ int count_sprites_per_view(uint32_t flags)
 {
 int sprites_per_view=1;
     if(flags & CAR_IS_SWINGING) {
-        sprites_per_view=13;
+        sprites_per_view=7;
         /*
         printf("flags: %x ",flags);
         if (flags & CAR_FLAG_21) {
@@ -681,7 +681,7 @@ object_t* project_export_dat(project_t* project)
                 object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
                 //if (i%2==0) 
                 object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
-                object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
+                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
                 object->ride_header->cars[i].flags |= 0x01;//animation type!!!

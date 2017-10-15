@@ -893,7 +893,7 @@ void object_save_dat(object_t* object,
         header_filename[i - start_index] = toupper(filename[i]);
     }
     /*Specify that data is compressed*/
-    //header[0x10] = 1;
+    header[0x10] = 1;
 
     // Write checksum forcing salt
     uint32_t cur_checksum = calculate_checksum(header, decoded_file->data, decoded_file->size);
@@ -912,18 +912,18 @@ void object_save_dat(object_t* object,
     buffer_t* encoded_bytes = compress_data(decoded_file->data, decoded_file->size);
     /*Write file size*/
     *((uint32_t*)(header + 17)) = encoded_bytes->size;
+    buffer_free(decoded_file);
 
     /*Free decode data*/
 
     FILE* file = fopen(filename, "wb");
     fwrite(header, 1, HEADER_SIZE, file);
     //fwrite(encoded_bytes->data, 1, encoded_bytes->size, file);
-    fwrite(decoded_file->data, 1, decoded_file->size, file);
+    fwrite(encoded_bytes->data, 1, encoded_bytes->size, file);
     fclose(file);
 
     buffer_free(encoded_bytes);
     printf("File saved with filename %s\n", filename);
-    buffer_free(decoded_file);
 }
 void object_free(object_t* object)
 {

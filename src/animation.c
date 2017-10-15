@@ -53,12 +53,12 @@ animation_instruction_t parse_identifier(parser_state_t* state)
 
     // Find the index of the input identifier in aformentioned list
     int index;
-    for (index = 0; index < 12; index++) {
+    for (index = 0; index < 13; index++) {
         if (strcmp(identifier, identifiers[index]) == 0)
             break;
     }
     // If valid identifier not found, error
-    if (index >= 12) {
+    if (index >= 13) {
         state->error = "Unrecognized identifier";
         return instruction;
     }
@@ -67,7 +67,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
         instruction.opcode = OP_LOD_VAR;
         instruction.operand.variable = index;
     } else
-        instruction.opcode = index - 2;
+        instruction.opcode = index - 3;
 
     state->position += identifier_length;
     return instruction;
