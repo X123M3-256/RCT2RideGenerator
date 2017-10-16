@@ -455,12 +455,6 @@ static void animation_dialog_add_model(GtkWidget* widget, gpointer user_data)
     }
 }
 
-static void animation_dialog_update_preview(GtkWidget* widget, gpointer data)
-{
-    animation_dialog_t* dialog = (animation_dialog_t*)data;
-    animation_viewer_update(dialog->animation_viewer);
-}
-
 static void animation_dialog_preview_pressed(GtkWidget* widget,
     GdkEventButton* event,
     gpointer user_data)

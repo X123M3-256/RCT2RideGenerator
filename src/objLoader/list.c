@@ -138,14 +138,11 @@ void list_delete_name(list* listo, char* name)
     // char remove = 0;
 
     //	int length_name = strlen(name);
-    int item_name;
 
     if (name == NULL)
         return;
 
     for (i = 0; i < listo->item_count; i++) {
-        item_name = strlen(name);
-
         if (name != NULL && (strncmp(listo->names[i], name, strlen(name)) == 0))
             list_delete_index(listo, i);
     }

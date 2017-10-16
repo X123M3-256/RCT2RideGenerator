@@ -71,13 +71,11 @@ uint32_t calculate_checksum(uint8_t* header, uint8_t* data, uint32_t size)
     ;
     return checksum;
 }
-uint32_t calculate_salt(uint32_t current_checksum,
-    uint32_t target,
-    uint8_t* salt)
+
+void calculate_salt(uint32_t current_checksum, uint32_t target, uint8_t* salt)
 {
     target ^= (current_checksum << 25) | (current_checksum >> 7);
     salt[0] = (target & 0x00000001) << 7;
-    ;
     salt[1] = ((target & 0x00200000) >> 14);
     salt[2] = ((target & 0x000007F8) >> 3);
     salt[3] = ((target & 0xFF000000) >> 24);
