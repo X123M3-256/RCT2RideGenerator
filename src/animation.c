@@ -208,6 +208,7 @@ void animation_expression_parse(animation_expression_t* expr,
                 instruction_list_add(instruction_list, stack[stack_top]);
                 stack_top--;
             }
+            break;
         case OP_MUL:
         case OP_DIV:
         case OP_MINUS:
