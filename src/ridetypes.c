@@ -1,7 +1,7 @@
 #include "ridetypes.h"
 #include <string.h>
 
-ride_type_t ride_types[NUM_RIDE_TYPES] = {
+static ride_type_t ride_types[NUM_RIDE_TYPES] = {
     { 0x0, "Spiral Coaster" },
     { 0x1, "Stand-up Coaster" },
     { 0x2, "Suspended Swinging Coaster" },

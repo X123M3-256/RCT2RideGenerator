@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
-color_t palette[256] = {
+static color_t palette[256] = {
     // Original palette without modifications to remove animated water colors
     { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, // 0
     { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 },
@@ -95,7 +95,7 @@ color_t palette[256] = {
     { 80, 219, 80, 0 }, { 88, 237, 88, 0 }, { 92, 255, 92, 0 } //252
 };
 
-uint8_t remap[36][12] = {
+static uint8_t remap[36][12] = {
     { 10, 10, 10, 10, 10, 11, 12, 13, 14, 15, 16, 17 }, // black
     { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 }, // gray
     { 13, 14, 15, 16, 17, 18, 19, 20, 21, 21, 21, 21 }, // white

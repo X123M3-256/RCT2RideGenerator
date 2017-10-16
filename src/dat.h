@@ -72,7 +72,7 @@ enum {
     RIDE_SLOW_IN_WATER = 0x00000200u,
     RIDE_SEPERATE = 0x00001000u
     // from showing in the window
-} ride_flags_t;
+};
 
 enum {
     CAR_ANIMATION_NONE = 0x00u, //1 vehicle sprite, 1 peep sprite
@@ -86,7 +86,7 @@ enum {
     CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
     CAR_ANIMATION_4D = 0x09u, // unknown
 
-} car_animation_t;
+};
 
 // clang-format off
 enum {
@@ -98,7 +98,7 @@ enum {
     CAR_FLAG_5 =                     0x02u << 8,
     CAR_CAN_INVERT =                 0x04u << 8,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
     CAR_FLAG_7 =                     0x80u << 8,
-    CAR_OPENS_DOORS =                0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_OPENS_DOORS =               0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
     CAR_ENABLE_REMAP3 =             0x200u << 8,
     CAR_FLAG_10 =                   0x400u << 8,
     CAR_FLAG_11 =                   0x800u << 8,
@@ -125,7 +125,7 @@ enum {
     CAR_FLAG_31 = 1u << 31
     */
     CAR_STEAM_EFFECT =                0x1u//this should be an animation type
-} car_flags_t;
+};
 // clang-format on
 
 enum {
@@ -144,7 +144,7 @@ enum {
     SPRITE_CORKSCREW = 0x1000,
     SPRITE_RESTRAINT_ANIMATION = 0x2000,
     SPRITE_SPIRAL_LIFT = 0x4000
-} sprite_flags_t;
+};
 
 enum {
     RUNNING_SOUND_WOODEN_OLD = 1,
@@ -155,7 +155,7 @@ enum {
     RUNNING_SOUND_TRAIN = 31,
     RUNNING_SOUND_ENGINE = 21,
     RUNNING_SOUND_NONE = 255
-} running_sound_t;
+};
 
 enum {
     SECONDARY_SOUND_SCREAMS_1 = 0,
@@ -164,7 +164,7 @@ enum {
     SECONDARY_SOUND_WHISTLE = 3,
     SECONDARY_SOUND_BELL = 4,
     SECONDARY_SOUND_NONE = 255,
-} secondary_sound_t;
+};
 
 enum {
     CAR_INDEX_DEFAULT = 0,
@@ -172,7 +172,7 @@ enum {
     CAR_INDEX_SECOND = 2,
     CAR_INDEX_THIRD = 4,
     CAR_INDEX_REAR = 3
-} car_index_t;
+};
 
 enum {
     CATEGORY_TRANSPORT_RIDE = 0,
@@ -180,7 +180,7 @@ enum {
     CATEGORY_ROLLERCOASTER = 2,
     CATEGORY_THRILL_RIDE = 3,
     CATEGORY_WATER_RIDE = 4
-} category_t;
+};
 
 #define TRACK_STATION 0x0000000000000004l
 #define TRACK_STRAIGHT 0x0000000000000002l

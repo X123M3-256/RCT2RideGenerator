@@ -158,11 +158,11 @@ model_t* model_deserialize(json_t* json)
         json_t* face = json_array_get(faces, i);
         model->faces[i].color = json_integer_value(json_array_get(face, 0));
 
-        json_t* vertices = json_array_get(face, 1);
-        json_t* normals = json_array_get(face, 2);
+        json_t* face_vertices = json_array_get(face, 1);
+        json_t* face_normals = json_array_get(face, 2);
         for (j = 0; j < 3; j++) {
-            model->faces[i].vertices[j] = json_integer_value(json_array_get(vertices, j));
-            model->faces[i].normals[j] = json_integer_value(json_array_get(normals, j));
+            model->faces[i].vertices[j] = json_integer_value(json_array_get(face_vertices, j));
+            model->faces[i].normals[j] = json_integer_value(json_array_get(face_normals, j));
         }
     }
     return model;
@@ -429,8 +429,8 @@ json_t* project_serialize(project_t* project)
                 project->models, project->num_models);
             json_object_set_new(car, "animation", anim);
             // Flags
-            json_t* flags = json_integer(project->cars[i].flags);
-            json_object_set_new(car, "flags", flags);
+            json_t* car_flags = json_integer(project->cars[i].flags);
+            json_object_set_new(car, "flags", car_flags);
             // Sprites
             json_t* sprites = json_integer(project->cars[i].sprites);
             json_object_set_new(car, "sprites", sprites);
@@ -597,9 +597,9 @@ project_t* project_deserialize(json_t* json)
             } else
                 project->cars[i].animation = animation_new();
             // Flags
-            json_t* flags = json_object_get(car, "flags");
-            if (flags != NULL)
-                project->cars[i].flags = json_integer_value(flags);
+            json_t* car_flags = json_object_get(car, "flags");
+            if (car_flags != NULL)
+                project->cars[i].flags = json_integer_value(car_flags);
             json_t* sprites = json_object_get(car, "sprites");
             if (sprites != NULL)
                 project->cars[i].sprites = json_integer_value(sprites);

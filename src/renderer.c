@@ -18,7 +18,7 @@
 #define SQRT_6 2.44948974278
 #define S (64.0 / (3.0 * SQRT_3))
 // Dimetric projection
-const Matrix projection = {
+static const Matrix projection = {
     { SQRT1_2 * S, 0.0, -SQRT1_2* S, FRAME_BUFFER_SIZE / 2.0, 0.5 * SQRT1_2* S,
         SQRT_3 / 2.0 * S, 0.5 * SQRT1_2* S, FRAME_BUFFER_SIZE / 2.0,
         SQRT_6 / 4.0 * S, -1.0 / 2.0 * S, SQRT_6 / 4.0 * S, 0.0, 0.0, 0.0, 0.0,
@@ -26,11 +26,11 @@ const Matrix projection = {
 };
 
 // Stores the color indices for each pixel, as used in the in-game palette.
-uint8_t color_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+static uint8_t color_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 // Stores luminance values for each pixel
-float luminance_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+static float luminance_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 // Stores depth values for each pixel
-float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
+static float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
 static void renderer_get_image_bounds(int* x_ptr,
     int* y_ptr,
@@ -505,12 +505,12 @@ face_t* renderer_get_face_by_point(model_t* model,
     face_t* nearest_face = NULL;
     int i;
     for (i = 0; i < model->num_faces; i++) {
-        float depth;
+        float depth2;
         if (point_in_triangle(coords, TV[model->faces[i].vertices[0]],
                 TV[model->faces[i].vertices[1]],
-                TV[model->faces[i].vertices[2]], &depth)
-            && depth > largest_depth) {
-            largest_depth = depth;
+                TV[model->faces[i].vertices[2]], &depth2)
+            && depth2 > largest_depth) {
+            largest_depth = depth2;
             nearest_face = model->faces + i;
         }
     }
