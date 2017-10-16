@@ -939,7 +939,7 @@ buffer_t* load_file(char* filename)
     int file_size = ftell(file);
     fseek(file, SEEK_SET, 0);
     // Allocate buffer
-    buffer_t* buffer = buffer_new(file_size);
+    buffer_t* buffer = buffer_new();
     buffer_expand(buffer, file_size);
     // Read data into buffer
     fread(buffer->data, file_size, 1, file);

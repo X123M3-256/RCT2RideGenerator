@@ -36,7 +36,7 @@ animation_instruction_t parse_literal(parser_state_t* state)
 
 animation_instruction_t parse_identifier(parser_state_t* state)
 {
-    animation_instruction_t instruction;
+    animation_instruction_t instruction = {};
 
     char identifier[32];
     int identifier_length = 0;
@@ -75,7 +75,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
 
 animation_instruction_t parse_operator(parser_state_t* state)
 {
-    animation_instruction_t instruction;
+    animation_instruction_t instruction = {};
     switch (state->str[state->position]) {
     case '+':
         instruction.opcode = OP_ADD;
@@ -102,7 +102,7 @@ animation_instruction_t parse_operator(parser_state_t* state)
 
 animation_instruction_t parse_instruction(parser_state_t* state)
 {
-    animation_instruction_t instruction;
+    animation_instruction_t instruction = {};
     if (state->str[state->position] == '+' || state->str[state->position] == '-' || state->str[state->position] == '*' || state->str[state->position] == '/')
         instruction = parse_operator(state);
     else if ((state->str[state->position] >= '0' && state->str[state->position] <= '9') || state->str[state->position] == '-')
