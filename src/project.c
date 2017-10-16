@@ -632,7 +632,7 @@ object_t* project_export_dat(project_t* project)
     object->ride_header->flags = project->flags | RIDE_SEPARATE_RIDE;//this is kept for backwards compatability
 
     // Set categories
-    object->ride_header->categories[0] = CATEGORY_GENTLE_RIDE;
+    object->ride_header->categories[0] = CATEGORY_ROLLERCOASTER;
     object->ride_header->categories[1] = (project->flags & RIDE_WET) ? CATEGORY_WATER_RIDE : 0xFF;
     object->ride_header->track_sections = 0xFFFFFFFFFFFFFFFFl;//refer to dat.h for what flags are what
 
@@ -680,8 +680,8 @@ object_t* project_export_dat(project_t* project)
                 */
                 object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
                 //if (i%2==0) 
-                object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
-                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
+                //object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
+                object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
                 object->ride_header->cars[i].flags |= 0x01;//animation type!!!
