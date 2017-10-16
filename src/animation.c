@@ -18,7 +18,7 @@ typedef struct {
     int num_instructions;
 } instruction_list_t;
 
-animation_instruction_t parse_literal(parser_state_t* state)
+static animation_instruction_t parse_literal(parser_state_t* state)
 {
     animation_instruction_t instruction;
     char* end_ptr;
@@ -34,7 +34,7 @@ animation_instruction_t parse_literal(parser_state_t* state)
     return instruction;
 }
 
-animation_instruction_t parse_identifier(parser_state_t* state)
+static animation_instruction_t parse_identifier(parser_state_t* state)
 {
     animation_instruction_t instruction = {};
 
@@ -73,7 +73,7 @@ animation_instruction_t parse_identifier(parser_state_t* state)
     return instruction;
 }
 
-animation_instruction_t parse_operator(parser_state_t* state)
+static animation_instruction_t parse_operator(parser_state_t* state)
 {
     animation_instruction_t instruction = {};
     switch (state->str[state->position]) {
@@ -100,7 +100,7 @@ animation_instruction_t parse_operator(parser_state_t* state)
     return instruction;
 }
 
-animation_instruction_t parse_instruction(parser_state_t* state)
+static animation_instruction_t parse_instruction(parser_state_t* state)
 {
     animation_instruction_t instruction = {};
     if (state->str[state->position] == '+' || state->str[state->position] == '-' || state->str[state->position] == '*' || state->str[state->position] == '/')
@@ -139,7 +139,7 @@ void animation_expression_free(animation_expression_t* expr)
     free(expr);
 }
 
-instruction_list_t* instruction_list_new()
+static instruction_list_t* instruction_list_new()
 {
     instruction_list_t* list = malloc(sizeof(instruction_list_t));
     list->allocated_instructions = 4;
@@ -147,7 +147,7 @@ instruction_list_t* instruction_list_new()
     list->num_instructions = 0;
     return list;
 }
-void instruction_list_add(instruction_list_t* list,
+static void instruction_list_add(instruction_list_t* list,
     animation_instruction_t instruction)
 {
     if (list->allocated_instructions == list->num_instructions) {
@@ -158,7 +158,7 @@ void instruction_list_add(instruction_list_t* list,
     list->instructions[list->num_instructions] = instruction;
     list->num_instructions++;
 }
-animation_instruction_t* instruction_list_get_instructions(
+static animation_instruction_t* instruction_list_get_instructions(
     instruction_list_t* list,
     int* num_instructions)
 {
@@ -168,7 +168,7 @@ animation_instruction_t* instruction_list_get_instructions(
     free(list);
     return instructions;
 }
-void instruction_list_free(instruction_list_t* list)
+static void instruction_list_free(instruction_list_t* list)
 {
     free(list->instructions);
     free(list);
@@ -356,7 +356,7 @@ float animation_expression_evaluate(animation_expression_t* expr,
     return stack[0];
 }
 
-animation_object_t* animation_object_new(model_t* model)
+static animation_object_t* animation_object_new(model_t* model)
 {
     animation_object_t* object = malloc(sizeof(animation_object_t));
     object->model = model;
@@ -369,7 +369,7 @@ animation_object_t* animation_object_new(model_t* model)
     return object;
 }
 
-void animation_object_free(animation_object_t* object)
+static void animation_object_free(animation_object_t* object)
 {
     int i;
     for (i = 0; i < 3; i++) {
@@ -462,7 +462,7 @@ void animation_render(animation_t* animation,
             MatrixMultiply(model_view, animation->objects[i]->transform));
 }
 
-int animation_object_is_descendant_of_object(animation_object_t* object,
+static int animation_object_is_descendant_of_object(animation_object_t* object,
     animation_object_t* parent)
 {
     if (parent == object) {
@@ -480,7 +480,7 @@ int animation_object_is_descendant_of_object(animation_object_t* object,
     return 0;
 }
 
-int animation_object_is_descendant_of_rider(animation_object_t* object)
+static int animation_object_is_descendant_of_rider(animation_object_t* object)
 {
     if (object->model->is_rider) {
         return 1;

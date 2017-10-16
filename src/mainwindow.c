@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* get_filename(char* message, int action)
+static char* get_filename(char* message, int action)
 {
     GtkWidget* file_dialog = gtk_file_chooser_dialog_new(
         message, NULL, action, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -34,7 +34,8 @@ static void track_type_editor_changed(GtkWidget* widget, gpointer data)
         return;
     *(editor->track_type) = ride_type_by_name(text)->id;
 }
-track_type_editor_t* track_type_editor_new()
+
+static track_type_editor_t* track_type_editor_new()
 {
     int i;
     track_type_editor_t* editor = malloc(sizeof(track_type_editor_t));
@@ -55,7 +56,7 @@ track_type_editor_t* track_type_editor_new()
         G_CALLBACK(track_type_editor_changed), editor);
     return editor;
 }
-void track_type_editor_set_track_type(track_type_editor_t* editor,
+static void track_type_editor_set_track_type(track_type_editor_t* editor,
     uint8_t* track_type)
 {
     int i;
@@ -69,7 +70,7 @@ void track_type_editor_set_track_type(track_type_editor_t* editor,
     }
 }
 
-void flag_editor_checkbox_toggled(GtkWidget* widget, gpointer data)
+static void flag_editor_checkbox_toggled(GtkWidget* widget, gpointer data)
 {
     flag_checkbox_t* flag_checkbox = (flag_checkbox_t*)data;
     if (flag_checkbox->flags == NULL)
@@ -80,7 +81,8 @@ void flag_editor_checkbox_toggled(GtkWidget* widget, gpointer data)
     else
         *(flag_checkbox->flags) &= ~flag_checkbox->flag;
 }
-flag_editor_t* flag_editor_new(const char* label)
+
+static flag_editor_t* flag_editor_new(const char* label)
 {
     flag_editor_t* editor = malloc(sizeof(flag_editor_t));
     editor->flags = NULL;
@@ -91,7 +93,8 @@ flag_editor_t* flag_editor_new(const char* label)
     gtk_container_add(GTK_CONTAINER(editor->container), editor->table);
     return editor;
 }
-void flag_editor_add_checkbox(flag_editor_t* editor,
+
+static void flag_editor_add_checkbox(flag_editor_t* editor,
     const char* label,
     uint32_t flag)
 {
@@ -112,7 +115,8 @@ void flag_editor_add_checkbox(flag_editor_t* editor,
     g_signal_connect(checkbox->checkbox, "toggled",
         G_CALLBACK(flag_editor_checkbox_toggled), checkbox);
 }
-void flag_editor_set_flags(flag_editor_t* editor, uint32_t* flags)
+
+static void flag_editor_set_flags(flag_editor_t* editor, uint32_t* flags)
 {
     int i;
     editor->flags = flags;
@@ -128,7 +132,7 @@ void flag_editor_set_flags(flag_editor_t* editor, uint32_t* flags)
     }
 }
 
-void car_type_editor_changed(GtkWidget* widget, gpointer data)
+static void car_type_editor_changed(GtkWidget* widget, gpointer data)
 {
     car_type_editor_t* editor = (car_type_editor_t*)data;
     if (editor->car_type == NULL)
@@ -146,7 +150,7 @@ void car_type_editor_changed(GtkWidget* widget, gpointer data)
         break;
     }
 }
-car_type_editor_t* car_type_editor_new(const char* label)
+static car_type_editor_t* car_type_editor_new(const char* label)
 {
     int i;
     car_type_editor_t* editor = malloc(sizeof(car_type_editor_t));
@@ -172,7 +176,8 @@ car_type_editor_t* car_type_editor_new(const char* label)
         FALSE, 2);
     return editor;
 }
-void car_type_editor_set_car_type(car_type_editor_t* editor,
+
+static void car_type_editor_set_car_type(car_type_editor_t* editor,
     uint8_t* car_type)
 {
     editor->car_type = car_type;
@@ -191,7 +196,7 @@ void car_type_editor_set_car_type(car_type_editor_t* editor,
     }
 }
 
-void car_editor_edit_animation(GtkWidget* widget, gpointer data)
+static void car_editor_edit_animation(GtkWidget* widget, gpointer data)
 {
     car_editor_t* editor = (car_editor_t*)data;
     if (editor->project == NULL || editor->car_settings == NULL)
@@ -212,7 +217,7 @@ void car_editor_edit_animation(GtkWidget* widget, gpointer data)
     animation_dialog_free(dialog);
 }
 
-car_editor_t* car_editor_new()
+static car_editor_t* car_editor_new()
 {
     car_editor_t* editor = malloc(sizeof(car_editor_t));
     editor->car_settings = NULL;
@@ -313,12 +318,12 @@ car_editor_t* car_editor_new()
 
     return editor;
 }
-void car_editor_set_project(car_editor_t* editor, project_t* project)
+static void car_editor_set_project(car_editor_t* editor, project_t* project)
 {
     editor->project = project;
 }
 
-void car_editor_set_car(car_editor_t* editor, car_settings_t* car_settings)
+static void car_editor_set_car(car_editor_t* editor, car_settings_t* car_settings)
 {
     editor->car_settings = car_settings;
     flag_editor_set_flags(editor->flag_editor, &(car_settings->flags));
@@ -332,7 +337,7 @@ void car_editor_set_car(car_editor_t* editor, car_settings_t* car_settings)
     value_editor_set_value(editor->z_value_editor, &(car_settings->z_value));
 }
 
-header_editor_t* header_editor_new()
+static header_editor_t* header_editor_new()
 {
     header_editor_t* editor = malloc(sizeof(header_editor_t));
     editor->project = NULL;
@@ -414,7 +419,7 @@ header_editor_t* header_editor_new()
     gtk_box_pack_start(GTK_BOX(editor->container), cars, FALSE, FALSE, 2);
     return editor;
 }
-void header_editor_set_project(header_editor_t* editor, project_t* project)
+static void header_editor_set_project(header_editor_t* editor, project_t* project)
 {
     int i;
     editor->project = project;
@@ -487,7 +492,7 @@ static void preview_editor_set_preview_pressed(GtkWidget* widget,
     *(editor->image) = image;
     image_viewer_set_image(editor->preview_viewer, image);
 }
-preview_editor_t* preview_editor_new()
+static preview_editor_t* preview_editor_new()
 {
     preview_editor_t* editor = malloc(sizeof(preview_editor_t));
     editor->image = NULL;
@@ -505,7 +510,7 @@ preview_editor_t* preview_editor_new()
 
     return editor;
 }
-void preview_editor_set_image(preview_editor_t* editor, image_t** image)
+static void preview_editor_set_image(preview_editor_t* editor, image_t** image)
 {
     editor->image = image;
     image_viewer_set_image(editor->preview_viewer, *image);
@@ -533,7 +538,7 @@ static void main_window_edit_model(GtkWidget* widget, gpointer data)
     }
 }
 
-void main_window_add_model_to_menu(main_window_t* main_window, model_t* model)
+static void main_window_add_model_to_menu(main_window_t* main_window, model_t* model)
 {
     GtkWidget* model_menu_item = gtk_menu_item_new_with_label(model->name);
     gtk_menu_shell_append(GTK_MENU_SHELL(main_window->model_menu),
@@ -561,7 +566,7 @@ static void main_window_add_model(GtkWidget* widget, gpointer data)
     }
 }
 
-void main_window_populate_model_menu(main_window_t* main_window)
+static void main_window_populate_model_menu(main_window_t* main_window)
 {
     if (main_window->project == NULL)
         return;
@@ -572,7 +577,7 @@ void main_window_populate_model_menu(main_window_t* main_window)
     }
 }
 
-void main_window_set_project(main_window_t* main_window, project_t* project)
+static void main_window_set_project(main_window_t* main_window, project_t* project)
 {
     main_window->project = project;
     preview_editor_set_image(main_window->preview_editor,
@@ -622,7 +627,7 @@ static void main_window_export_project(GtkWidget* widget, gpointer data)
     }
 }
 
-void main_window_build_menus(main_window_t* main_window)
+static void main_window_build_menus(main_window_t* main_window)
 {
     // Set up the menus
     main_window->main_menu = gtk_menu_bar_new();

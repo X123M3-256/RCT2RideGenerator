@@ -15,7 +15,7 @@ uint32_t size;
 uint32_t allocated;
 }buffer_t;
 */
-buffer_t* buffer_new()
+static buffer_t* buffer_new()
 {
     buffer_t* buffer = malloc(sizeof(buffer_t));
     buffer->size = 0;
@@ -25,7 +25,7 @@ buffer_t* buffer_new()
 }
 
 /*Increases the size of the buffer without writing anything*/
-void buffer_expand(buffer_t* buffer, uint32_t num_bytes)
+static void buffer_expand(buffer_t* buffer, uint32_t num_bytes)
 {
     uint32_t required_size = buffer->size + num_bytes;
     if (buffer->allocated < required_size) {
@@ -37,20 +37,20 @@ void buffer_expand(buffer_t* buffer, uint32_t num_bytes)
     buffer->size += num_bytes;
 }
 
-void buffer_write(buffer_t* buffer, uint8_t* bytes, uint32_t num_bytes)
+static void buffer_write(buffer_t* buffer, uint8_t* bytes, uint32_t num_bytes)
 {
     uint32_t cur_size = buffer->size;
     buffer_expand(buffer, num_bytes);
     memcpy(buffer->data + cur_size, bytes, num_bytes);
 }
 
-void buffer_free(buffer_t* buffer)
+static void buffer_free(buffer_t* buffer)
 {
     free(buffer->data);
     free(buffer);
 }
 
-uint32_t checksum_process_byte(uint32_t checksum, uint8_t byte)
+static uint32_t checksum_process_byte(uint32_t checksum, uint8_t byte)
 {
     uint32_t checksum_higher_bits = checksum & 0xFFFFFF00u;
     uint32_t checksum_lower_bits = checksum & 0xFFu;
@@ -58,7 +58,7 @@ uint32_t checksum_process_byte(uint32_t checksum, uint8_t byte)
     checksum = checksum_higher_bits | checksum_lower_bits;
     return (checksum << 11) | (checksum >> 21);
 }
-uint32_t calculate_checksum(uint8_t* header, uint8_t* data, uint32_t size)
+static uint32_t calculate_checksum(uint8_t* header, uint8_t* data, uint32_t size)
 {
     uint32_t i;
     /*Check checksum*/
@@ -72,7 +72,7 @@ uint32_t calculate_checksum(uint8_t* header, uint8_t* data, uint32_t size)
     return checksum;
 }
 
-void calculate_salt(uint32_t current_checksum, uint32_t target, uint8_t* salt)
+static void calculate_salt(uint32_t current_checksum, uint32_t target, uint8_t* salt)
 {
     target ^= (current_checksum << 25) | (current_checksum >> 7);
     salt[0] = (target & 0x00000001) << 7;
@@ -88,7 +88,7 @@ void calculate_salt(uint32_t current_checksum, uint32_t target, uint8_t* salt)
     salt[10] = (target & 0x00000800) >> 11;
 }
 
-uint8_t count_repeated_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
+static uint8_t count_repeated_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
 {
     uint8_t first_char = bytes[pos];
     char repeated_bytes = 1;
@@ -99,7 +99,7 @@ uint8_t count_repeated_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
     }
     return repeated_bytes;
 }
-uint8_t count_differing_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
+static uint8_t count_differing_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
 {
     char last_char;
     char differing_bytes;
@@ -115,7 +115,7 @@ uint8_t count_differing_bytes(uint8_t* bytes, uint32_t pos, uint32_t size)
     }
     return differing_bytes;
 }
-buffer_t* decompress_data(uint8_t* encoded_bytes, uint32_t size)
+static buffer_t* decompress_data(uint8_t* encoded_bytes, uint32_t size)
 {
     /*Allocate buffer to store decoded data*/
     buffer_t* decoded_bytes = buffer_new();
@@ -139,7 +139,7 @@ buffer_t* decompress_data(uint8_t* encoded_bytes, uint32_t size)
     }
     return decoded_bytes;
 }
-buffer_t* compress_data(uint8_t* decoded_bytes, uint32_t size)
+static buffer_t* compress_data(uint8_t* decoded_bytes, uint32_t size)
 {
     buffer_t* encoded_bytes = buffer_new();
 
@@ -179,7 +179,7 @@ ride_header_t* ride_header_new()
     }
     return ride_header;
 }
-ride_header_t* ride_header_load(uint8_t* bytes, uint32_t* pos_ptr)
+static ride_header_t* ride_header_load(uint8_t* bytes, uint32_t* pos_ptr)
 {
     int i;
 
@@ -271,7 +271,7 @@ ride_header_t* ride_header_load(uint8_t* bytes, uint32_t* pos_ptr)
     *pos_ptr += 0x1C2;
     return ride_header;
 }
-void ride_header_write(ride_header_t* header, buffer_t* buffer)
+static void ride_header_write(ride_header_t* header, buffer_t* buffer)
 {
     int i;
     uint8_t header_bytes[0x1C2];
@@ -359,7 +359,7 @@ void ride_header_write(ride_header_t* header, buffer_t* buffer)
     }
     buffer_write(buffer, header_bytes, 0x1C2);
 }
-void ride_header_free(ride_header_t* header)
+static void ride_header_free(ride_header_t* header)
 {
     free(header);
 }
@@ -401,7 +401,7 @@ void ride_structures_set_num_default_colors(ride_structures_t* structures,
     structures->num_default_colors = num;
 }
 
-ride_structures_t* ride_structures_load(uint8_t* bytes, uint32_t* pos_ptr)
+static ride_structures_t* ride_structures_load(uint8_t* bytes, uint32_t* pos_ptr)
 {
     int i;
     int pos = *pos_ptr;
@@ -440,7 +440,7 @@ ride_structures_t* ride_structures_load(uint8_t* bytes, uint32_t* pos_ptr)
     *pos_ptr = pos;
     return structures;
 }
-void ride_structures_write(ride_structures_t* structures, buffer_t* buffer)
+static void ride_structures_write(ride_structures_t* structures, buffer_t* buffer)
 {
     int i;
     /*Write number of 3 byte structures*/
@@ -467,7 +467,7 @@ void ride_structures_write(ride_structures_t* structures, buffer_t* buffer)
             structures->peep_positions[i].num);
     }
 }
-void ride_structures_free(ride_structures_t* structures)
+static void ride_structures_free(ride_structures_t* structures)
 {
     int i;
     for (i = 0; i < 4; i++)
@@ -487,7 +487,7 @@ string_table_t* string_table_new()
     strcpy(table->strings[1].str, "A Ride");
     return table;
 }
-string_table_t* string_table_load(uint8_t* bytes, uint32_t* pos_ptr)
+static string_table_t* string_table_load(uint8_t* bytes, uint32_t* pos_ptr)
 {
     uint32_t pos = *pos_ptr;
     /*Allocate string table*/
@@ -516,7 +516,7 @@ string_table_t* string_table_load(uint8_t* bytes, uint32_t* pos_ptr)
     *pos_ptr = pos;
     return table;
 }
-void string_table_write(string_table_t* table, buffer_t* buffer)
+static void string_table_write(string_table_t* table, buffer_t* buffer)
 {
     int i;
     for (i = 0; i < table->num_strings; i++) {
@@ -554,7 +554,7 @@ void string_table_set_string_by_language(string_table_t* table,
         }
     }
 }
-void string_table_free(string_table_t* table)
+static void string_table_free(string_table_t* table)
 {
     int i;
     for (i = 0; i < table->num_strings; i++)

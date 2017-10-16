@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void animation_viewer_update(animation_viewer_t* viewer)
+static void animation_viewer_update(animation_viewer_t* viewer)
 {
     renderer_clear_buffers();
     if (viewer->animation != NULL)
@@ -17,7 +17,7 @@ void animation_viewer_update(animation_viewer_t* viewer)
     image_free(image);
 }
 
-animation_viewer_t* animation_viewer_new()
+static animation_viewer_t* animation_viewer_new()
 {
     animation_viewer_t* viewer = malloc(sizeof(animation_viewer_t));
     viewer->animation = NULL;
@@ -36,7 +36,7 @@ animation_viewer_t* animation_viewer_new()
     return viewer;
 }
 
-void animation_viewer_set_animation(animation_viewer_t* viewer,
+static void animation_viewer_set_animation(animation_viewer_t* viewer,
     animation_t* animation)
 {
     viewer->animation = animation;
@@ -129,7 +129,7 @@ editor->object_transform=object_transform;
 }
 
 */
-model_selector_t* model_selector_new(model_t** models, int num_models)
+static model_selector_t* model_selector_new(model_t** models, int num_models)
 {
     int i;
     model_selector_t* selector = malloc(sizeof(model_selector_t));
@@ -142,7 +142,8 @@ model_selector_t* model_selector_new(model_t** models, int num_models)
     }
     return selector;
 }
-model_t* model_selector_get_model(model_selector_t* model_selector)
+
+static model_t* model_selector_get_model(model_selector_t* model_selector)
 {
     int index = gtk_combo_box_get_active(GTK_COMBO_BOX(model_selector->container));
     if (index < 0)
@@ -288,7 +289,8 @@ static void animation_object_editor_roll_entry_changed(GtkWidget* widget,
         gtk_widget_modify_base(editor->roll_entry, GTK_STATE_NORMAL, NULL);
     }
 }
-void animation_object_editor_update_parent_select(
+
+static void animation_object_editor_update_parent_select(
     animation_object_editor_t* editor)
 {
     // Easiest way to prevent this change from altering the object parent is to
@@ -328,7 +330,7 @@ static void animation_object_editor_parent_select_changed(GtkWidget* widget,
     }
 }
 
-void animation_object_editor_update_object_list(
+static void animation_object_editor_update_object_list(
     animation_object_editor_t* editor,
     animation_object_t** objects,
     int num_objects)
@@ -344,7 +346,7 @@ void animation_object_editor_update_object_list(
             objects[i]->model->name);
 }
 
-animation_object_editor_t* animation_object_editor_new(
+static animation_object_editor_t* animation_object_editor_new(
     animation_object_t** objects,
     int num_objects)
 {
@@ -425,7 +427,8 @@ animation_object_editor_t* animation_object_editor_new(
 
     return editor;
 }
-void animation_object_editor_set_object(animation_object_editor_t* editor,
+
+static void animation_object_editor_set_object(animation_object_editor_t* editor,
     animation_object_t* object)
 {
     editor->object = NULL;

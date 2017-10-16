@@ -71,7 +71,7 @@ void project_free(project_t* project)
     free(project);
 }
 
-int count_sprites_per_view(uint32_t flags)
+static int count_sprites_per_view(uint32_t flags)
 {
     int sprites_per_view = 1;
     if (flags & CAR_IS_SWINGING)
@@ -81,7 +81,7 @@ int count_sprites_per_view(uint32_t flags)
     return sprites_per_view;
 }
 
-void render_rotation(image_list_t* image_list,
+static void render_rotation(image_list_t* image_list,
     animation_t* animation,
     uint32_t flags,
     int base_frame,
@@ -130,7 +130,7 @@ void render_rotation(image_list_t* image_list,
         variables[VAR_YAW] += step;
     }
 }
-void render_loading(image_list_t* image_list,
+static void render_loading(image_list_t* image_list,
     animation_t* animation,
     uint32_t flags,
     int base_frame,
@@ -164,7 +164,7 @@ void render_loading(image_list_t* image_list,
     }
 }
 
-int count_sprites_from_flags(uint16_t sprites)
+static int count_sprites_from_flags(uint16_t sprites)
 {
     int count = 0;
     if (sprites & SPRITE_FLAT_SLOPE)
@@ -198,7 +198,7 @@ int count_sprites_from_flags(uint16_t sprites)
     return count;
 }
 
-void project_render_sprites(project_t* project, object_t* object)
+static void project_render_sprites(project_t* project, object_t* object)
 {
     int i;
     ride_header_t* header = object->ride_header;

@@ -32,7 +32,7 @@ float luminance_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 // Stores depth values for each pixel
 float depth_buffer[FRAME_BUFFER_SIZE][FRAME_BUFFER_SIZE];
 
-void renderer_get_image_bounds(int* x_ptr,
+static void renderer_get_image_bounds(int* x_ptr,
     int* y_ptr,
     int* width_ptr,
     int* height_ptr)
@@ -170,7 +170,7 @@ void renderer_remap_color(uint8_t source, uint8_t dest)
 }
 
 // Fragment shader
-float shade_fragment(Vector normal)
+static float shade_fragment(Vector normal)
 {
     // printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
     const Vector light_direction = { sqrt(10.0) / 5.0, -sqrt(10.0) / 5.0,
@@ -190,7 +190,8 @@ typedef struct {
     Vector current;
     Vector step;
 } linear_interp_t;
-linear_interp_t linear_interp_init(Vector x1,
+
+static linear_interp_t linear_interp_init(Vector x1,
     Vector x2,
     float u_start,
     float u_step)
@@ -201,7 +202,7 @@ linear_interp_t linear_interp_init(Vector x1,
     interp.step = VectorMultiply(diff, u_step);
     return interp;
 }
-Vector linear_interp_step(linear_interp_t* interp)
+static Vector linear_interp_step(linear_interp_t* interp)
 {
     interp->current = VectorAdd(interp->current, interp->step);
     return interp->current;
@@ -211,7 +212,7 @@ Vector linear_interp_step(linear_interp_t* interp)
 start-end.
 The value of skip is distance from the start of the range to the centre of the
 first pixel*/
-void get_enclosed_pixels(float start,
+static void get_enclosed_pixels(float start,
     float end,
     int* first,
     int* last,
@@ -228,7 +229,7 @@ void get_enclosed_pixels(float start,
     if (*last >= FRAME_BUFFER_SIZE)
         *last = FRAME_BUFFER_SIZE - 1;
 }
-float lerp(float x1, float x2, float u)
+static float lerp(float x1, float x2, float u)
 {
     return x1 + u * (x2 - x1);
 }
@@ -236,7 +237,7 @@ float lerp(float x1, float x2, float u)
 // Rasterizes a line from the first two vertices in the supplied primitive;
 // others are ignored
 #define ABS(X) ((X) > 0 ? (X) : -(X))
-void rasterize_line(primitive_t* primitive)
+static void rasterize_line(primitive_t* primitive)
 {
     Vector first_vertex, last_vertex;
 
@@ -289,7 +290,7 @@ void rasterize_line(primitive_t* primitive)
 }
 
 // DWISOTT
-void rasterize_primitive(primitive_t* primitive)
+static void rasterize_primitive(primitive_t* primitive)
 {
     Vector top_vertex, middle_vertex, bottom_vertex, top_normal, middle_normal,
         bottom_normal;
@@ -400,7 +401,7 @@ void rasterize_primitive(primitive_t* primitive)
         }
     }
 }
-void transform_vectors(Matrix transform,
+static void transform_vectors(Matrix transform,
     Vector* source,
     Vector* dest,
     unsigned int num,
@@ -468,7 +469,7 @@ void renderer_cut(Vector point, Vector normal)
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
-int point_in_triangle(Vector point,
+static int point_in_triangle(Vector point,
     Vector t1,
     Vector t2,
     Vector t3,

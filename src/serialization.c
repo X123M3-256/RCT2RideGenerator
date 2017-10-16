@@ -10,7 +10,7 @@ char* strdup(const char* str)
     return new_str;
 }
 
-json_t* matrix_serialize(Matrix matrix)
+static json_t* matrix_serialize(Matrix matrix)
 {
     int i, j;
     json_t* root = json_array();
@@ -24,7 +24,7 @@ json_t* matrix_serialize(Matrix matrix)
     }
     return root;
 }
-Matrix matrix_deserialize(json_t* json)
+static Matrix matrix_deserialize(json_t* json)
 {
     int i, j;
     Matrix matrix;
@@ -39,15 +39,7 @@ Matrix matrix_deserialize(json_t* json)
     return matrix;
 }
 
-json_t* vector_serialize(Vector vector)
-{
-    json_t* components = json_array();
-    json_array_append_new(components, json_real(vector.X));
-    json_array_append_new(components, json_real(vector.Y));
-    json_array_append_new(components, json_real(vector.Z));
-    return components;
-}
-Vector vector_deserialize(json_t* components)
+static Vector vector_deserialize(json_t* components)
 {
     Vector vector;
     vector.X = json_real_value(json_array_get(components, 0));
@@ -276,7 +268,7 @@ animation_t* animation_deserialize(json_t* json,
     return animation;
 }
 
-json_t* image_serialize(image_t* image)
+static json_t* image_serialize(image_t* image)
 {
     json_t* json = json_object();
 
@@ -309,7 +301,7 @@ json_t* image_serialize(image_t* image)
 
     return json;
 }
-image_t* image_deserialize(json_t* json)
+static image_t* image_deserialize(json_t* json)
 {
     json_t* width = json_object_get(json, "width");
     json_t* height = json_object_get(json, "height");
@@ -652,95 +644,3 @@ void project_save(const char* filename, project_t* project)
     json_dump_file(json, filename, 0);
     json_delete(json);
 }
-
-/*
-json_t* animation_serialize(animation_t* animation,model_t** model_list,int
-num_models)
-{
-int i,j;
-json_t* root=json_object();
-
-//Serialize model list
-json_t* objects=json_array();
-    for(i=0;i<animation->num_objects;i++)
-    {
-    json_t* object_data=json_array();
-    //Find the index of the model using supplied array
-    int index=0;
-        while(index<num_models)
-        {
-            if(animation->objects[i].model==model_list[index])break;
-        index++;
-        }
-        if(index==num_models)
-        {
-        printf("Animation references model that isn't in project\n");
-        exit(0);
-        }
-
-    json_array_append_new(object_data,json_integer(index));
-    json_array_append_new(object_data,json_integer(animation->objects[i].parent_index));
-    json_array_append_new(objects,object_data);
-    }
-json_object_set(root,"objects",objects);
-//Serialize frames
-json_t* frames=json_array();
-    for(i=0;i<animation->num_frames;i++)
-    {
-    json_t* frame=json_array();
-        for(j=0;j<animation->num_objects;j++)
-        {
-        json_t* transform=json_array();
-        json_array_append_new(transform,vector_serialize(animation->frames[i][j].position));
-        json_array_append_new(transform,vector_serialize(animation->frames[i][j].rotation));
-        json_array_append_new(frame,transform);
-        }
-    json_array_append(frames,frame);
-    }
-json_object_set(root,"frames",frames);
-return root;
-}
-animation_t* animation_deserialize(json_t* json,model_t** model_list,int
-num_models)
-{
-int i,j;
-animation_t* animation=animation_new();
-
-//Deserialize model list
-json_t* objects=json_object_get(json,"objects");
-    for(i=0;i<json_array_size(objects);i++)
-    {
-    json_t* object_data=json_array_get(objects,i);
-    int index=json_integer_value(json_array_get(object_data,0));
-        if(index>=num_models)
-        {
-        fprintf(stderr,"Failed loading animation because model index is out of
-range\n");
-        animation_free(animation);
-        return NULL;
-        }
-    int object=animation_add_object(animation,model_list[index]);
-    int parent=json_integer_value(json_array_get(object_data,1));
-    animation->objects[object].parent_index=parent;
-    }
-static int animcount=0;
-//Deserialize frames
-json_t* frames=json_object_get(json,"frames");
-animation_set_num_frames(animation,json_array_size(frames));
-    for(i=0;i<animation->num_frames;i++)
-    {
-    json_t* frame=json_array_get(frames,i);
-        for(j=0;j<animation->num_objects;j++)
-        {
-        json_t* transform=json_array_get(frame,j);
-
-        Vector position=vector_deserialize(json_array_get(transform,0));
-        Vector rotation=vector_deserialize(json_array_get(transform,1));
-
-        animation_update_transform(&(animation->frames[i][j]),position,rotation);
-        }
-    }
-animcount++;
-return animation;
-}
-*/
