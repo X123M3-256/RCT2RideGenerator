@@ -487,8 +487,7 @@ static void animation_dialog_preview_pressed(GtkWidget* widget,
 
         float depth;
         if (renderer_get_face_by_point(
-                object->model, MatrixMultiply(dialog->animation_viewer->model_view,
-                                   object->transform),
+                object->model, MatrixMultiply(dialog->animation_viewer->model_view, object->transform),
                 coords, &depth)
                 != NULL
             && depth > largest_depth) {
@@ -522,7 +521,7 @@ static void animation_dialog_update_variables(GtkWidget* widget,
     if (dialog->flip_slider != NULL)
         dialog->animation_viewer->variables[VAR_FLIP] = gtk_range_get_value(GTK_RANGE(dialog->flip_slider));
     if (dialog->animation_slider != NULL)
-        dialog->animation_viewer->variables[VAR_ANIMATION] = gtk_range_get_value(GTK_RANGE(dialog->animation_slider));	
+        dialog->animation_viewer->variables[VAR_ANIMATION] = gtk_range_get_value(GTK_RANGE(dialog->animation_slider));
     if (dialog->restraint_slider != NULL)
         dialog->animation_viewer->variables[VAR_RESTRAINT] = gtk_range_get_value(GTK_RANGE(dialog->restraint_slider));
     animation_viewer_update(dialog->animation_viewer);

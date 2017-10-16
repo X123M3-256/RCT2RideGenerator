@@ -431,7 +431,7 @@ json_t* project_serialize(project_t* project)
     for (i = 0; i < NUM_CARS; i++) {
         json_t* car;
         if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
-            printf("Lets save car %d\n",i);
+            printf("Lets save car %d\n", i);
             car = json_object();
             // Animation
             json_t* anim = animation_serialize(project->cars[i].animation,

@@ -51,7 +51,7 @@ enum {
     RIDE_NO_INVERSIONS = 0x00000002u,
     RIDE_NO_BANKED_TRACK = 0x00000004u,
     RIDE_CHUFFING_ON_DEPART = 0x00000008u,
-    RIDE_SWING_MODE_1 =0x00000010u,
+    RIDE_SWING_MODE_1 = 0x00000010u,
     RIDE_ROTATION_MODE_1 = 0x00000020u, //twist
     RIDE_ROTATION_MODE_2 = 0x00000040u, //enterprise
     RIDE_FLAG_7 = 0x0000080u,
@@ -60,7 +60,7 @@ enum {
     RIDE_COVERED = 0x00000400u,
     RIDE_LIMIT_AIRTIME_BONUS = 0x00000800u,
     RIDE_SEPARATE_RIDE_DEPRECATED = 0x00001000u,
-    RIDE_SEPARATE_RIDE = 0x00002000u,//this enables track designs
+    RIDE_SEPARATE_RIDE = 0x00002000u, //this enables track designs
     RIDE_CANNOT_BREAK_DOWN = 0x00004000u,
     RIDE_DISABLE_LAST_OPERATING_MODE = 0x00008000u,
     RIDE_FLAG_16 = 0x00010000u,
@@ -75,19 +75,20 @@ enum {
 } ride_flags_t;
 
 enum {
-    CAR_ANIMATION_NONE = 0x00u,//1 vehicle sprite, 1 peep sprite
-    CAR_ANIMATION_STEAM = 0x01u,//4 vehicle sprites, uknown peep sprites, slow animation
-    CAR_ANIMATION_2 = 0x02u,//unknown, possibly 3 
-    CAR_ANIMATION_ROWING = 0x03u,// 1 vehicle sprite, 6 peep sprites
-    CAR_ANIMATION_4 = 0x04u,//unknown
-    CAR_ANIMATION_5 = 0x05u,//unknown, possibly 2 frames?
-    CAR_ANIMATION_OBSERVATION = 0x06u,//8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
-    CAR_ANIMATION_GENERIC = 0x07u,//4 vehicle sprites, 4 peep sprites, fast animation speed
-    CAR_ANIMATION_BICYCLE = 0x08u,//4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
-    CAR_ANIMATION_4D = 0x09u,// unknown
-    
+    CAR_ANIMATION_NONE = 0x00u, //1 vehicle sprite, 1 peep sprite
+    CAR_ANIMATION_STEAM = 0x01u, //4 vehicle sprites, uknown peep sprites, slow animation
+    CAR_ANIMATION_2 = 0x02u, //unknown, possibly 3
+    CAR_ANIMATION_ROWING = 0x03u, // 1 vehicle sprite, 6 peep sprites
+    CAR_ANIMATION_4 = 0x04u, //unknown
+    CAR_ANIMATION_5 = 0x05u, //unknown, possibly 2 frames?
+    CAR_ANIMATION_OBSERVATION = 0x06u, //8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
+    CAR_ANIMATION_GENERIC = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
+    CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
+    CAR_ANIMATION_4D = 0x09u, // unknown
+
 } car_animation_t;
 
+// clang-format off
 enum {
     CAR_FLAG_1 =                      0x1u << 8,//these are all bit-shifted 8 because the flags field is offset one byte
     CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u << 8,
@@ -125,6 +126,7 @@ enum {
     */
     CAR_STEAM_EFFECT =                0x1u//this should be an animation type
 } car_flags_t;
+// clang-format on
 
 enum {
     SPRITE_FLAT_SLOPE = 0x0001,
