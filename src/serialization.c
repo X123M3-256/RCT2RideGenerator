@@ -342,7 +342,6 @@ image_t* image_deserialize(json_t* json)
 
 json_t* project_serialize(project_t* project)
 {
-    int i;
     json_t* json = json_object();
     // Serialize strings
     json_t* name = json_string(project->name);
@@ -388,7 +387,7 @@ json_t* project_serialize(project_t* project)
 
     // Serialize default color schemes
     json_t* default_color_schemes = json_array();
-    for (i = 0; i < project->num_color_schemes; i++) {
+    for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         json_t* color_scheme = json_array();
         json_array_append_new(color_scheme,
             json_integer(project->color_schemes[i].colors[0]));
@@ -422,13 +421,13 @@ json_t* project_serialize(project_t* project)
     // Determine which cars are used
     unsigned char cars_used[NUM_CARS];
     memset(cars_used, 0, NUM_CARS);
-    for (i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
         if (project->car_types[i] != 0xFF) {
             cars_used[project->car_types[i]] = 1;
         }
     }
     json_t* cars = json_array();
-    for (i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS; i++) {
         json_t* car;
         if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
             printf("Lets save car %d\n", i);
@@ -465,7 +464,7 @@ json_t* project_serialize(project_t* project)
     json_object_set_new(json, "cars", cars);
     // Load models
     json_t* models = json_array();
-    for (i = 0; i < project->num_models; i++) {
+    for (int i = 0; i < project->num_models; i++) {
         json_t* model = model_serialize(project->models[i]);
         json_array_append_new(models, model);
     }
@@ -473,6 +472,7 @@ json_t* project_serialize(project_t* project)
 
     return json;
 }
+
 project_t* project_deserialize(json_t* json)
 {
     project_t* project = project_new();
@@ -544,7 +544,7 @@ project_t* project_deserialize(json_t* json)
     project->num_color_schemes = json_array_size(default_color_schemes) > MAX_COLOR_SCHEMES
         ? MAX_COLOR_SCHEMES
         : json_array_size(default_color_schemes);
-    for (int i = 0; i < project->num_color_schemes; i++) {
+    for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         json_t* color_scheme = json_array_get(default_color_schemes, i);
         if (json_array_size(color_scheme) > 0)
             project->color_schemes[i].colors[0] = json_integer_value(json_array_get(color_scheme, 0));

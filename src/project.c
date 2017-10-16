@@ -577,7 +577,6 @@ void project_render_sprites(project_t* project, object_t* object)
 
 object_t* project_export_dat(project_t* project)
 {
-    int i;
     object_t* object = object_new_ride();
 
     object->ride_header->track_style = project->track_type;
@@ -607,7 +606,7 @@ object_t* project_export_dat(project_t* project)
     // Set color schemes
     ride_structures_set_num_default_colors(object->optional,
         project->num_color_schemes);
-    for (i = 0; i < project->num_color_schemes; i++) {
+    for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         object->optional->default_colors[i] = project->color_schemes[i];
     }
 
@@ -639,10 +638,10 @@ object_t* project_export_dat(project_t* project)
 
     unsigned char cars_used[NUM_CARS];
     memset(cars_used, 0, NUM_CARS);
-    for (i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++)
         if (project->car_types[i] != 0xFF)
             cars_used[project->car_types[i]] = 1;
-    for (i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS; i++) {
         if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
             printf("rendering car %d\n", i);
             // printf("%d %d %d %d
