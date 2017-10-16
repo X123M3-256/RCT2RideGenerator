@@ -50,7 +50,7 @@ strcpy(model->Name,name);
 }
 */
 
-void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
+static void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
 {
     int i, j;
     int rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -68,7 +68,7 @@ void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
     }
 }
 
-void model_viewer_render_preview(model_viewer_t* viewer)
+static void model_viewer_render_preview(model_viewer_t* viewer)
 {
     renderer_clear_buffers();
     renderer_render_model(viewer->grid, viewer->model_view);
@@ -206,7 +206,7 @@ static void model_viewer_zoom_out(GtkWidget* button, gpointer user_data)
         model_viewer_render_preview(model_viewer);
 }
 
-model_viewer_t* model_viewer_new()
+static model_viewer_t* model_viewer_new()
 {
     model_viewer_t* model_viewer = malloc(sizeof(model_viewer_t));
     model_viewer->model = NULL;
@@ -304,12 +304,12 @@ model_viewer_t* model_viewer_new()
 
     return model_viewer;
 }
-void model_viewer_set_model(model_viewer_t* viewer, model_t* model)
+static void model_viewer_set_model(model_viewer_t* viewer, model_t* model)
 {
     viewer->model = model;
     model_viewer_render_preview(viewer);
 }
-void model_viewer_free(model_viewer_t* viewer)
+static void model_viewer_free(model_viewer_t* viewer)
 {
     image_viewer_free(viewer->image_viewer);
     gtk_widget_destroy(viewer->reset);
@@ -335,7 +335,7 @@ static void color_select_tool_clicked(GtkWidget* widget, gpointer user_data)
     if (tool->color != NULL)
         *(tool->color) = tool->value;
 }
-color_select_tool_t* color_select_tool_new(uint8_t color)
+static color_select_tool_t* color_select_tool_new(uint8_t color)
 {
     color_select_tool_t* tool = malloc(sizeof(color_select_tool_t));
     tool->color = NULL;
@@ -348,18 +348,18 @@ color_select_tool_t* color_select_tool_new(uint8_t color)
         G_CALLBACK(color_select_tool_clicked), tool);
     return tool;
 }
-void color_select_tool_set_color(color_select_tool_t* tool, uint8_t* color)
+static void color_select_tool_set_color(color_select_tool_t* tool, uint8_t* color)
 {
     tool->color = color;
 }
-void color_select_tool_free(color_select_tool_t* tool)
+static void color_select_tool_free(color_select_tool_t* tool)
 {
     gtk_widget_destroy(tool->image);
     g_object_unref(G_OBJECT(tool->pixbuf));
     gtk_widget_destroy(GTK_WIDGET(tool->tool_item));
     free(tool);
 }
-color_selector_t* color_selector_new()
+static color_selector_t* color_selector_new()
 {
     color_selector_t* selector = malloc(sizeof(color_selector_t));
     selector->color = NULL;
@@ -403,7 +403,7 @@ color_selector_t* color_selector_new()
     }
     return selector;
 }
-void color_selector_set_color(color_selector_t* selector, uint8_t* color)
+static void color_selector_set_color(color_selector_t* selector, uint8_t* color)
 {
     int i;
     selector->color = color;
@@ -411,7 +411,7 @@ void color_selector_set_color(color_selector_t* selector, uint8_t* color)
         color_select_tool_set_color(selector->tools[i], color);
     }
 }
-void color_selector_free(color_selector_t* selector)
+static void color_selector_free(color_selector_t* selector)
 {
     int i;
     for (i = 0; i < 39; i++) {
@@ -433,7 +433,7 @@ static void matrix_transform_button_clicked(GtkWidget* widget,
         return;
     *(button->matrix) = MatrixMultiply(button->transform, *(button->matrix));
 }
-matrix_transform_button_t* matrix_transform_button_new(const char* label,
+static matrix_transform_button_t* matrix_transform_button_new(const char* label,
     Matrix matrix)
 {
     matrix_transform_button_t* button = malloc(sizeof(matrix_transform_button_t));
@@ -444,12 +444,12 @@ matrix_transform_button_t* matrix_transform_button_new(const char* label,
         G_CALLBACK(matrix_transform_button_clicked), button);
     return button;
 }
-void matrix_transform_button_set_matrix(matrix_transform_button_t* button,
+static void matrix_transform_button_set_matrix(matrix_transform_button_t* button,
     Matrix* matrix)
 {
     button->matrix = matrix;
 }
-void matrix_transform_button_free(matrix_transform_button_t* button)
+static void matrix_transform_button_free(matrix_transform_button_t* button)
 {
     gtk_widget_destroy(button->container);
     free(button);

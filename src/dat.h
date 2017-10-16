@@ -51,7 +51,7 @@ enum {
     RIDE_NO_INVERSIONS = 0x00000002u,
     RIDE_NO_BANKED_TRACK = 0x00000004u,
     RIDE_CHUFFING_ON_DEPART = 0x00000008u,
-    RIDE_SWING_MODE_1 =0x00000010u,
+    RIDE_SWING_MODE_1 = 0x00000010u,
     RIDE_ROTATION_MODE_1 = 0x00000020u, //twist
     RIDE_ROTATION_MODE_2 = 0x00000040u, //enterprise
     RIDE_FLAG_7 = 0x0000080u,
@@ -60,7 +60,7 @@ enum {
     RIDE_COVERED = 0x00000400u,
     RIDE_LIMIT_AIRTIME_BONUS = 0x00000800u,
     RIDE_SEPARATE_RIDE_DEPRECATED = 0x00001000u,
-    RIDE_SEPARATE_RIDE = 0x00002000u,//this enables track designs
+    RIDE_SEPARATE_RIDE = 0x00002000u, //this enables track designs
     RIDE_CANNOT_BREAK_DOWN = 0x00004000u,
     RIDE_DISABLE_LAST_OPERATING_MODE = 0x00008000u,
     RIDE_FLAG_16 = 0x00010000u,
@@ -72,22 +72,23 @@ enum {
     RIDE_SLOW_IN_WATER = 0x00000200u,
     RIDE_SEPERATE = 0x00001000u
     // from showing in the window
-} ride_flags_t;
+};
 
 enum {
-    CAR_ANIMATION_NONE = 0x00u,//1 vehicle sprite, 1 peep sprite
-    CAR_ANIMATION_STEAM = 0x01u,//4 vehicle sprites, uknown peep sprites, slow animation
-    CAR_ANIMATION_2 = 0x02u,//unknown, possibly 3 
-    CAR_ANIMATION_ROWING = 0x03u,// 1 vehicle sprite, 6 peep sprites
-    CAR_ANIMATION_4 = 0x04u,//unknown
-    CAR_ANIMATION_5 = 0x05u,//unknown, possibly 2 frames?
-    CAR_ANIMATION_OBSERVATION = 0x06u,//8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
-    CAR_ANIMATION_GENERIC = 0x07u,//4 vehicle sprites, 4 peep sprites, fast animation speed
-    CAR_ANIMATION_BICYCLE = 0x08u,//4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
-    CAR_ANIMATION_4D = 0x09u,// unknown
-    
-} car_animation_t;
+    CAR_ANIMATION_NONE = 0x00u, //1 vehicle sprite, 1 peep sprite
+    CAR_ANIMATION_STEAM = 0x01u, //4 vehicle sprites, uknown peep sprites, slow animation
+    CAR_ANIMATION_2 = 0x02u, //unknown, possibly 3
+    CAR_ANIMATION_ROWING = 0x03u, // 1 vehicle sprite, 6 peep sprites
+    CAR_ANIMATION_4 = 0x04u, //unknown
+    CAR_ANIMATION_5 = 0x05u, //unknown, possibly 2 frames?
+    CAR_ANIMATION_OBSERVATION = 0x06u, //8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
+    CAR_ANIMATION_GENERIC = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
+    CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
+    CAR_ANIMATION_4D = 0x09u, // unknown
 
+};
+
+// clang-format off
 enum {
     CAR_FLAG_1 =                      0x1u << 8,//these are all bit-shifted 8 because the flags field is offset one byte
     CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u << 8,
@@ -97,7 +98,7 @@ enum {
     CAR_FLAG_5 =                     0x02u << 8,
     CAR_CAN_INVERT =                 0x04u << 8,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
     CAR_FLAG_7 =                     0x80u << 8,
-    CAR_OPENS_DOORS =                0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_OPENS_DOORS =               0x100u << 8,//only relevant for making things backwards-compatible with RCT2 and doors
     CAR_ENABLE_REMAP3 =             0x200u << 8,
     CAR_FLAG_10 =                   0x400u << 8,
     CAR_FLAG_11 =                   0x800u << 8,
@@ -124,7 +125,8 @@ enum {
     CAR_FLAG_31 = 1u << 31
     */
     CAR_STEAM_EFFECT =                0x1u//this should be an animation type
-} car_flags_t;
+};
+// clang-format on
 
 enum {
     SPRITE_FLAT_SLOPE = 0x0001,
@@ -142,7 +144,7 @@ enum {
     SPRITE_CORKSCREW = 0x1000,
     SPRITE_RESTRAINT_ANIMATION = 0x2000,
     SPRITE_SPIRAL_LIFT = 0x4000
-} sprite_flags_t;
+};
 
 enum {
     RUNNING_SOUND_WOODEN_OLD = 1,
@@ -153,7 +155,7 @@ enum {
     RUNNING_SOUND_TRAIN = 31,
     RUNNING_SOUND_ENGINE = 21,
     RUNNING_SOUND_NONE = 255
-} running_sound_t;
+};
 
 enum {
     SECONDARY_SOUND_SCREAMS_1 = 0,
@@ -162,7 +164,7 @@ enum {
     SECONDARY_SOUND_WHISTLE = 3,
     SECONDARY_SOUND_BELL = 4,
     SECONDARY_SOUND_NONE = 255,
-} secondary_sound_t;
+};
 
 enum {
     CAR_INDEX_DEFAULT = 0,
@@ -170,7 +172,7 @@ enum {
     CAR_INDEX_SECOND = 2,
     CAR_INDEX_THIRD = 4,
     CAR_INDEX_REAR = 3
-} car_index_t;
+};
 
 enum {
     CATEGORY_TRANSPORT_RIDE = 0,
@@ -178,7 +180,7 @@ enum {
     CATEGORY_ROLLERCOASTER = 2,
     CATEGORY_THRILL_RIDE = 3,
     CATEGORY_WATER_RIDE = 4
-} category_t;
+};
 
 #define TRACK_STATION 0x0000000000000004l
 #define TRACK_STRAIGHT 0x0000000000000002l

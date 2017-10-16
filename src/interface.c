@@ -76,7 +76,7 @@ void value_editor_set_value(value_editor_t* editor, void* value_ptr)
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button), value);
 }
 
-void value_selector_changed(GtkWidget* widget, gpointer data)
+static void value_selector_changed(GtkWidget* widget, gpointer data)
 {
     value_selector_t* selector = (value_selector_t*)data;
     if (selector->value == NULL)

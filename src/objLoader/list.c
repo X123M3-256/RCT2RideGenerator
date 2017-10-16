@@ -6,12 +6,12 @@
 #include <string.h>
 
 // internal helper functions
-char list_is_full(list* listo)
+static char list_is_full(list* listo)
 {
     return (listo->item_count == listo->current_max_size);
 }
 
-void list_grow(list* old_listo)
+static void list_grow(list* old_listo)
 {
     int i;
     list new_listo;
@@ -138,14 +138,11 @@ void list_delete_name(list* listo, char* name)
     // char remove = 0;
 
     //	int length_name = strlen(name);
-    int item_name;
 
     if (name == NULL)
         return;
 
     for (i = 0; i < listo->item_count; i++) {
-        item_name = strlen(name);
-
         if (name != NULL && (strncmp(listo->names[i], name, strlen(name)) == 0))
             list_delete_index(listo, i);
     }
