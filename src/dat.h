@@ -101,7 +101,7 @@ enum {
     CAR_ENABLE_REMAP3 =             0x200u << 8,
     CAR_FLAG_10 =                   0x400u << 8,
     CAR_FLAG_11 =                   0x800u << 8,
-    CAR_OVERRIDE_VERTICAL_FRAMES = 0x1000u << 8,//this is set on all 3 swinging rides (dingys, bobsled, suspended), with an override value of 0
+    CAR_OVERRIDE_VERTICAL_FRAMES = 0x1000u << 8,
     CAR_FLAG_13 =                  0x2000u << 8,
     CAR_FLAG_14 =                  0x4000u << 8,
     CAR_FLAG_15 =                  0x8000u << 8,

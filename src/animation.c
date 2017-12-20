@@ -417,6 +417,7 @@ void animation_calculate_object_transforms(
     animation_t* animation,
     float variables[ANIMATION_NUM_VARIABLES])
 {
+    Matrix object_global_transforms[animation->num_objects];
     // Calculate transformations relative to parent object
     for (int i = 0; i < animation->num_objects; i++) {
         Vector position;
@@ -432,12 +433,10 @@ void animation_calculate_object_transforms(
         object->transform.Data[3] = position.X;
         object->transform.Data[7] = position.Y;
         object->transform.Data[11] = position.Z;
+        object_global_transforms[i] = animation->objects[i]->transform;
     }
     // Calculate global transformations
-    Matrix object_global_transforms[animation->num_objects];
     for (int i = 0; i < animation->num_objects; i++) {
-        object_global_transforms[i] = animation->objects[i]->transform;
-
         animation_object_t* current_object = animation->objects[i];
         while (current_object->parent != NULL) {
             object_global_transforms[i] = MatrixMultiply(

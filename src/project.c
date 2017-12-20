@@ -76,7 +76,7 @@ int count_sprites_per_view(uint32_t flags)
 {
 int sprites_per_view=1;
     if(flags & CAR_IS_SWINGING) {
-        sprites_per_view=7;
+        sprites_per_view=13;
         /*
         printf("flags: %x ",flags);
         if (flags & CAR_FLAG_21) {
@@ -660,15 +660,18 @@ object_t* project_export_dat(project_t* project)
             // %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
             object->ride_header->cars[i].highest_rotation_index = 31;
             object->ride_header->cars[i].flags = project->cars[i].flags;//CAR_ENABLE_ROLLING_SOUND | ;
+            if (object->ride_header->categories[0] == CATEGORY_ROLLERCOASTER){
+                object->ride_header->cars[i].flags |= CAR_ENABLE_ROLLING_SOUND;
+            }
             // Enable all extra swinging frames
         // printf("flags %x\n",project->cars[i].flags);
-            if (!project->cars[i].flags & CAR_CAN_INVERT || i%2==0) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
+            if (!project->cars[i].flags & CAR_CAN_INVERT /*|| i%2==0*/) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
 
             if (project->cars[i].flags & CAR_IS_SWINGING) {
                 //see RideObject.cpp for details
                 /*
                 Swinging flags karnaugh map
-                FLAG_21 | FLAG_25 | FLAG_27 | number of flags
+                FLAG_21 | FLAG_25 | FLAG_27 | number of sprites
                     -         -         -        5
                     -         -         1        7
                     -         1         -        3
@@ -680,16 +683,16 @@ object_t* project_export_dat(project_t* project)
                 */
                 object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
                 //if (i%2==0) 
-                //object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
+                object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
                 object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
                 object->ride_header->cars[i].flags |= 0x01;//animation type!!!
             }
             if (project->cars[i].flags & CAR_IS_POWERED) {
-                object->ride_header->cars[i].powered_velocity = 9;
-                object->ride_header->cars[i].powered_acceleration = 40;
-                object->ride_header->cars[i].extra_swing_frames |= 0x20u; // coasting FLAG
+                object->ride_header->cars[i].powered_velocity = 16;
+                object->ride_header->cars[i].powered_acceleration = 100;
+                //object->ride_header->cars[i].extra_swing_frames |= 0x20u; // coasting FLAG
                 //slow boat to china: 5/200
                 //slow motorboat: 8/45
                 //speedboat: 12/33
@@ -738,11 +741,11 @@ object_t* project_export_dat(project_t* project)
             int model = 0;
             float variables[ANIMATION_NUM_VARIABLES] = { 0, 0, 0, 0, 0, 0, 0 };
             variables[VAR_RESTRAINT] = 1;
+            animation_calculate_object_transforms(animation,variables);
 
             while (rider < num_riders && model < animation->num_objects) {
                 if (animation->objects[model]->model->is_rider) {
-                    int8_t peep_position = (int8_t)(-animation_expression_evaluate(
-                                                        animation->objects[model]->position[2], variables)
+                    int8_t peep_position = (int8_t)(-animation->objects[model]->transform.Data[11]
                         * (32.0 / 3.0));
                     object->optional->peep_positions[i].positions[rider] = *((uint8_t*)(&peep_position));
                     rider++;
