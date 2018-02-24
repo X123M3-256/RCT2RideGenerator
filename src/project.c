@@ -134,6 +134,7 @@ void render_rotation(image_list_t* image_list,
             }
         if(flags & CAR_IS_SWINGING)variables[VAR_SWING]+= (frame%2==0)?swingstep*(frame):-swingstep*(frame);
         if(flags & CAR_IS_ANIMATED)variables[VAR_ANIMATION]+=1.0/sprites_per_view;
+        if(flags & CAR_IS_SPINNING)variables[VAR_SPIN]+=3.141592654*2/sprites_per_view;
         }
 
         rotation += step;
