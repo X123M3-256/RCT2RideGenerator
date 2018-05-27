@@ -16,6 +16,8 @@ typedef struct {
     uint16_t friction;
     uint8_t running_sound;
     uint8_t secondary_sound;
+	uint8_t car_visual;// set to 0 by default
+	uint8_t effect_visual;// set to 1 by default
     uint8_t z_value;
 } car_settings_t;
 

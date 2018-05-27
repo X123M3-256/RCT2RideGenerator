@@ -44,6 +44,8 @@ project_t* project_new()
         project->cars[i].secondary_sound = SECONDARY_SOUND_NONE;
         project->cars[i].z_value = 5;
         project->cars[i].friction = 0x2A8;
+		project->cars[i].car_visual = 0;
+		project->cars[i].effect_visual = 1;
     }
     return project;
 }
@@ -76,7 +78,7 @@ int count_sprites_per_view(uint32_t flags)
 {
 int sprites_per_view=1;
     if(flags & CAR_IS_SWINGING) {
-        sprites_per_view=13;
+        sprites_per_view=7;
         /*
         printf("flags: %x ",flags);
         if (flags & CAR_FLAG_21) {
@@ -89,6 +91,8 @@ int sprites_per_view=1;
         */
     }
     if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
+    if(flags & CAR_IS_SPINNING) sprites_per_view = 16;
+    if(flags & CAR_FLAG_14) sprites_per_view = 32; // assumes car is spinning
 return sprites_per_view;
 }
 
@@ -176,13 +180,19 @@ void render_loading(image_list_t* image_list,
 }
 
 
-int count_sprites_from_flags(uint16_t sprites)
+int count_sprites_from_flags(uint16_t sprites,uint16_t flags)
 {
     int count = 0;
     if (sprites & SPRITE_FLAT_SLOPE)
         count += 32;
-    if (sprites & SPRITE_GENTLE_SLOPE)
-        count += 72;
+    if (sprites & SPRITE_GENTLE_SLOPE) {
+        if (flags & CAR_IS_SPINNING) {
+            count += 16;
+        }
+        else {
+            count += 72;
+        }
+    }
     if (sprites & SPRITE_STEEP_SLOPE)
         count += 80;
     if (sprites & SPRITE_VERTICAL_SLOPE)
@@ -230,7 +240,7 @@ void project_render_sprites(project_t* project, object_t* object)
         int car_num_riders = animation_count_riders(project->cars[i].animation);
         int car_images = (car_num_riders != 1 ? car_num_riders / 2 : 1) + 1;
         // Number of angles that need to be rendered for each image
-        int views_per_image = count_sprites_from_flags(sprite_flags);
+        int views_per_image = count_sprites_from_flags(sprite_flags,flags);
         // Number of sprites that must be rendered for each angle of an image
         int sprites_per_view = count_sprites_per_view(flags);
         // Total sprites for each image
@@ -257,15 +267,25 @@ void project_render_sprites(project_t* project, object_t* object)
             render_rotation(images, animation, flags, base_frame, sprites_per_image,
                 car_images, 4, -FG_TRANSITION, 0, 0);
             base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, base_frame, sprites_per_image,
-                car_images, 32, GENTLE, 0, 0); // Why the fuck does this
-            // become a 4 frame
-            // rotation with spinning
-            // enabled?
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation, flags, base_frame, sprites_per_image,
-                car_images, 32, -GENTLE, 0, 0);
-            base_frame += 32 * sprites_per_view;
+            if (flags & CAR_IS_SPINNING) {
+                render_rotation(images, animation, flags, base_frame, sprites_per_image,
+                    car_images, 4, GENTLE, 0, 0);
+                base_frame += 4 * sprites_per_view;
+                render_rotation(images, animation, flags, base_frame, sprites_per_image,
+                    car_images, 4, -GENTLE, 0, 0);
+                base_frame += 4 * sprites_per_view;
+            }
+            else {
+                render_rotation(images, animation, flags, base_frame, sprites_per_image,
+                    car_images, 32, GENTLE, 0, 0); // Why the fuck does this
+                // become a 4 frame
+                // rotation with spinning
+                // enabled?
+                base_frame += 32 * sprites_per_view;
+                render_rotation(images, animation, flags, base_frame, sprites_per_image,
+                    car_images, 32, -GENTLE, 0, 0);
+                base_frame += 32 * sprites_per_view;
+            }
         }
         if (sprite_flags & SPRITE_STEEP_SLOPE) {
             render_rotation(images, animation, flags, base_frame, sprites_per_image,
@@ -660,6 +680,8 @@ object_t* project_export_dat(project_t* project)
             // printf("%d %d %d %d
             // %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
             object->ride_header->cars[i].highest_rotation_index = 31;
+			object->ride_header->cars[i].car_visual = project->cars[i].car_visual;
+			object->ride_header->cars[i].effect_visual = project->cars[i].effect_visual;
             object->ride_header->cars[i].flags = project->cars[i].flags;//CAR_ENABLE_ROLLING_SOUND | ;
             if (object->ride_header->categories[0] == CATEGORY_ROLLERCOASTER){
                 object->ride_header->cars[i].flags |= CAR_ENABLE_ROLLING_SOUND;
@@ -685,19 +707,23 @@ object_t* project_export_dat(project_t* project)
                 object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
                 //if (i%2==0) 
                 object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
-                object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
+                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
             }
             if (project->cars[i].flags & CAR_IS_ANIMATED) {
-                object->ride_header->cars[i].flags |= 0x01;//animation type!!!
+                object->ride_header->cars[i].flags |= 0x08;//animation type!!!
             }
             if (project->cars[i].flags & CAR_IS_POWERED) {
-                object->ride_header->cars[i].powered_velocity = 16;
-                object->ride_header->cars[i].powered_acceleration = 100;
-                //object->ride_header->cars[i].extra_swing_frames |= 0x20u; // coasting FLAG
-                //slow boat to china: 5/200
-                //slow motorboat: 8/45
-                //speedboat: 12/33
-                // steam tractor: 10/60
+				object->ride_header->cars[i].powered_velocity = 16;
+                object->ride_header->cars[i].powered_acceleration = 255;
+                //CMP S-15: speed 14, power 100
+				//C.P.Hunt: speed 16, power 200
+				//Doppelmayr quad: 13/255
+				//gondola: 16/244
+				//skiiers 10/30
+            }
+            if (project->cars[i].flags & CAR_IS_SPINNING) {
+                object->ride_header->cars[i].spin_inertia = 28;
+                object->ride_header->cars[i].spin_friction = 7;
             }
             if (project->flags & RIDE_WET) {
                 //object->ride_header->cars[i].flags |= 0x000010; //splashing sound effect

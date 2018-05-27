@@ -347,7 +347,8 @@ void ride_header_write(ride_header_t* header, buffer_t* buffer)
         /*Write Z value*/
         car_data[95] = car->z_value;
         /*Write unknown fields*/
-        car_data[94] = (uint8_t)car->unknown[0];// splash types: 0x01 no splash, 0x0B river rafts 0x0C log flume 0x0D splash boats
+		car_data[93] = car->car_visual;
+        car_data[94] = car->effect_visual;// splash types: 0x01 no splash, 0x0B river rafts 0x0C log flume 0x0D splash boats
         *((uint16_t*)(car_data + 96)) = car->unknown[1];
         car_data[88] = (uint8_t)car->unknown[2];
         car_data[90] = (uint8_t)car->unknown[3];
@@ -355,7 +356,6 @@ void ride_header_write(ride_header_t* header, buffer_t* buffer)
         car_data[14] = (uint8_t)car->unknown[5];
         car_data[15] = (uint8_t)car->unknown[6];
         car_data[16] = (uint8_t)car->unknown[7];
-        car_data[93] = (uint8_t)car->unknown[8];
         /*Move to next car*/
         car_data += 101;
     }

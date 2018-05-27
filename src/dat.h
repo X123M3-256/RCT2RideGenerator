@@ -68,6 +68,7 @@ enum {
     RIDE_FLAG_18 =                  0x00040000u,
     RIDE_DISABLE_COLOR_TAB =        0x00080000u,
     RIDE_ALTERNATIVE_SWING_MODE_2 = 0x00100000u,
+	
     RIDE_WET =                      0x00000100u,
     RIDE_SLOW_IN_WATER =            0x00000200u,
     RIDE_SEPERATE =                 0x00001000u
@@ -289,6 +290,8 @@ typedef struct {
     uint8_t powered_acceleration;
     uint8_t powered_velocity;
     uint8_t z_value;
+	uint8_t car_visual;
+	uint8_t effect_visual;
 } car_t;
 
 typedef struct {
