@@ -73,7 +73,6 @@ image_t* renderer_get_image()
 {
     int b_x, b_y, b_w, b_h;
     renderer_get_image_bounds(&b_x, &b_y, &b_w, &b_h);
-
     image_t* image = malloc(sizeof(image_t));
     image->width = b_w;
     image->height = b_h;
