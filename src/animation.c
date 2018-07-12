@@ -53,12 +53,12 @@ static animation_instruction_t parse_identifier(parser_state_t* state)
 
     // Find the index of the input identifier in aformentioned list
     int index;
-    for (index = 0; index < 12; index++) {
+    for (index = 0; index < 13; index++) {
         if (strcmp(identifier, identifiers[index]) == 0)
             break;
     }
     // If valid identifier not found, error
-    if (index >= 12) {
+    if (index >= 13) {
         state->error = "Unrecognized identifier";
         return instruction;
     }
@@ -67,7 +67,7 @@ static animation_instruction_t parse_identifier(parser_state_t* state)
         instruction.opcode = OP_LOD_VAR;
         instruction.operand.variable = index;
     } else
-        instruction.opcode = index - 2;
+        instruction.opcode = index - 3;
 
     state->position += identifier_length;
     return instruction;
@@ -418,6 +418,7 @@ void animation_calculate_object_transforms(
     animation_t* animation,
     float variables[ANIMATION_NUM_VARIABLES])
 {
+    Matrix object_global_transforms[animation->num_objects];
     // Calculate transformations relative to parent object
     for (int i = 0; i < animation->num_objects; i++) {
         Vector position;
@@ -433,12 +434,10 @@ void animation_calculate_object_transforms(
         object->transform.Data[3] = position.X;
         object->transform.Data[7] = position.Y;
         object->transform.Data[11] = position.Z;
+        object_global_transforms[i] = animation->objects[i]->transform;
     }
     // Calculate global transformations
-    Matrix object_global_transforms[animation->num_objects];
     for (int i = 0; i < animation->num_objects; i++) {
-        object_global_transforms[i] = animation->objects[i]->transform;
-
         animation_object_t* current_object = animation->objects[i];
         while (current_object->parent != NULL) {
             object_global_transforms[i] = MatrixMultiply(
