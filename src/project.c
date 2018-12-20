@@ -91,23 +91,46 @@ void project_free(project_t* project)
 
 int count_sprites_per_view(uint32_t flags, uint8_t animation_type)
 {
-int sprites_per_view=1;
-    if(flags & CAR_IS_SWINGING) {
-        sprites_per_view=7;
+    int sprites_per_view = 1;
+    if (flags & CAR_IS_SWINGING) {
         /*
-        printf("flags: %x ",flags);
-        if (flags & CAR_FLAG_21) {
-            sprites_per_view=7;
+        Swinging flags karnaugh map
+        FLAG_21 | FLAG_25 | FLAG_27 | number of sprites
+        -         -         -        5
+
+        -         1         -        3 <-- wood wild mouse
+
+        1         1         1       13
+        1         -         1       13 <-- bobsled
+
+        -         1         1        7
+        1         -         -        7 <-- arrow suspended
+        1         1         -        7
+        -         -         1        7 <-- dinghy slide
+        */
+        int f21 = flags & CAR_FLAG_21;
+        int f25 = flags & CAR_FLAG_25;
+        int f27 = flags & CAR_FLAG_27;
+
+        if (!(f21) && !(f27)) {
+            if (f25) {
+                sprites_per_view = 3;
+            }
+            else {
+                sprites_per_view = 5;
+            }
+        }
+        else if (!(f21) || !(f27)) {
+            sprites_per_view = 7;
         }
         else {
-            sprites_per_view=5;
+            sprites_per_view = 13;
         }
-        printf("sprites per view for this swinging car: %d\n",sprites_per_view);
-        */
+
     }
-    if(flags & CAR_IS_ANIMATED)sprites_per_view=4;
-    if(flags & CAR_IS_SPINNING) sprites_per_view = 16;
-    if(flags & CAR_EXTRA_SPINNING_FRAMES) sprites_per_view = 32; // assumes car is spinning
+    if (flags & CAR_IS_ANIMATED) { sprites_per_view = 4; }
+    if (flags & CAR_IS_SPINNING) { sprites_per_view = 16; }
+    if (flags & CAR_EXTRA_SPINNING_FRAMES) {sprites_per_view = 32; } // assumes car is spinning
 return sprites_per_view;
 }
 
@@ -181,6 +204,7 @@ void render_loading(image_list_t* image_list,
     for (int anim_frame = 0; anim_frame < 3; anim_frame++) {
         variables[VAR_RESTRAINT] += 0.25;
         variables[VAR_YAW] = 0;
+		printf("var_restraint is %i\n", variables[VAR_RESTRAINT]);
         for (int i = 0; i < 4; i++) {
             renderer_clear_buffers();
             render_data_t render_data = animation_split_render_begin(animation, rotation_matrix, variables);
@@ -204,11 +228,16 @@ int count_sprites_from_flags(uint16_t sprites,uint16_t flags)
         count += 32;
     if (sprites & SPRITE_GENTLE_SLOPE) {
         if (flags & CAR_IS_SPINNING) {
-            count += 16;
+            count += 20;//16
         }
         else {
             count += 72;
         }
+    }
+    if (sprites & SPRITE_RESTRAINT_ANIMATION)
+        count += 12;
+    if ((flags & CAR_IS_SPINNING)) {
+        return count;
     }
     if (sprites & SPRITE_STEEP_SLOPE)
         count += 80;
@@ -232,8 +261,6 @@ int count_sprites_from_flags(uint16_t sprites,uint16_t flags)
         count += 16;
     if (sprites & SPRITE_CORKSCREW)
         count += 80;
-    if (sprites & SPRITE_RESTRAINT_ANIMATION)
-        count += 12;
     return count;
 }
 
@@ -248,21 +275,19 @@ static void project_render_sprites(project_t* project, object_t* object)
     image_list_set_image(object->images, 1, image_new(1, 1, 0));
     image_list_set_image(object->images, 2, image_new(1, 1, 0));
 
-	
-	printf("How many models? %i\n",project->num_models-1);
     // Compute number of sprites
     for (i = 0; i < NUM_CARS; i++) {
         // Set flags
         uint32_t flags = project->cars[i].flags;
-		uint8_t animation_type = project->cars[i].animation_type;
+        uint8_t animation_type = project->cars[i].animation_type;
         uint16_t sprite_flags = header->cars[i].sprites;
         // Number of images needed for this car (car + riders)
         int car_num_riders = animation_count_riders(project->cars[i].animation);
         int car_images = (car_num_riders != 1 ? car_num_riders / 2 : 1) + 1;
         // Number of angles that need to be rendered for each image
-        int views_per_image = count_sprites_from_flags(sprite_flags,flags);
+        int views_per_image = count_sprites_from_flags(sprite_flags, flags);
         // Number of sprites that must be rendered for each angle of an image
-        int sprites_per_view = count_sprites_per_view(flags,project->cars[i].animation_type);
+        int sprites_per_view = count_sprites_per_view(flags, project->cars[i].animation_type);
         // Total sprites for each image
         int sprites_per_image = sprites_per_view * views_per_image;
         // Total sprites related to this car
@@ -271,20 +296,21 @@ static void project_render_sprites(project_t* project, object_t* object)
         int base_frame = object->images->num_images;
         // Allocate images for car
         image_list_set_num_images(object->images, base_frame + total_car_sprites);
-		
+
         // Render images for car
         image_list_t* images = object->images;
         animation_t* animation = project->cars[i].animation;
-		/*
-		animation_t* animation_trans_left;
-		animation_t* animation_full_left;
-		animation_t* animation_trans_right;
-		animation_t* animation_full_right;
-			animation_trans_left = animation;
-			animation_trans_right = animation;
-			animation_full_left = animation;
-			animation_full_right = animation;
-		/**/
+        /*
+        animation_t* animation_trans_left;
+        animation_t* animation_full_left;
+        animation_t* animation_trans_right;
+        animation_t* animation_full_right;
+            animation_trans_left = animation;
+            animation_trans_right = animation;
+            animation_full_left = animation;
+            animation_full_right = animation;
+        /**/
+        fprintf(stdout, "car is spinning %i \n",flags & CAR_IS_SPINNING);
 
         if (sprite_flags & SPRITE_FLAT_SLOPE) {
             render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
@@ -298,6 +324,7 @@ static void project_render_sprites(project_t* project, object_t* object)
             render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
                 car_images, 4, -FG_TRANSITION, 0, 0);
             base_frame += 4 * sprites_per_view;
+
             if (flags & CAR_IS_SPINNING) {
                 render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
                     car_images, 4, GENTLE, 0, 0);
@@ -308,10 +335,7 @@ static void project_render_sprites(project_t* project, object_t* object)
             }
             else {
                 render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                    car_images, 32, GENTLE, 0, 0); // Why the fuck does this
-                // become a 4 frame
-                // rotation with spinning
-                // enabled?
+                    car_images, 32, GENTLE, 0, 0);
                 base_frame += 32 * sprites_per_view;
                 render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
                     car_images, 32, -GENTLE, 0, 0);
@@ -400,128 +424,7 @@ static void project_render_sprites(project_t* project, object_t* object)
                 car_images, 4, -STEEP_DIAGONAL, 0, M_PI_4);
             base_frame += 4 * sprites_per_view;
         }
-		
-		// BANKING
-		/*
         if (sprite_flags & SPRITE_BANKING) {
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 8, FLAT, 0, 0);
-            base_frame += 8 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 8, FLAT, 0, 0);
-            base_frame += 8 * sprites_per_view;
-            render_rotation(images, animation_full_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, FLAT, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_full_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, FLAT, 0, 0);
-            base_frame += 32 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_INLINE_TWIST) {
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, 3.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, -3.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, M_PI_2, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, -M_PI_2, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, 5.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, -5.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, 3.0 * M_PI_4, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, -3.0 * M_PI_4, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, 7.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FLAT, -7.0 * M_PI_8, 0);
-            base_frame += 4 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_SLOPE_BANK_TRANSITION) {
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, FG_TRANSITION, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, FG_TRANSITION, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, -FG_TRANSITION, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, -FG_TRANSITION, 0, 0);
-            base_frame += 32 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_DIAGONAL_BANK_TRANSITION) {
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, GENTLE_DIAGONAL, 0, M_PI_4);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, GENTLE_DIAGONAL, 0, M_PI_4);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -GENTLE_DIAGONAL, 0, M_PI_4);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -GENTLE_DIAGONAL, 0,
-                M_PI_4);
-            base_frame += 4 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_SLOPED_BANK_TRANSITION) {
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, GENTLE, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, GENTLE, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -GENTLE, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_trans_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -GENTLE, 0, 0);
-            base_frame += 4 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_SLOPED_BANKED_TURN) {
-            render_rotation(images, animation_full_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, GENTLE, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_full_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, GENTLE, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_full_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, -GENTLE, 0, 0);
-            base_frame += 32 * sprites_per_view;
-            render_rotation(images, animation_full_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 32, -GENTLE, 0, 0);
-            base_frame += 32 * sprites_per_view;
-        }
-        if (sprite_flags & SPRITE_BANKED_SLOPE_TRANSITION) {
-            render_rotation(images, animation_full_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FG_TRANSITION, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_full_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, FG_TRANSITION, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_full_left, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -FG_TRANSITION, 0, 0);
-            base_frame += 4 * sprites_per_view;
-            render_rotation(images, animation_full_right, flags, animation_type, base_frame, sprites_per_image,
-                car_images, 4, -FG_TRANSITION, 0, 0);
-            base_frame += 4 * sprites_per_view;
-        }
-		*/
-		if (sprite_flags & SPRITE_BANKING) {
             render_rotation(images, animation, flags, animation_type, base_frame, sprites_per_image,
                 car_images, 8, FLAT, BANK_TRANSITION, 0);
             base_frame += 8 * sprites_per_view;
@@ -754,7 +657,7 @@ static void project_render_sprites(project_t* project, object_t* object)
         if (sprite_flags & SPRITE_RESTRAINT_ANIMATION) {
             render_loading(images, animation, flags, animation_type, base_frame, sprites_per_image,
                 car_images);
-            base_frame += 12 * sprites_per_view;
+            base_frame += 12 * 1;
         }
     }
 }
@@ -836,34 +739,31 @@ object_t* project_export_dat(project_t* project)
             // Enable all extra swinging frames
         // printf("flags %x\n",project->cars[i].flags);
             //if (!project->cars[i].flags & CAR_CAN_INVERT /*|| i%2==0*/) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
-
-            if (project->cars[i].flags & CAR_IS_SWINGING) {
+            //if (project->cars[i].flags & CAR_IS_SWINGING) {
                 //see RideObject.cpp for details
                 /*
                 Swinging flags karnaugh map
                 FLAG_21 | FLAG_25 | FLAG_27 | number of sprites
                     -         -         -        5
-                    -         -         1        7
-                    -         1         -        3
+                    -         -         1        7 <-- dinghy slide
+                    -         1         -        3 <-- wood wild mouse
                     -         1         1        7
-                    1         -         -        7
-                    1         -         1       13
+                    1         -         -        7 <-- arrow suspended
+                    1         -         1       13 <-- bobsled
                     1         1         -        7
                     1         1         1       13
                 */
-                object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
+                //object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
                 //if (i%2==0) 
-                object->ride_header->cars[i].flags |= CAR_FLAG_21;//this is only set on the above trains for some reason.
+                //object->ride_header->cars[i].flags |= CAR_FLAG_27;//this is only set on the above trains for some reason.
                 //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
-            }
+            //}
             if (project->cars[i].flags & CAR_IS_POWERED) {
 				object->ride_header->cars[i].powered_velocity = project->cars[i].powered_velocity;
                 object->ride_header->cars[i].powered_acceleration = project->cars[i].powered_acceleration;
-                //CMP S-15: speed 14, power 100
-				//C.P.Hunt: speed 16, power 200
-				//Doppelmayr quad: 13/255
-				//gondola: 16/244
-				//skiiers 10/30
+            }
+            if (project->cars[i].flags & CAR_IS_ANIMATED) {
+                object->ride_header->cars[i].animation_type = project->cars[i].animation_type;
             }
             if (project->cars[i].flags & CAR_IS_SPINNING) {
                 object->ride_header->cars[i].spin_inertia = project->cars[i].spin_inertia;

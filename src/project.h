@@ -40,6 +40,7 @@ typedef struct {
     char* name;
     char* description;
     color_scheme_t color_schemes[16];
+	int color_scheme_override; // set to 255 to indicate the ride has different colors for each train
 	uint32_t id;
     uint32_t num_color_schemes;
 	uint64_t track_sections;
