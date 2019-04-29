@@ -131,8 +131,7 @@ static uint8_t remap[36][12] = {
     // Special peep colors
     { 108, 109, 110, 111, 112, 113, 114, 115, 116, 116, 117, 117 }, // Skin
     { 105, 105, 106, 106, 106, 107, 107, 107, 108, 108, 109, 109 }, // Legs/Hair
-    { 243, 244, 245, 246, 246, 247, 247, 248, 248, 248, 249,
-        250 }, // Remap1 -- These are darker than the normal remap colors
+    { 243, 244, 245, 246, 246, 247, 247, 248, 248, 248, 249, 250 }, // Remap1 -- These are darker than the normal remap colors
     { 202, 203, 204, 205, 205, 206, 206, 207, 207, 207, 208, 209 }, // Remap2  /
 };
 
@@ -140,6 +139,8 @@ uint8_t palette_remap_section_index(uint8_t color, uint8_t section_index)
 {
     if (color == TRANSPARENT)
         return 0;
+    if (color == BLACKTILE)
+        return 10;
     if (color == COLOR_REMAP_1)
         return 243 + section_index;
     if (color == COLOR_REMAP_2)

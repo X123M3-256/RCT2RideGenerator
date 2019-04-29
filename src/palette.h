@@ -12,6 +12,7 @@
 #define COLOR_REMAP_2 37
 #define COLOR_REMAP_3 38
 #define TRANSPARENT 39
+#define BLACKTILE 40
 
 typedef struct {
     uint8_t blue;

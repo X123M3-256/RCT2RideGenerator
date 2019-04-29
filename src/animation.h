@@ -32,7 +32,7 @@ typedef enum {
 } animation_opcode_t;
 
 #define ANIMATION_NUM_VARIABLES 8
-#define ANIMATION_MAX_OBJECTS 32
+#define ANIMATION_MAX_OBJECTS 64
 typedef struct {
     animation_opcode_t opcode;
     union {
