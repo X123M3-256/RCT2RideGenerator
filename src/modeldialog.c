@@ -50,6 +50,33 @@ strcpy(model->Name,name);
 }
 */
 
+Matrix DefaultView()
+{
+    Matrix matrix;
+
+    matrix.Data[0] = -4;
+    matrix.Data[4] = 0;
+    matrix.Data[8] = 0;
+    matrix.Data[12] = 0;
+
+    matrix.Data[1] = 0;
+    matrix.Data[5] = -4;
+    matrix.Data[9] = 0;
+    matrix.Data[13] = 0;
+
+    matrix.Data[2] = 0;
+    matrix.Data[6] = 0;
+    matrix.Data[10] = -4;
+    matrix.Data[14] = 0;
+
+    matrix.Data[3] = 0;
+    matrix.Data[7] = 0;
+    matrix.Data[11] = 0;
+    matrix.Data[15] = 1;
+
+    return matrix;
+}
+
 static void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
 {
     int i, j;
@@ -80,7 +107,7 @@ static void model_viewer_render_preview(model_viewer_t* viewer)
 static void model_viewer_reset(GtkWidget* button, gpointer user_data)
 {
     model_viewer_t* model_viewer = (model_viewer_t*)user_data;
-    model_viewer->model_view = MatrixIdentity();
+    model_viewer->model_view = DefaultView();
     if (model_viewer->model != NULL)
         model_viewer_render_preview(model_viewer);
 }
@@ -211,7 +238,7 @@ static model_viewer_t* model_viewer_new()
     model_viewer_t* model_viewer = malloc(sizeof(model_viewer_t));
     model_viewer->model = NULL;
     model_viewer->grid = model_new_grid();
-    model_viewer->model_view = MatrixIdentity();
+    model_viewer->model_view = DefaultView();
 
     model_viewer->container = gtk_vbox_new(FALSE, 1);
 
