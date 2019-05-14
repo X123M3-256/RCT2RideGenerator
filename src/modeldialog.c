@@ -366,12 +366,14 @@ static color_selector_t* color_selector_new()
     selector->container = gtk_tool_palette_new();
     selector->remap_tools = gtk_tool_item_group_new("Remap colors");
     selector->peep_tools = gtk_tool_item_group_new("Peep colors");
-    selector->color_tools = gtk_tool_item_group_new("Other colors");
+    selector->color_tools = gtk_tool_item_group_new("Paint colors");
+    selector->special_tools = gtk_tool_item_group_new("Tool colors");
     gtk_container_add(GTK_CONTAINER(selector->container), selector->remap_tools);
     gtk_container_add(GTK_CONTAINER(selector->container), selector->peep_tools);
     gtk_container_add(GTK_CONTAINER(selector->container), selector->color_tools);
+    gtk_container_add(GTK_CONTAINER(selector->container), selector->special_tools);
 
-    selector->tools = malloc(39 * sizeof(color_select_tool_t*));
+    selector->tools = malloc(NUMBER_OF_COLORS * sizeof(color_select_tool_t*));
 
     selector->tools[0] = color_select_tool_new(COLOR_REMAP_1);
     selector->tools[1] = color_select_tool_new(COLOR_REMAP_2);
@@ -392,14 +394,31 @@ static color_selector_t* color_selector_new()
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
         selector->tools[4]->tool_item, 1);
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
-        selector->tools[5]->tool_item, 3);
+        selector->tools[5]->tool_item, 2);
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
-        selector->tools[6]->tool_item, 4);
+        selector->tools[6]->tool_item, 3);
+
+    selector->tools[7] = color_select_tool_new(TRANSPARENT);
+    selector->tools[8] = color_select_tool_new(BLACKTILE);
+    selector->tools[9] = color_select_tool_new(NEON_REMAP_1);
+    selector->tools[10] = color_select_tool_new(NEON_REMAP_2);
+    selector->tools[11] = color_select_tool_new(NEON_REMAP_3);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[7]->tool_item, 0);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[8]->tool_item, 1);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[9]->tool_item, 2);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[10]->tool_item, 3);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[11]->tool_item, 4);
+
     int i;
     for (i = 0; i < 32; i++) {
-        selector->tools[7 + i] = color_select_tool_new(i);
+        selector->tools[NUMBER_OF_COLORS - 32 + i] = color_select_tool_new(i);
         gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->color_tools),
-            selector->tools[7 + i]->tool_item, i);
+            selector->tools[NUMBER_OF_COLORS - 32 + i]->tool_item, i);
     }
     return selector;
 }
@@ -407,7 +426,7 @@ static void color_selector_set_color(color_selector_t* selector, uint8_t* color)
 {
     int i;
     selector->color = color;
-    for (i = 0; i < 39; i++) {
+    for (i = 0; i < NUMBER_OF_COLORS; i++) {
         color_select_tool_set_color(selector->tools[i], color);
     }
 }
@@ -645,6 +664,8 @@ model_dialog_t* model_dialog_new(model_t* model)
     gtk_box_pack_start(GTK_BOX(top_hbox), dialog->rotate_z->container, FALSE,
         FALSE, 2);
 
+    // create paint selector
+
     GtkWidget* hbox = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(content_area), hbox, FALSE, FALSE, 2);
 
@@ -656,16 +677,23 @@ model_dialog_t* model_dialog_new(model_t* model)
     GtkWidget* paint_vbox = gtk_vbox_new(FALSE, 2);
 
     dialog->color_selector = color_selector_new();
+    gtk_widget_set_size_request(dialog->color_selector->container, 200, 200);
     color_selector_set_color(dialog->color_selector, &(dialog->color));
     gtk_box_pack_start(GTK_BOX(paint_vbox), dialog->color_selector->container,
         TRUE, TRUE, 2);
+
+    GtkWidget* hsep = gtk_hseparator_new();
+    gtk_box_pack_start(GTK_BOX(paint_vbox), hsep, FALSE, FALSE, 2);
 
     dialog->paint_all = gtk_button_new_with_label("Paint all");
     g_signal_connect(dialog->paint_all, "clicked",
         G_CALLBACK(model_dialog_paint_all), dialog);
     gtk_box_pack_start(GTK_BOX(paint_vbox), dialog->paint_all, FALSE, FALSE, 2);
 
+
     gtk_box_pack_start(GTK_BOX(hbox), paint_vbox, FALSE, FALSE, 2);
+
+    // create button press events
 
     g_signal_connect(dialog->model_viewer->image_viewer->container,
         "motion_notify_event", G_CALLBACK(model_dialog_paint_model),
