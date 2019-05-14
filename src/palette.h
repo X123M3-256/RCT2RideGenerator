@@ -31,4 +31,5 @@ typedef struct {
 uint8_t palette_remap_section_index(uint8_t color, uint8_t section_index);
 color_t palette_color_from_index(uint8_t index);
 uint8_t palette_index_from_color(color_t color);
+char* color_name_from_color(uint8_t color);
 #endif // PALETTE_H_INCLUDED

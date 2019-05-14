@@ -127,7 +127,7 @@ uint8_t remap[NUMBER_OF_COLORS][12] = {
     { 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177 }, // 28:  bright red
     { 202, 202, 202, 203, 203, 204, 205, 206, 206, 207, 208, 208 }, // 29:  dark pink
     { 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213 }, // 30:  bright pink
-    { 15, 16, 17, 18, 19, 20, 20, 20, 21, 21, 21, 21 },             // 31:  light pink // TODO: FIX THIS
+    { 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69 },             // 31:  light pink // TODO: FIX THIS
     // Special peep colors
     { 108, 109, 110, 111, 112, 113, 114, 115, 116, 116, 117, 117 }, // 32:  COLOR_PEEP_SKIN
     { 105, 105, 106, 106, 106, 107, 107, 107, 108, 108, 109, 109 }, // 33:  COLOR_PEEP_LEG
@@ -145,6 +145,54 @@ uint8_t remap[NUMBER_OF_COLORS][12] = {
     { 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54 },             // 43:  NEON_REMAP_3
 };
 
+char* remap_names[NUMBER_OF_COLORS] = {
+    "Black",
+    "Gray",
+    "White",
+    "Dark Purple",
+    "Light Purple",
+    "Bright Purple",
+    "Dark Blue",
+    "Light Blue",
+    "Icy Blue",
+    "Dark Water",
+    "Light Water",
+    "Saturated Green",
+    "Dark Green",
+    "Moss Green",
+    "Bright Green",
+    "Olive Green",
+    "Dark Olive Green",
+    "Bright Yellow (remap 3)",
+    "Yellow (remap 3)",
+    "Dark Yellow (remap 3)",
+    "Light Orange",
+    "Dark Orange",
+    "Light Brown",
+    "Saturated Brown",
+    "Dark Brown",
+    "Salmon Pink",
+    "Bordeaux Red",
+    "Saturated Red",
+    "Bright Red",
+    "Dark Pink",
+    "Bright Pink",
+    "Light Pink",
+    "Peep Skin",
+    "Peep Pants/Hair"
+    "Peep Shirt",
+    "Peep Shirt (Do not use)",
+    "Remap 1",
+    "Remap 2",
+    "Remap 3",
+    "NoDraw",
+    "Blacktile",
+    "Neon Remap 1",
+    "Neon Remap 2",
+    "Neon Remap 3",
+};
+
+
 uint8_t palette_remap_section_index(uint8_t color, uint8_t section_index)
 {
     /*if (color == TRANSPARENT)
@@ -160,6 +208,11 @@ uint8_t palette_remap_section_index(uint8_t color, uint8_t section_index)
         return 46 + section_index;*/
 
     return remap[color][section_index];
+}
+
+char* color_name_from_color(uint8_t color)
+{
+    return remap_names[color];
 }
 
 color_t palette_color_from_index(uint8_t index)

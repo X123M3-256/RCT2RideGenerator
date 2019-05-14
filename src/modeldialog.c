@@ -340,10 +340,12 @@ static color_select_tool_t* color_select_tool_new(uint8_t color)
     color_select_tool_t* tool = malloc(sizeof(color_select_tool_t));
     tool->color = NULL;
     tool->value = color;
-    tool->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 20, 20);
+    tool->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 28, 24);
     pixbuf_set_color(tool->pixbuf, palette_remap_section_index(color, 6));
     tool->image = gtk_image_new_from_pixbuf(tool->pixbuf);
-    tool->tool_item = gtk_tool_button_new(tool->image, "");
+    tool->tool_item = gtk_tool_button_new(tool->image, color_name_from_color(color));
+    //tool->tool_item = gtk_tool_button_new(tool->image, "");
+    //tool->tool_item->["icon-spacing"] = 0;
     g_signal_connect(tool->tool_item, "clicked",
         G_CALLBACK(color_select_tool_clicked), tool);
     return tool;
@@ -395,8 +397,8 @@ static color_selector_t* color_selector_new()
         selector->tools[4]->tool_item, 1);
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
         selector->tools[5]->tool_item, 2);
-    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
-        selector->tools[6]->tool_item, 3);
+    //gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
+    //    selector->tools[6]->tool_item, 3);
 
     selector->tools[7] = color_select_tool_new(TRANSPARENT);
     selector->tools[8] = color_select_tool_new(BLACKTILE);
@@ -439,6 +441,7 @@ static void color_selector_free(color_selector_t* selector)
     gtk_widget_destroy(selector->remap_tools);
     gtk_widget_destroy(selector->peep_tools);
     gtk_widget_destroy(selector->color_tools);
+    gtk_widget_destroy(selector->special_tools);
     gtk_widget_destroy(selector->container);
     free(selector->tools);
     free(selector);
@@ -677,7 +680,7 @@ model_dialog_t* model_dialog_new(model_t* model)
     GtkWidget* paint_vbox = gtk_vbox_new(FALSE, 2);
 
     dialog->color_selector = color_selector_new();
-    gtk_widget_set_size_request(dialog->color_selector->container, 200, 200);
+    gtk_widget_set_size_request(dialog->color_selector->container, 304, 200);
     color_selector_set_color(dialog->color_selector, &(dialog->color));
     gtk_box_pack_start(GTK_BOX(paint_vbox), dialog->color_selector->container,
         TRUE, TRUE, 2);
