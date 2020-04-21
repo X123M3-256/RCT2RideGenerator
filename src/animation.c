@@ -47,27 +47,24 @@ static animation_instruction_t parse_identifier(parser_state_t* state)
     identifier[identifier_length] = 0;
 
     // List of valid identifiers and their lengths
-    char* identifiers[13] = { "pitch", "yaw", "roll", "spin",
-        "swing", "flip", "restraint", "animation", "exp",
-        "ln", "sin", "cos", "clamp" };
 
     // Find the index of the input identifier in aformentioned list
     int index;
-    for (index = 0; index < 13; index++) {
-        if (strcmp(identifier, identifiers[index]) == 0)
+    for (index = 0; index < NUM_OP_IDENTIFIERS; index++) {
+        if (strcmp(identifier, OP_IDENTIFIERS[index]) == 0)
             break;
     }
     // If valid identifier not found, error
-    if (index >= 13) {
+    if (index >= NUM_OP_IDENTIFIERS) {
         state->error = "Unrecognized identifier";
         return instruction;
     }
 
-    if (index < ANIMATION_NUM_VARIABLES) {
+    if (index < ANIMATION_NUM_VARIABLES) { // less than 8
         instruction.opcode = OP_LOD_VAR;
         instruction.operand.variable = index;
     } else
-        instruction.opcode = index - 3;
+        instruction.opcode = OP_FUNCS[index-ANIMATION_NUM_VARIABLES];
 
     state->position += identifier_length;
     return instruction;
@@ -217,6 +214,12 @@ void animation_expression_parse(animation_expression_t* expr,
         case OP_SIN:
         case OP_COS:
         case OP_CLAMP:
+        case OP_ABS:
+        case OP_UNIT:
+        case OP_SQRT:
+        case OP_SQUARE:
+        case OP_FLOOR:
+        case OP_CEIL:
         case OP_OPEN_PAREN:
             stack_top++;
             stack[stack_top] = instruction;
@@ -232,11 +235,19 @@ void animation_expression_parse(animation_expression_t* expr,
                 return;
             }
             stack_top--;
-            if (stack_top >= 0 && (stack[stack_top].opcode == OP_SIN || stack[stack_top].opcode == OP_COS || stack[stack_top].opcode == OP_EXP || stack[stack_top].opcode == OP_LN)) {
-                instruction_list_add(instruction_list, stack[stack_top]);
-                stack_top--;
+            if (stack_top >= 0)
+            {
+                int index;
+                for (index = 0; index < NUM_OP_FUNCS; index++) {
+                    if (stack[stack_top].opcode == OP_FUNCS[index]) {
+                        instruction_list_add(instruction_list, stack[stack_top]);
+                        stack_top--;
+                        index = -1;
+                        break;
+                    }
+                }
+                if (index < 0) break;
             }
-            break;
         }
     }
     while (stack_top >= 0) {
@@ -344,6 +355,30 @@ float animation_expression_evaluate(animation_expression_t* expr,
             else if (stack[stack_top] > 1)
                 stack[stack_top] = 1;
             break;
+        case OP_ABS:
+            assert(stack_top >= 0);
+            if (stack[stack_top] < 0)
+                stack[stack_top] *= -1.0;
+            break;
+        case OP_UNIT:
+            assert(stack_top >= 0);
+            if (stack[stack_top] < 0)
+                stack[stack_top] = 0;
+            else
+                stack[stack_top] = 1;
+            break;
+        case OP_SQRT:
+            assert(stack_top >= 0);
+            stack[stack_top] = sqrt(stack[stack_top]);
+        case OP_SQUARE:
+            assert(stack_top >= 0);
+            stack[stack_top] = stack[stack_top]*stack[stack_top];
+        case OP_FLOOR:
+            assert(stack_top >= 0);
+            stack[stack_top] = floor(stack[stack_top]);
+        case OP_CEIL:
+            assert(stack_top >= 0);
+            stack[stack_top] = ceil(stack[stack_top]);
         default:
             fprintf(
                 stderr,
