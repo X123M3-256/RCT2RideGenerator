@@ -235,19 +235,26 @@ void animation_expression_parse(animation_expression_t* expr,
                 return;
             }
             stack_top--;
-            if (stack_top >= 0)
-            {
+            
+            if (stack_top >= 0 && (stack[stack_top].opcode == OP_SIN || stack[stack_top].opcode == OP_COS || stack[stack_top].opcode == OP_EXP || stack[stack_top].opcode == OP_LN|| stack[stack_top].opcode == OP_CLAMP|| stack[stack_top].opcode == OP_ABS|| stack[stack_top].opcode == OP_SQUARE|| stack[stack_top].opcode == OP_SQRT|| stack[stack_top].opcode == OP_CEIL|| stack[stack_top].opcode == OP_FLOOR)) {
+                instruction_list_add(instruction_list, stack[stack_top]);
+                stack_top--;
+            }
+            //*/
+            
+            /*
+            if (stack_top >= 0){
                 int index;
                 for (index = 0; index < NUM_OP_FUNCS; index++) {
                     if (stack[stack_top].opcode == OP_FUNCS[index]) {
                         instruction_list_add(instruction_list, stack[stack_top]);
                         stack_top--;
-                        index = -1;
                         break;
                     }
                 }
-                if (index < 0) break;
             }
+            //*/
+            break;
         }
     }
     while (stack_top >= 0) {
@@ -370,15 +377,19 @@ float animation_expression_evaluate(animation_expression_t* expr,
         case OP_SQRT:
             assert(stack_top >= 0);
             stack[stack_top] = sqrt(stack[stack_top]);
+            break;
         case OP_SQUARE:
             assert(stack_top >= 0);
             stack[stack_top] = stack[stack_top]*stack[stack_top];
+            break;
         case OP_FLOOR:
             assert(stack_top >= 0);
             stack[stack_top] = floor(stack[stack_top]);
+            break;
         case OP_CEIL:
             assert(stack_top >= 0);
             stack[stack_top] = ceil(stack[stack_top]);
+            break;
         default:
             fprintf(
                 stderr,

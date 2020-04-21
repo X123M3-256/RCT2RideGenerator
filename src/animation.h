@@ -42,6 +42,7 @@ static animation_opcode_t OP_FUNCS[] = {
     OP_EXP,
     OP_LN,
     OP_SIN,
+    OP_COS,
     OP_CLAMP,
     OP_ABS,
     OP_UNIT,
