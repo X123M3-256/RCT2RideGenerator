@@ -24,6 +24,12 @@ typedef enum {
     OP_SIN = 7,
     OP_COS = 8,
     OP_CLAMP = 9,
+    OP_ABS = 10,
+    OP_UNIT = 11,
+    OP_SQRT = 12,
+    OP_SQUARE = 13,
+    OP_FLOOR = 14,
+    OP_CEIL = 15,
     OP_LOD_IMM,
     OP_LOD_VAR,
     OP_OPEN_PAREN, // Not opcodes, but it saves having a seperate datatype for
@@ -31,7 +37,36 @@ typedef enum {
     OP_CLOSE_PAREN
 } animation_opcode_t;
 
-#define ANIMATION_NUM_VARIABLES 8
+#define NUM_OP_FUNCS 10
+static animation_opcode_t OP_FUNCS[] = {
+    OP_EXP,
+    OP_LN,
+    OP_SIN,
+    OP_CLAMP,
+    OP_ABS,
+    OP_UNIT,
+    OP_SQRT,
+    OP_SQUARE,
+    OP_FLOOR,
+    OP_CEIL
+};
+#define ANIMATION_NUM_VARIABLES 8 //first 8 values are variables that define motion
+#define NUM_OP_IDENTIFIERS 19
+static char* OP_IDENTIFIERS[] = { "pitch", "yaw", "roll", "spin", "swing", "flip", "restraint", "animation",
+// all others represent OP_FUNCS[i-ANIMATION_NUM_VARIABLES]
+    "exp",
+    "ln",
+    "sin",
+    "cos",
+    "clamp",
+    "abs",
+    "unit",
+    "sqrt",
+    "square",
+    "floor",
+    "ceil"
+};
+
 #define ANIMATION_MAX_OBJECTS 64
 typedef struct {
     animation_opcode_t opcode;

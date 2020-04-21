@@ -513,14 +513,24 @@ static void animation_dialog_update_variables(GtkWidget* widget,
     dialog->animation_viewer->variables[VAR_ROLL] = gtk_range_get_value(GTK_RANGE(dialog->roll_slider));
     if (dialog->spin_slider != NULL)
         dialog->animation_viewer->variables[VAR_SPIN] = gtk_range_get_value(GTK_RANGE(dialog->spin_slider));
+    else
+        dialog->animation_viewer->variables[VAR_SPIN] = 0;
     if (dialog->swing_slider != NULL)
         dialog->animation_viewer->variables[VAR_SWING] = gtk_range_get_value(GTK_RANGE(dialog->swing_slider));
+    else
+        dialog->animation_viewer->variables[VAR_SWING] = 0;
     if (dialog->flip_slider != NULL)
         dialog->animation_viewer->variables[VAR_FLIP] = gtk_range_get_value(GTK_RANGE(dialog->flip_slider));
+    else
+        dialog->animation_viewer->variables[VAR_FLIP] = 0;
     if (dialog->animation_slider != NULL)
         dialog->animation_viewer->variables[VAR_ANIMATION] = gtk_range_get_value(GTK_RANGE(dialog->animation_slider));
+    else
+        dialog->animation_viewer->variables[VAR_ANIMATION] = 0;
     if (dialog->restraint_slider != NULL)
         dialog->animation_viewer->variables[VAR_RESTRAINT] = gtk_range_get_value(GTK_RANGE(dialog->restraint_slider));
+    else
+        dialog->animation_viewer->variables[VAR_RESTRAINT] = 0;
     animation_viewer_update(dialog->animation_viewer);
 }
 
