@@ -235,14 +235,14 @@ void animation_expression_parse(animation_expression_t* expr,
                 return;
             }
             stack_top--;
-            
+            /*
             if (stack_top >= 0 && (stack[stack_top].opcode == OP_SIN || stack[stack_top].opcode == OP_COS || stack[stack_top].opcode == OP_EXP || stack[stack_top].opcode == OP_LN|| stack[stack_top].opcode == OP_CLAMP|| stack[stack_top].opcode == OP_ABS|| stack[stack_top].opcode == OP_SQUARE|| stack[stack_top].opcode == OP_SQRT|| stack[stack_top].opcode == OP_CEIL|| stack[stack_top].opcode == OP_FLOOR)) {
                 instruction_list_add(instruction_list, stack[stack_top]);
                 stack_top--;
             }
             //*/
             
-            /*
+            
             if (stack_top >= 0){
                 int index;
                 for (index = 0; index < NUM_OP_FUNCS; index++) {
