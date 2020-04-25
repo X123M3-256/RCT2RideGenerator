@@ -326,6 +326,7 @@ typedef struct {
 typedef struct {
     color_scheme_t* default_colors;
     uint8_t num_default_colors;
+	uint8_t num_colors_override; // set to 255 to indicate each train gets a different color OF THE 32 COLORS INCLUDED!!!!
     peep_position_data_t peep_positions[4];
 } ride_structures_t;
 
