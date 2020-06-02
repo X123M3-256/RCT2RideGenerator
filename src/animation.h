@@ -2,6 +2,8 @@
 #define ANIMATION_H_INCLUDED
 #include "model.h"
 #include "renderer.h"
+
+#define ANIMATION_NUM_VARIABLES 8
 typedef enum {
     VAR_PITCH = 0,
     VAR_YAW = 1,
@@ -12,6 +14,17 @@ typedef enum {
     VAR_RESTRAINT = 6,
     VAR_ANIMATION = 7
 } animation_variable_t;
+
+static char* ANIMATION_VAR_IDENTIFIERS[] = {
+    "pitch",
+    "yaw",
+    "roll",
+    "spin",
+    "swing",
+    "flip",
+    "restraint",
+    "animation"
+};
 
 typedef enum {
     OP_ADD,
@@ -30,15 +43,15 @@ typedef enum {
     OP_SQUARE = 13,
     OP_FLOOR = 14,
     OP_CEIL = 15,
-    OP_LOD_IMM,
-    OP_LOD_VAR,
-    OP_OPEN_PAREN, // Not opcodes, but it saves having a seperate datatype for
+    OP_LOD_IMM,//16
+    OP_LOD_VAR,//17
+    OP_OPEN_PAREN,//18 // Not opcodes, but it saves having a seperate datatype for
     // tokens
-    OP_CLOSE_PAREN
+    OP_CLOSE_PAREN//19
 } animation_opcode_t;
 
-#define NUM_OP_FUNCS 10
-static animation_opcode_t OP_FUNCS[] = {
+#define ANIMATION_NUM_FUNCTIONS 11
+static animation_opcode_t ANIMATION_FUNCTIONS[] = {
     OP_EXP,
     OP_LN,
     OP_SIN,
@@ -51,10 +64,7 @@ static animation_opcode_t OP_FUNCS[] = {
     OP_FLOOR,
     OP_CEIL
 };
-#define ANIMATION_NUM_VARIABLES 8 //first 8 values are variables that define motion
-#define NUM_OP_IDENTIFIERS 19
-static char* OP_IDENTIFIERS[] = { "pitch", "yaw", "roll", "spin", "swing", "flip", "restraint", "animation",
-// all others represent OP_FUNCS[i-ANIMATION_NUM_VARIABLES]
+static char* OP_FUNC_IDENTIFIERS[] = {
     "exp",
     "ln",
     "sin",

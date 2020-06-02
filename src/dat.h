@@ -43,8 +43,10 @@ typedef enum {
     STRING_TABLE_CAPACITY = 2
 } string_table_index_t;
 
-typedef enum { LANGUAGE_ENGLISH_UK = 0,
-    LANGUAGE_ENGLISH_US = 1 } language_t;
+typedef enum {
+    LANGUAGE_ENGLISH_UK = 0,
+    LANGUAGE_ENGLISH_US = 1
+} language_t;
 
 enum {
     RIDE_VEHICLE_TAB_SCALE_HALF =                0x1u,
@@ -68,7 +70,7 @@ enum {
     RIDE_DISABLE_DOOR_CONSTRUCTION =         0x40000u,
     RIDE_DISABLE_COLOR_TAB =                 0x80000u,
     RIDE_ALTERNATIVE_SWING_MODE_2 =         0x100000u,
-	
+
     RIDE_WET =                      0x100u,
     RIDE_SLOW_IN_WATER =            0x200u,
     RIDE_SEPERATE =                 0x1000u
@@ -86,11 +88,10 @@ enum {
     CAR_ANIMATION_GENERIC = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
     CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
     CAR_ANIMATION_4D = 0x09u, // unknown
-
 };
 
 // clang-format off
-enum {
+typedef enum {
     CAR_COASTS_DOWNHILL =             0x1u,//these are all bit-shifted 8 because the flags field is offset one byte
     CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u,
     CAR_NO_UPSTOPS =                  0x4u,//bobsled-style with 0.05 extra G's
@@ -126,7 +127,7 @@ enum {
     CAR_FLAG_DODGEM_CAR_PLACEMENT = 1u << 31,
 } car_flags_t;
 
-enum {
+typedef enum {
     SPRITE_FLAT_SLOPE =               0x0001,
     SPRITE_GENTLE_SLOPE =             0x0002,
     SPRITE_STEEP_SLOPE =              0x0004,
@@ -144,7 +145,7 @@ enum {
     SPRITE_SPIRAL_LIFT =              0x4000
 } sprite_flags_t;
 
-enum {
+typedef enum {
     RUNNING_SOUND_WOODEN_OLD = 1,
     RUNNING_SOUND_WOODEN_MODERN = 54,
     RUNNING_SOUND_STEEL = 2,
@@ -153,9 +154,9 @@ enum {
     RUNNING_SOUND_TRAIN = 31,
     RUNNING_SOUND_ENGINE = 21,
     RUNNING_SOUND_NONE = 255
-};
+} primary_sound_t;
 
-enum {
+typedef enum {
     SECONDARY_SOUND_SCREAMS_1 = 0,
     SECONDARY_SOUND_SCREAMS_2 = 1,
     SECONDARY_SOUND_SCREAMS_3 = 2,
@@ -164,15 +165,15 @@ enum {
     SECONDARY_SOUND_NONE = 255
 } secondary_sound_t;
 
-enum {
+typedef enum {
     CAR_INDEX_DEFAULT = 0,
     CAR_INDEX_FRONT = 1,
     CAR_INDEX_SECOND = 2,
     CAR_INDEX_THIRD = 4,
     CAR_INDEX_REAR = 3
-};
+} car_index_t;
 
-enum {
+typedef enum {
     CATEGORY_TRANSPORT_RIDE = 0,
     CATEGORY_GENTLE_RIDE = 1,
     CATEGORY_ROLLERCOASTER = 2,
