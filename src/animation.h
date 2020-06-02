@@ -2,6 +2,8 @@
 #define ANIMATION_H_INCLUDED
 #include "model.h"
 #include "renderer.h"
+
+#define ANIMATION_NUM_VARIABLES 8
 typedef enum {
     VAR_PITCH = 0,
     VAR_YAW = 1,
@@ -12,6 +14,17 @@ typedef enum {
     VAR_RESTRAINT = 6,
     VAR_ANIMATION = 7
 } animation_variable_t;
+
+static char* ANIMATION_VAR_IDENTIFIERS[] = {
+    "pitch",
+    "yaw",
+    "roll",
+    "spin",
+    "swing",
+    "flip",
+    "restraint",
+    "animation"
+};
 
 typedef enum {
     OP_ADD,
@@ -36,29 +49,6 @@ typedef enum {
     // tokens
     OP_CLOSE_PAREN//19
 } animation_opcode_t;
-
-static char* OP_FUNC_NAMES[] = {
-    "OP_ADD",
-    "OP_SUB",
-    "OP_MUL",
-    "OP_DIV",
-    "OP_MINUS",
-    "OP_EXP",
-    "OP_LN",
-    "OP_SIN",
-    "OP_COS",
-    "OP_CLAMP",
-    "OP_ABS",
-    "OP_UNIT",
-    "OP_SQRT",
-    "OP_SQUARE",
-    "OP_FLOOR",
-    "OP_CEIL",
-    "OP_IMM",
-    "OP_VAR",
-    "OP_OPEN_PAREN",
-    "OP_CLOSE_PAREN"
-};
 
 #define ANIMATION_NUM_FUNCTIONS 11
 static animation_opcode_t ANIMATION_FUNCTIONS[] = {
@@ -86,17 +76,6 @@ static char* OP_FUNC_IDENTIFIERS[] = {
     "square",
     "floor",
     "ceil"
-};
-#define ANIMATION_NUM_VARIABLES 8
-static char* ANIMATION_VAR_IDENTIFIERS[] = {
-    "pitch",
-    "yaw",
-    "roll",
-    "spin",
-    "swing",
-    "flip",
-    "restraint",
-    "animation"
 };
 
 #define ANIMATION_MAX_OBJECTS 64
