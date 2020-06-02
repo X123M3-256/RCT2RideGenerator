@@ -158,7 +158,7 @@ static void instruction_list_add(instruction_list_t* list,
         list->instructions = realloc(list->instructions,
             list->allocated_instructions * sizeof(animation_instruction_t));
     }
-    printf("Adding operation %i: %i\n",list->num_instructions,OP_FUNC_NAMES[instruction.opcode]);
+    printf("Adding operation %i: %s\n",list->num_instructions,OP_FUNC_NAMES[instruction.opcode]);
     list->instructions[list->num_instructions] = instruction;
     list->num_instructions++;
 }
@@ -187,11 +187,12 @@ void animation_expression_parse(animation_expression_t* expr,
     state.position = 0;
     state.error = NULL;
     *error = NULL;
-
+    
+    printf("Parsing expression: %s\n",str);
     instruction_list_t* instruction_list = instruction_list_new();
 
     animation_instruction_t stack[256];
-    int stack_top = 0;
+    int stack_top = -1;
 
     while (state.str[state.position] != 0) {
         animation_instruction_t instruction = parse_instruction(&state);
@@ -207,7 +208,7 @@ void animation_expression_parse(animation_expression_t* expr,
             break;
         case OP_ADD:
         case OP_SUB:
-            while (stack_top >= 0 && stack[stack_top].opcode != OP_ADD && stack[stack_top].opcode != OP_SUB) {
+            while (stack_top >= 0 && stack[stack_top].opcode != OP_OPEN_PAREN) {
                 instruction_list_add(instruction_list, stack[stack_top]);
                 stack_top--;
             }
@@ -270,6 +271,7 @@ void animation_expression_parse(animation_expression_t* expr,
     // Check validity of expression
     int stack_size = 0;
     for (int i = 0; i < instruction_list->num_instructions; i++) {
+        printf("operation %i: %s\n",i, OP_FUNC_NAMES[instruction_list->instructions[i].opcode]);
         switch (instruction_list->instructions[i].opcode) {
         case OP_LOD_IMM:
         case OP_LOD_VAR:
