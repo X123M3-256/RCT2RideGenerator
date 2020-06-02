@@ -50,12 +50,17 @@ static animation_instruction_t parse_identifier(parser_state_t* state)
 
     // Find the index of the input identifier in aformentioned list
     int index;
-    for (index = 0; index < NUM_OP_IDENTIFIERS; index++) {
-        if (strcmp(identifier, OP_IDENTIFIERS[index]) == 0)
-            break;
+    for (index = 0; index < ANIMATION_NUM_VARIABLES+ANIMATION_NUM_FUNCTIONS; index++) {
+        if (index < ANIMATION_NUM_VARIABLES) {
+            if (strcmp(identifier, ANIMATION_VAR_IDENTIFIERS[index]) == 0)
+                break;
+        } else {
+            if (strcmp(identifier, OP_FUNC_IDENTIFIERS[index-ANIMATION_NUM_VARIABLES]) == 0)
+                break;
+        }
     }
     // If valid identifier not found, error
-    if (index >= NUM_OP_IDENTIFIERS) {
+    if (index >= ANIMATION_NUM_VARIABLES+ANIMATION_NUM_FUNCTIONS) {
         state->error = "Unrecognized identifier";
         return instruction;
     }
@@ -64,7 +69,7 @@ static animation_instruction_t parse_identifier(parser_state_t* state)
         instruction.opcode = OP_LOD_VAR;
         instruction.operand.variable = index;
     } else
-        instruction.opcode = OP_FUNCS[index-ANIMATION_NUM_VARIABLES];
+        instruction.opcode = ANIMATION_FUNCTIONS[index-ANIMATION_NUM_VARIABLES];
 
     state->position += identifier_length;
     return instruction;
@@ -100,6 +105,7 @@ static animation_instruction_t parse_operator(parser_state_t* state)
 static animation_instruction_t parse_instruction(parser_state_t* state)
 {
     animation_instruction_t instruction = {};
+    //printf("Found an instruction %s: ",state->str[state->position]);
     if (state->str[state->position] == '+' || state->str[state->position] == '-' || state->str[state->position] == '*' || state->str[state->position] == '/')
         instruction = parse_operator(state);
     else if ((state->str[state->position] >= '0' && state->str[state->position] <= '9') || state->str[state->position] == '-')
@@ -114,7 +120,7 @@ static animation_instruction_t parse_instruction(parser_state_t* state)
         state->position++;
     } else
         state->error = "Invalid character";
-
+    printf("opcode: %i\n",instruction.opcode);
     return instruction;
 }
 
@@ -152,6 +158,7 @@ static void instruction_list_add(instruction_list_t* list,
         list->instructions = realloc(list->instructions,
             list->allocated_instructions * sizeof(animation_instruction_t));
     }
+    printf("Adding operation %i: %i\n",list->num_instructions,OP_FUNC_NAMES[instruction.opcode]);
     list->instructions[list->num_instructions] = instruction;
     list->num_instructions++;
 }
@@ -184,7 +191,7 @@ void animation_expression_parse(animation_expression_t* expr,
     instruction_list_t* instruction_list = instruction_list_new();
 
     animation_instruction_t stack[256];
-    int stack_top = -1;
+    int stack_top = 0;
 
     while (state.str[state.position] != 0) {
         animation_instruction_t instruction = parse_instruction(&state);
@@ -193,7 +200,6 @@ void animation_expression_parse(animation_expression_t* expr,
             instruction_list_free(instruction_list);
             return;
         }
-
         switch (instruction.opcode) {
         case OP_LOD_IMM:
         case OP_LOD_VAR:
@@ -201,10 +207,12 @@ void animation_expression_parse(animation_expression_t* expr,
             break;
         case OP_ADD:
         case OP_SUB:
-            while (stack_top >= 0 && (stack[stack_top].opcode == OP_ADD || stack[stack_top].opcode == OP_SUB || stack[stack_top].opcode == OP_MUL || stack[stack_top].opcode == OP_DIV)) {
+            while (stack_top >= 0 && stack[stack_top].opcode != OP_ADD && stack[stack_top].opcode != OP_SUB) {
                 instruction_list_add(instruction_list, stack[stack_top]);
                 stack_top--;
             }
+            stack_top++;
+            stack[stack_top] = instruction;
             break;
         case OP_MUL:
         case OP_DIV:
@@ -235,27 +243,20 @@ void animation_expression_parse(animation_expression_t* expr,
                 return;
             }
             stack_top--;
-            /*
-            if (stack_top >= 0 && (stack[stack_top].opcode == OP_SIN || stack[stack_top].opcode == OP_COS || stack[stack_top].opcode == OP_EXP || stack[stack_top].opcode == OP_LN|| stack[stack_top].opcode == OP_CLAMP|| stack[stack_top].opcode == OP_ABS|| stack[stack_top].opcode == OP_SQUARE|| stack[stack_top].opcode == OP_SQRT|| stack[stack_top].opcode == OP_CEIL|| stack[stack_top].opcode == OP_FLOOR)) {
-                instruction_list_add(instruction_list, stack[stack_top]);
-                stack_top--;
-            }
-            //*/
-            
             
             if (stack_top >= 0){
                 int index;
-                for (index = 0; index < NUM_OP_FUNCS; index++) {
-                    if (stack[stack_top].opcode == OP_FUNCS[index]) {
+                for (index = 0; index < ANIMATION_NUM_FUNCTIONS; index++) {
+                    if (stack[stack_top].opcode == ANIMATION_FUNCTIONS[index]) {
                         instruction_list_add(instruction_list, stack[stack_top]);
                         stack_top--;
                         break;
                     }
                 }
             }
-            //*/
             break;
         }
+        //*/
     }
     while (stack_top >= 0) {
         if (stack[stack_top].opcode == OP_OPEN_PAREN) {
@@ -393,7 +394,7 @@ float animation_expression_evaluate(animation_expression_t* expr,
         default:
             fprintf(
                 stderr,
-                "animation_expression_evaluate: Attempt to execute invalid opcode");
+                "animation_expression_evaluate: Attempt to execute invalid opcode %i\n",expr->instructions[i].opcode);
             assert(0);
             break;
         }
