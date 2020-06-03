@@ -60,7 +60,7 @@ Matrix DefaultView()
     matrix.Data[12] = 0;
 
     matrix.Data[1] = 0;
-    matrix.Data[5] = -4;
+    matrix.Data[5] = 4;
     matrix.Data[9] = 0;
     matrix.Data[13] = 0;
 
