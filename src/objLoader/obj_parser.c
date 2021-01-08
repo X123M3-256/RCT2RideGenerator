@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../floatparse.h"
 
 #define WHITESPACE " \t\n\r"
 
@@ -173,9 +174,9 @@ static obj_light_disc* obj_parse_light_disc(obj_growable_scene_data* scene)
 static obj_vector* obj_parse_vector()
 {
     obj_vector* v = (obj_vector*)malloc(sizeof(obj_vector));
-    v->e[0] = atof(strtok(NULL, WHITESPACE));
-    v->e[1] = atof(strtok(NULL, WHITESPACE));
-    v->e[2] = atof(strtok(NULL, WHITESPACE));
+    v->e[0] = hack_atof(strtok(NULL, WHITESPACE));
+    v->e[1] = hack_atof(strtok(NULL, WHITESPACE));
+    v->e[2] = hack_atof(strtok(NULL, WHITESPACE));
     return v;
 }
 
@@ -227,43 +228,43 @@ static int obj_parse_mtl_file(char* filename, list* material_list)
 
         // ambient
         else if (strequal(current_token, "Ka") && material_open) {
-            current_mtl->amb[0] = atof(strtok(NULL, " \t"));
-            current_mtl->amb[1] = atof(strtok(NULL, " \t"));
-            current_mtl->amb[2] = atof(strtok(NULL, " \t"));
+            current_mtl->amb[0] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->amb[1] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->amb[2] = hack_atof(strtok(NULL, " \t"));
         }
 
         // diff
         else if (strequal(current_token, "Kd") && material_open) {
-            current_mtl->diff[0] = atof(strtok(NULL, " \t"));
-            current_mtl->diff[1] = atof(strtok(NULL, " \t"));
-            current_mtl->diff[2] = atof(strtok(NULL, " \t"));
+            current_mtl->diff[0] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->diff[1] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->diff[2] = hack_atof(strtok(NULL, " \t"));
         }
 
         // specular
         else if (strequal(current_token, "Ks") && material_open) {
-            current_mtl->spec[0] = atof(strtok(NULL, " \t"));
-            current_mtl->spec[1] = atof(strtok(NULL, " \t"));
-            current_mtl->spec[2] = atof(strtok(NULL, " \t"));
+            current_mtl->spec[0] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->spec[1] = hack_atof(strtok(NULL, " \t"));
+            current_mtl->spec[2] = hack_atof(strtok(NULL, " \t"));
         }
         // shiny
         else if (strequal(current_token, "Ns") && material_open) {
-            current_mtl->shiny = atof(strtok(NULL, " \t"));
+            current_mtl->shiny = hack_atof(strtok(NULL, " \t"));
         }
         // transparent
         else if (strequal(current_token, "d") && material_open) {
-            current_mtl->trans = atof(strtok(NULL, " \t"));
+            current_mtl->trans = hack_atof(strtok(NULL, " \t"));
         }
         // reflection
         else if (strequal(current_token, "r") && material_open) {
-            current_mtl->reflect = atof(strtok(NULL, " \t"));
+            current_mtl->reflect = hack_atof(strtok(NULL, " \t"));
         }
         // glossy
         else if (strequal(current_token, "sharpness") && material_open) {
-            current_mtl->glossy = atof(strtok(NULL, " \t"));
+            current_mtl->glossy = hack_atof(strtok(NULL, " \t"));
         }
         // refract index
         else if (strequal(current_token, "Ni") && material_open) {
-            current_mtl->refract_index = atof(strtok(NULL, " \t"));
+            current_mtl->refract_index = hack_atof(strtok(NULL, " \t"));
         }
         // illumination type
         else if (strequal(current_token, "illum") && material_open) {

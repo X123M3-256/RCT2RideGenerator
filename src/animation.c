@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "floatparse.h"
 
 typedef struct {
     const char* str;
@@ -24,7 +25,7 @@ static animation_instruction_t parse_literal(parser_state_t* state)
     char* end_ptr;
 
     instruction.opcode = OP_LOD_IMM;
-    instruction.operand.immediate = strtod(state->str + state->position, &end_ptr);
+    instruction.operand.immediate = hack_strtod(state->str + state->position, &end_ptr);
     if (end_ptr == (state->str + state->position)) {
         state->error = "Invalid numeric literal";
         return instruction;
