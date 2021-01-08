@@ -167,15 +167,15 @@ model_t* model_load_obj(char* filename)
 
     // Load vertices
     for (i = 0; i < model->num_vertices; i++) {
-        model->vertices[i].X = obj_data.vertex_list[i]->e[0];
-        model->vertices[i].Y = obj_data.vertex_list[i]->e[1];
-        model->vertices[i].Z = obj_data.vertex_list[i]->e[2];
+        model->vertices[i].X = -obj_data.vertex_list[i]->e[0];
+        model->vertices[i].Y = -obj_data.vertex_list[i]->e[1];
+        model->vertices[i].Z = -obj_data.vertex_list[i]->e[2];
     }
     // Load vertices
     for (i = 0; i < model->num_normals; i++) {
-        model->normals[i].X = obj_data.vertex_normal_list[i]->e[0];
-        model->normals[i].Y = obj_data.vertex_normal_list[i]->e[1];
-        model->normals[i].Z = obj_data.vertex_normal_list[i]->e[2];
+        model->normals[i].X = -obj_data.vertex_normal_list[i]->e[0];
+        model->normals[i].Y = -obj_data.vertex_normal_list[i]->e[1];
+        model->normals[i].Z = -obj_data.vertex_normal_list[i]->e[2];
     }
     // Load faces
     int face_index = 0;

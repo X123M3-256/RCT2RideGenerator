@@ -1,6 +1,27 @@
 #include "serialization.h"
+#include "dat.h"
 #include <assert.h>
 #include <string.h>
+
+int try_catch_int(json_t* json, char* key, uint64_t def)
+{
+	json_t* deserialize = json_object_get(json, key);
+	if (deserialize != NULL)
+	{
+		return json_integer_value(deserialize);
+	}
+	else
+	{
+		return def;
+	}
+}
+
+void serialize_int_dict(json_t* json, char* key, uint64_t input)
+{
+	json_t* serialize = json_integer(input);
+	json_object_set_new(json, key, serialize);
+}
+
 
 char* strdup(const char* str)
 {
@@ -23,7 +44,7 @@ json_t* matrix_serialize(Matrix matrix)
     }
     return root;
 }
-Matrix matrix_deserialize(json_t* json)
+static Matrix matrix_deserialize(json_t* json)
 {
     int i, j;
     Matrix matrix;
@@ -38,15 +59,7 @@ Matrix matrix_deserialize(json_t* json)
     return matrix;
 }
 
-json_t* vector_serialize(Vector vector)
-{
-    json_t* components = json_array();
-    json_array_append_new(components, json_real(vector.X));
-    json_array_append_new(components, json_real(vector.Y));
-    json_array_append_new(components, json_real(vector.Z));
-    return components;
-}
-Vector vector_deserialize(json_t* components)
+static Vector vector_deserialize(json_t* components)
 {
     Vector vector;
     vector.X = json_real_value(json_array_get(components, 0));
@@ -165,11 +178,11 @@ model_t* model_deserialize(json_t* json)
         json_t* face = json_array_get(faces, i);
         model->faces[i].color = json_integer_value(json_array_get(face, 0));
 
-        json_t* vertices = json_array_get(face, 1);
-        json_t* normals = json_array_get(face, 2);
+        json_t* face_vertices = json_array_get(face, 1);
+        json_t* face_normals = json_array_get(face, 2);
         for (j = 0; j < 3; j++) {
-            model->faces[i].vertices[j] = json_integer_value(json_array_get(vertices, j));
-            model->faces[i].normals[j] = json_integer_value(json_array_get(normals, j));
+            model->faces[i].vertices[j] = json_integer_value(json_array_get(face_vertices, j));
+            model->faces[i].normals[j] = json_integer_value(json_array_get(face_normals, j));
         }
     }
     return model;
@@ -275,7 +288,7 @@ animation_t* animation_deserialize(json_t* json,
     return animation;
 }
 
-json_t* image_serialize(image_t* image)
+static json_t* image_serialize(image_t* image)
 {
     json_t* json = json_object();
 
@@ -308,7 +321,7 @@ json_t* image_serialize(image_t* image)
 
     return json;
 }
-image_t* image_deserialize(json_t* json)
+static image_t* image_deserialize(json_t* json)
 {
     json_t* width = json_object_get(json, "width");
     json_t* height = json_object_get(json, "height");
@@ -341,7 +354,6 @@ image_t* image_deserialize(json_t* json)
 
 json_t* project_serialize(project_t* project)
 {
-    int i;
     json_t* json = json_object();
     // Serialize strings
     json_t* name = json_string(project->name);
@@ -380,14 +392,18 @@ json_t* project_serialize(project_t* project)
     // Serialize car icon index
     json_t* car_icon_index = json_integer(project->car_icon_index);
     json_object_set_new(json, "car_icon_index", car_icon_index);
+	//Serialize ride categories
+	serialize_int_dict(json, "ride_category_0", project->ride_categories[0]);
+	serialize_int_dict(json, "ride_category_1", project->ride_categories[1]);
 
+	serialize_int_dict(json, "track_sections", project->track_sections);
     // Serialize preview image
     json_t* preview = image_serialize(project->preview_image);
     json_object_set_new(json, "preview", preview);
 
     // Serialize default color schemes
     json_t* default_color_schemes = json_array();
-    for (i = 0; i < project->num_color_schemes; i++) {
+    for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         json_t* color_scheme = json_array();
         json_array_append_new(color_scheme,
             json_integer(project->color_schemes[i].colors[0]));
@@ -421,13 +437,15 @@ json_t* project_serialize(project_t* project)
     // Determine which cars are used
     unsigned char cars_used[NUM_CARS];
     memset(cars_used, 0, NUM_CARS);
-    for (i = 0; i < 5; i++)
-        if (project->car_types[i] != 0xFF)
+    for (int i = 0; i < 5; i++) {
+        if (project->car_types[i] != 0xFF) {
             cars_used[project->car_types[i]] = 1;
+        }
+    }
     json_t* cars = json_array();
-    for (i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS; i++) {
         json_t* car;
-        if (cars_used[i]) {
+        if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
             car = json_object();
             // Animation
             json_t* anim = animation_serialize(project->cars[i].animation,
@@ -436,6 +454,9 @@ json_t* project_serialize(project_t* project)
             // Flags
             json_t* flags = json_integer(project->cars[i].flags);
             json_object_set_new(car, "flags", flags);
+            // Animation type
+            json_t* animation_type = json_integer(project->cars[i].animation_type);
+            json_object_set_new(car, "animation_type", animation_type);
             // Sprites
             json_t* sprites = json_integer(project->cars[i].sprites);
             json_object_set_new(car, "sprites", sprites);
@@ -454,6 +475,28 @@ json_t* project_serialize(project_t* project)
             // Z value
             json_t* z_value = json_integer(project->cars[i].z_value);
             json_object_set_new(car, "z_value", z_value);
+
+
+			json_t* spin_inertia = json_integer(project->cars[i].spin_inertia);
+			json_object_set_new(car, "spin_inertia", spin_inertia);
+			json_t* spin_friction = json_integer(project->cars[i].spin_friction);
+			json_object_set_new(car, "spin_friction", spin_friction);
+			json_t* powered_velocity = json_integer(project->cars[i].powered_velocity);
+			json_object_set_new(car, "powered_velocity", powered_velocity);
+			json_t* powered_acceleration = json_integer(project->cars[i].powered_acceleration);
+			json_object_set_new(car, "powered_acceleration", powered_acceleration);
+
+			json_t* car_visual = json_integer(project->cars[i].car_visual);
+			json_object_set_new(car, "car_visual", car_visual);
+			json_t* effect_visual = json_integer(project->cars[i].effect_visual);
+			json_object_set_new(car, "effect_visual", effect_visual);
+
+			json_t* logflume_reverser_vehicle = json_integer(project->cars[i].logflume_reverser_vehicle);
+			json_object_set_new(car, "logflume_reverser_vehicle", logflume_reverser_vehicle);
+
+			json_t* double_sound_frequency = json_integer(project->cars[i].double_sound_frequency);
+			json_object_set_new(car, "double_sound_frequency", double_sound_frequency);
+
         } else
             car = json_null();
         json_array_append_new(cars, car);
@@ -461,7 +504,7 @@ json_t* project_serialize(project_t* project)
     json_object_set_new(json, "cars", cars);
     // Load models
     json_t* models = json_array();
-    for (i = 0; i < project->num_models; i++) {
+    for (int i = 0; i < project->num_models; i++) {
         json_t* model = model_serialize(project->models[i]);
         json_array_append_new(models, model);
     }
@@ -469,6 +512,7 @@ json_t* project_serialize(project_t* project)
 
     return json;
 }
+
 project_t* project_deserialize(json_t* json)
 {
     project_t* project = project_new();
@@ -484,48 +528,27 @@ project_t* project_deserialize(json_t* json)
         strcpy(project->description, json_string_value(description));
     }
     // Deserialize id
-    json_t* id = json_object_get(json, "id");
-    if (id != NULL)
-        project->id = json_integer_value(id);
+	project->id = try_catch_int(json, "flags", rand());
     // Deserialize flags
-    json_t* flags = json_object_get(json, "flags");
-    if (flags != NULL)
-        project->flags = json_integer_value(flags);
-    // Deserialize excitement
-    json_t* excitement = json_object_get(json, "excitement");
-    if (excitement != NULL)
-        project->excitement = json_integer_value(excitement);
-    // Deserialize intensity
-    json_t* intensity = json_object_get(json, "intensity");
-    if (intensity != NULL)
-        project->intensity = json_integer_value(intensity);
-    // Deserialize nausea
-    json_t* nausea = json_object_get(json, "nausea");
-    if (nausea != NULL)
-        project->nausea = json_integer_value(nausea);
-    // Deserialize max height adjustment
-    json_t* max_height = json_object_get(json, "max_height");
-    if (max_height != NULL)
-        project->max_height = json_integer_value(max_height);
+	project->flags = try_catch_int(json, "flags", RIDE_SEPARATE_RIDE_DEPRECATED | RIDE_SEPARATE_RIDE);
+    // Deserialize modifiers
+	project->excitement = try_catch_int(json, "excitement", 0);
+	project->intensity = try_catch_int(json, "intensity", 0);
+	project->nausea = try_catch_int(json, "nausea", 0);
+	project->max_height = try_catch_int(json, "max_height", 0);
     // Deserialize track type
-    json_t* track_type = json_object_get(json, "track_type");
-    if (track_type != NULL)
-        project->track_type = json_integer_value(track_type);
+	project->track_type = try_catch_int(json, "track_type", 5);
     // Deserialize minimum/maximum cars
-    json_t* minimum_cars = json_object_get(json, "minimum_cars");
-    if (minimum_cars != NULL)
-        project->minimum_cars = json_integer_value(minimum_cars);
-    json_t* maximum_cars = json_object_get(json, "maximum_cars");
-    if (maximum_cars != NULL)
-        project->maximum_cars = json_integer_value(maximum_cars);
+	project->minimum_cars = try_catch_int(json, "minimum_cars", 8);
+	project->maximum_cars = try_catch_int(json, "maximum_cars", 8);
     // Deserialize zero cars
-    json_t* zero_cars = json_object_get(json, "zero_cars");
-    if (zero_cars != NULL)
-        project->zero_cars = json_integer_value(zero_cars);
+	project->zero_cars = try_catch_int(json, "zero_cars", 0);
     // Deserialize car icon index
-    json_t* car_icon_index = json_object_get(json, "car_icon_index");
-    if (car_icon_index != NULL)
-        project->car_icon_index = json_integer_value(car_icon_index);
+	project->car_icon_index = try_catch_int(json, "car_icon_index", 0);
+	//Deserialize ride categories
+	project->ride_categories[0] = try_catch_int(json, "ride_category_0", 0);
+	project->ride_categories[1] = try_catch_int(json, "ride_category_1", 255);
+	project->track_sections = try_catch_int(json, "track_sections", 0xFFFFFFFFFFFFFFFFl);
 
     // Deserialize preview image
     json_t* preview = json_object_get(json, "preview");
@@ -540,7 +563,7 @@ project_t* project_deserialize(json_t* json)
     project->num_color_schemes = json_array_size(default_color_schemes) > MAX_COLOR_SCHEMES
         ? MAX_COLOR_SCHEMES
         : json_array_size(default_color_schemes);
-    for (int i = 0; i < project->num_color_schemes; i++) {
+    for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         json_t* color_scheme = json_array_get(default_color_schemes, i);
         if (json_array_size(color_scheme) > 0)
             project->color_schemes[i].colors[0] = json_integer_value(json_array_get(color_scheme, 0));
@@ -602,31 +625,49 @@ project_t* project_deserialize(json_t* json)
                 project->cars[i].animation = animation_new();
             // Flags
             json_t* flags = json_object_get(car, "flags");
-            if (flags != NULL)
-                project->cars[i].flags = json_integer_value(flags);
+            json_t* animation_type = json_object_get(car, "animation_type");
+
+			if (animation_type != NULL && flags != NULL) {
+				project->cars[i].flags = json_integer_value(flags);
+				project->cars[i].animation_type = json_integer_value(animation_type);
+			}
+			else if (flags != NULL && animation_type == NULL) { // previous iterations of the tool grouped animation type into flags erroneously
+				project->cars[i].flags = json_integer_value(flags) >> 8; // updating to the new logic requires additional steps
+				project->cars[i].animation_type = json_integer_value(flags) & 0xFF; // aaaaaa
+			}
+
             json_t* sprites = json_object_get(car, "sprites");
             if (sprites != NULL)
                 project->cars[i].sprites = json_integer_value(sprites);
             // Spacing
-            json_t* spacing = json_object_get(car, "spacing");
-            if (spacing != NULL)
-                project->cars[i].spacing = json_integer_value(spacing);
+			project->cars[i].spacing = try_catch_int(car, "spacing", 8675309);
             // Friction
-            json_t* friction = json_object_get(car, "friction");
-            if (friction != NULL)
-                project->cars[i].friction = json_integer_value(friction);
+			json_t* mass = json_object_get(car, "mass");
+			json_t* friction = json_object_get(car, "friction");
+			if (mass != NULL) {
+				project->cars[i].friction = json_integer_value(mass);
+			}
+			else if (friction != NULL)
+			{
+				project->cars[i].friction = json_integer_value(friction);
+			}
+			else
+			{
+				project->cars[i].friction = 235;
+			} /**/
             // Running sound
-            json_t* running_sound = json_object_get(car, "running_sound");
-            if (running_sound != NULL)
-                project->cars[i].running_sound = json_integer_value(running_sound);
-            // Running sound
-            json_t* secondary_sound = json_object_get(car, "secondary_sound");
-            if (secondary_sound != NULL)
-                project->cars[i].secondary_sound = json_integer_value(secondary_sound);
-            // Z value
-            json_t* z_value = json_object_get(car, "z_value");
-            if (z_value != NULL)
-                project->cars[i].z_value = json_integer_value(z_value);
+			project->cars[i].running_sound = try_catch_int(car, "running_sound", 255);
+			project->cars[i].secondary_sound = try_catch_int(car, "secondary_sound", 255);
+			project->cars[i].z_value = try_catch_int(car, "z_value", 5);
+			project->cars[i].spin_inertia = try_catch_int(car, "spin_inertia", 0);
+			project->cars[i].spin_friction = try_catch_int(car, "spin_friction", 0);
+			project->cars[i].powered_acceleration = try_catch_int(car, "powered_acceleration", 0);
+			project->cars[i].powered_velocity = try_catch_int(car, "powered_velocity", 0);
+
+			project->cars[i].car_visual = try_catch_int(car, "car_visual", 0);
+			project->cars[i].effect_visual = try_catch_int(car, "effect_visual", 1);
+			project->cars[i].logflume_reverser_vehicle = try_catch_int(car, "logflume_reverser_vehicle", 0);
+			project->cars[i].double_sound_frequency = try_catch_int(car, "double_sound_frequency", 0);
         }
     }
     return project;
@@ -648,95 +689,3 @@ void project_save(const char* filename, project_t* project)
     json_dump_file(json, filename, 0);
     json_delete(json);
 }
-
-/*
-json_t* animation_serialize(animation_t* animation,model_t** model_list,int
-num_models)
-{
-int i,j;
-json_t* root=json_object();
-
-//Serialize model list
-json_t* objects=json_array();
-    for(i=0;i<animation->num_objects;i++)
-    {
-    json_t* object_data=json_array();
-    //Find the index of the model using supplied array
-    int index=0;
-        while(index<num_models)
-        {
-            if(animation->objects[i].model==model_list[index])break;
-        index++;
-        }
-        if(index==num_models)
-        {
-        printf("Animation references model that isn't in project\n");
-        exit(0);
-        }
-
-    json_array_append_new(object_data,json_integer(index));
-    json_array_append_new(object_data,json_integer(animation->objects[i].parent_index));
-    json_array_append_new(objects,object_data);
-    }
-json_object_set(root,"objects",objects);
-//Serialize frames
-json_t* frames=json_array();
-    for(i=0;i<animation->num_frames;i++)
-    {
-    json_t* frame=json_array();
-        for(j=0;j<animation->num_objects;j++)
-        {
-        json_t* transform=json_array();
-        json_array_append_new(transform,vector_serialize(animation->frames[i][j].position));
-        json_array_append_new(transform,vector_serialize(animation->frames[i][j].rotation));
-        json_array_append_new(frame,transform);
-        }
-    json_array_append(frames,frame);
-    }
-json_object_set(root,"frames",frames);
-return root;
-}
-animation_t* animation_deserialize(json_t* json,model_t** model_list,int
-num_models)
-{
-int i,j;
-animation_t* animation=animation_new();
-
-//Deserialize model list
-json_t* objects=json_object_get(json,"objects");
-    for(i=0;i<json_array_size(objects);i++)
-    {
-    json_t* object_data=json_array_get(objects,i);
-    int index=json_integer_value(json_array_get(object_data,0));
-        if(index>=num_models)
-        {
-        fprintf(stderr,"Failed loading animation because model index is out of
-range\n");
-        animation_free(animation);
-        return NULL;
-        }
-    int object=animation_add_object(animation,model_list[index]);
-    int parent=json_integer_value(json_array_get(object_data,1));
-    animation->objects[object].parent_index=parent;
-    }
-static int animcount=0;
-//Deserialize frames
-json_t* frames=json_object_get(json,"frames");
-animation_set_num_frames(animation,json_array_size(frames));
-    for(i=0;i<animation->num_frames;i++)
-    {
-    json_t* frame=json_array_get(frames,i);
-        for(j=0;j<animation->num_objects;j++)
-        {
-        json_t* transform=json_array_get(frame,j);
-
-        Vector position=vector_deserialize(json_array_get(transform,0));
-        Vector rotation=vector_deserialize(json_array_get(transform,1));
-
-        animation_update_transform(&(animation->frames[i][j]),position,rotation);
-        }
-    }
-animcount++;
-return animation;
-}
-*/

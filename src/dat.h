@@ -43,45 +43,106 @@ typedef enum {
     STRING_TABLE_CAPACITY = 2
 } string_table_index_t;
 
-typedef enum { LANGUAGE_ENGLISH_UK = 0,
-    LANGUAGE_ENGLISH_US = 1 } language_t;
-
 typedef enum {
-    RIDE_WET = 0x00000100u,
-    RIDE_COVERED = 0x00000400u,
-    RIDE_SLOW_IN_WATER = 0x00000200u,
-    RIDE_SEPERATE = 0x00001000u,
-    RIDE_ENABLE_OR_ELSE = 0x00002000u // Not setting this prevents track designs
+    LANGUAGE_ENGLISH_UK = 0,
+    LANGUAGE_ENGLISH_US = 1
+} language_t;
+
+enum {
+    RIDE_VEHICLE_TAB_SCALE_HALF =                0x1u,
+    RIDE_NO_INVERSIONS =                         0x2u,
+    RIDE_NO_BANKED_TRACK =                       0x4u,
+    RIDE_CHUFFING_ON_DEPART =                    0x8u,
+    RIDE_SWING_MODE_1 =                         0x10u,
+    RIDE_ROTATION_MODE_1 =                      0x20u, //twist
+    RIDE_ROTATION_MODE_2 =                      0x40u, //enterprise
+    RIDE_DISABLE_WANDERING =                    0x80u,
+    RIDE_PLAY_SPLASH_SOUND =                   0x100u,
+    RIDE_PLAY_SPLASH_SOUND_SLIDE =             0x200u,
+    RIDE_COVERED =                             0x400u,
+    RIDE_LIMIT_AIRTIME_BONUS =                 0x800u,
+    RIDE_SEPARATE_RIDE_DEPRECATED =           0x1000u,
+    RIDE_SEPARATE_RIDE =                      0x2000u,//this enables track designs
+    RIDE_CANNOT_BREAK_DOWN =                  0x4000u,
+    RIDE_DISABLE_LAST_OPERATING_MODE =        0x8000u,
+    RIDE_FLAG_DISABLE_COLLISION_CRASHES =    0x10000u,
+    RIDE_DISABLE_FIRST_TWO_OPERATING_MODES = 0x20000u,
+    RIDE_DISABLE_DOOR_CONSTRUCTION =         0x40000u,
+    RIDE_DISABLE_COLOR_TAB =                 0x80000u,
+    RIDE_ALTERNATIVE_SWING_MODE_2 =         0x100000u,
+
+    RIDE_WET =                      0x100u,
+    RIDE_SLOW_IN_WATER =            0x200u,
+    RIDE_SEPERATE =                 0x1000u
     // from showing in the window
-} ride_flags_t;
+};
 
+enum {
+    CAR_ANIMATION_NONE = 0x00u, //1 vehicle sprite, 1 peep sprite
+    CAR_ANIMATION_STEAM = 0x01u, //4 vehicle sprites, uknown peep sprites, slow animation
+    CAR_ANIMATION_2 = 0x02u, //unknown, possibly 3
+    CAR_ANIMATION_ROWING = 0x03u, // 1 vehicle sprite, 6 peep sprites
+    CAR_ANIMATION_4 = 0x04u, //unknown
+    CAR_ANIMATION_5 = 0x05u, //unknown, possibly 2 frames?
+    CAR_ANIMATION_OBSERVATION = 0x06u, //8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
+    CAR_ANIMATION_GENERIC = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
+    CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
+    CAR_ANIMATION_4D = 0x09u, // unknown
+};
+
+// clang-format off
 typedef enum {
-    CAR_ENABLE_REMAP2 = 0x01000000u,
-    CAR_ENABLE_REMAP3 = 0x00020000u,
-    CAR_IS_SWINGING = 0x02000000u,
-    CAR_IS_SPINNING = 0x04000000u,
-    CAR_IS_POWERED = 0x08000000u,
-    CAR_NO_UPSTOPS = 0x00000400u,
-    CAR_ENABLE_ROLLING_SOUND = 0x10000000u,
-    CAR_FAKE_SPINNING = 0x00000001u
+    CAR_COASTS_DOWNHILL =             0x1u,//these are all bit-shifted 8 because the flags field is offset one byte
+    CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u,
+    CAR_NO_UPSTOPS =                  0x4u,//bobsled-style with 0.05 extra G's
+    CAR_IS_MINIGOLFER =               0x8u,
+    CAR_FLAG_4 =                     0x10u,
+    CAR_FLAG_5 =                     0x20u,
+    CAR_CAN_INVERT =                 0x40u,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
+    CAR_DODGEM_USE_LIGHTS =          0x80u,
+    CAR_OPENS_DOORS =               0x100u,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_ENABLE_REMAP3 =             0x200u,
+    CAR_FLAG_10 =                   0x400u,
+    CAR_FLAG_11 =                   0x800u,
+    CAR_OVERRIDE_VERTICAL_FRAMES = 0x1000u,
+    CAR_FLAG_13 =                  0x2000u,
+    CAR_EXTRA_SPINNING_FRAMES =    0x4000u,
+    CAR_EXTRA_POWER_ON_ASCENT =    0x8000u,
+    CAR_ENABLE_REMAP2 =           0x10000u,
+    CAR_IS_SWINGING =             0x20000u,
+    CAR_IS_SPINNING =             0x40000u,
+    CAR_IS_POWERED =              0x80000u,
+    CAR_ENABLE_ROLLING_SOUND =   0x100000u,//riders scream
+    CAR_FLAG_21 =                0x200000u,//related to swinging sprites - I believe this is set automatically
+    CAR_WANDERS =                0x400000u,
+    CAR_IS_ANIMATED =            0x800000u,
+
+    CAR_FLAG_RIDER_ANIMATION = 1 << 24,
+    CAR_FLAG_25 = 1 << 25,// related to swinging sprites?
+    CAR_FLAG_2D_LOADING_WAYPOINTS = 1 << 26,
+    CAR_FLAG_27 = 1 << 27,// related to swinging sprites
+    CAR_IS_CHAIRLIFT = 1 << 28,
+    CAR_FLAG_WATER_PROPULSION = 1 << 29,//accelerates downhill, does not stop when ride breaks down b/c water continues to flow
+    CAR_IS_GO_KART = 1 << 30,
+    CAR_FLAG_DODGEM_CAR_PLACEMENT = 1u << 31,
 } car_flags_t;
 
 typedef enum {
-    SPRITE_FLAT_SLOPE = 0x0001,
-    SPRITE_GENTLE_SLOPE = 0x0002,
-    SPRITE_STEEP_SLOPE = 0x0004,
-    SPRITE_VERTICAL_SLOPE = 0x0008,
-    SPRITE_DIAGONAL_SLOPE = 0x0010,
-    SPRITE_BANKING = 0x0020,
-    SPRITE_INLINE_TWIST = 0x0040,
-    SPRITE_SLOPE_BANK_TRANSITION = 0x0080,
+    SPRITE_FLAT_SLOPE =               0x0001,
+    SPRITE_GENTLE_SLOPE =             0x0002,
+    SPRITE_STEEP_SLOPE =              0x0004,
+    SPRITE_VERTICAL_SLOPE =           0x0008,
+    SPRITE_DIAGONAL_SLOPE =           0x0010,
+    SPRITE_BANKING =                  0x0020,
+    SPRITE_INLINE_TWIST =             0x0040,
+    SPRITE_SLOPE_BANK_TRANSITION =    0x0080,
     SPRITE_DIAGONAL_BANK_TRANSITION = 0x0100,
-    SPRITE_SLOPED_BANK_TRANSITION = 0x0200,
-    SPRITE_SLOPED_BANKED_TURN = 0x0400,
-    SPRITE_BANKED_SLOPE_TRANSITION = 0x0800,
-    SPRITE_CORKSCREW = 0x1000,
-    SPRITE_RESTRAINT_ANIMATION = 0x2000,
-    SPRITE_SPIRAL_LIFT = 0x4000
+    SPRITE_SLOPED_BANK_TRANSITION =   0x0200,
+    SPRITE_SLOPED_BANKED_TURN =       0x0400,
+    SPRITE_BANKED_SLOPE_TRANSITION =  0x0800,
+    SPRITE_CORKSCREW =                0x1000,
+    SPRITE_RESTRAINT_ANIMATION =      0x2000,
+    SPRITE_SPIRAL_LIFT =              0x4000
 } sprite_flags_t;
 
 typedef enum {
@@ -93,7 +154,7 @@ typedef enum {
     RUNNING_SOUND_TRAIN = 31,
     RUNNING_SOUND_ENGINE = 21,
     RUNNING_SOUND_NONE = 255
-} running_sound_t;
+} primary_sound_t;
 
 typedef enum {
     SECONDARY_SOUND_SCREAMS_1 = 0,
@@ -101,7 +162,7 @@ typedef enum {
     SECONDARY_SOUND_SCREAMS_3 = 2,
     SECONDARY_SOUND_WHISTLE = 3,
     SECONDARY_SOUND_BELL = 4,
-    SECONDARY_SOUND_NONE = 255,
+    SECONDARY_SOUND_NONE = 255
 } secondary_sound_t;
 
 typedef enum {
@@ -117,7 +178,8 @@ typedef enum {
     CATEGORY_GENTLE_RIDE = 1,
     CATEGORY_ROLLERCOASTER = 2,
     CATEGORY_THRILL_RIDE = 3,
-    CATEGORY_WATER_RIDE = 4
+    CATEGORY_WATER_RIDE = 4,
+    CATEGORY_NONE = 255
 } category_t;
 
 #define TRACK_STATION 0x0000000000000004l
@@ -213,13 +275,13 @@ typedef struct {
 
 typedef struct {
     uint32_t flags;
+	uint8_t animation_type;
     uint32_t spacing;
     uint16_t unknown[9];
     uint16_t sprites;
     uint16_t friction;
     uint8_t running_sound;
     uint8_t secondary_sound;
-    uint8_t extra_swing_frames;
     uint8_t highest_rotation_index;
     uint8_t rider_pairs;
     uint8_t riders;
@@ -229,6 +291,10 @@ typedef struct {
     uint8_t powered_acceleration;
     uint8_t powered_velocity;
     uint8_t z_value;
+	uint8_t car_visual;
+	uint8_t effect_visual;
+	uint8_t logflume_reverser_vehicle;
+	uint8_t double_sound_frequency;
 } car_t;
 
 typedef struct {
@@ -261,6 +327,7 @@ typedef struct {
 typedef struct {
     color_scheme_t* default_colors;
     uint8_t num_default_colors;
+	uint8_t num_colors_override; // set to 255 to indicate each train gets a different color OF THE 32 COLORS INCLUDED!!!!
     peep_position_data_t peep_positions[4];
 } ride_structures_t;
 

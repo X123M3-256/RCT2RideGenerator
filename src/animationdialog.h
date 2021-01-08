@@ -6,9 +6,10 @@
 
 enum animation_dialog_variable_flags {
     ANIMATION_DIALOG_RESTRAINT = 1,
-    ANIMATION_DIALOG_SPIN = 2,
-    ANIMATION_DIALOG_SWING = 4,
-    ANIMATION_DIALOG_FLIP = 8
+    ANIMATION_DIALOG_ANIMATION = 2,
+    ANIMATION_DIALOG_SPIN = 4,
+    ANIMATION_DIALOG_SWING = 8,
+    ANIMATION_DIALOG_FLIP = 16
 };
 
 typedef struct {
@@ -61,6 +62,7 @@ typedef struct {
     GtkWidget* spin_slider;
     GtkWidget* swing_slider;
     GtkWidget* flip_slider;
+    GtkWidget* animation_slider;
     GtkWidget* restraint_slider;
 } animation_dialog_t;
 

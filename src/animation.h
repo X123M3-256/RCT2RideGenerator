@@ -2,6 +2,8 @@
 #define ANIMATION_H_INCLUDED
 #include "model.h"
 #include "renderer.h"
+
+#define ANIMATION_NUM_VARIABLES 8
 typedef enum {
     VAR_PITCH = 0,
     VAR_YAW = 1,
@@ -9,8 +11,20 @@ typedef enum {
     VAR_SPIN = 3,
     VAR_SWING = 4,
     VAR_FLIP = 5,
-    VAR_RESTRAINT = 6
+    VAR_RESTRAINT = 6,
+    VAR_ANIMATION = 7
 } animation_variable_t;
+
+static char* ANIMATION_VAR_IDENTIFIERS[] = {
+    "pitch",
+    "yaw",
+    "roll",
+    "spin",
+    "swing",
+    "flip",
+    "restraint",
+    "animation"
+};
 
 typedef enum {
     OP_ADD,
@@ -23,15 +37,48 @@ typedef enum {
     OP_SIN = 7,
     OP_COS = 8,
     OP_CLAMP = 9,
-    OP_LOD_IMM,
-    OP_LOD_VAR,
-    OP_OPEN_PAREN, // Not opcodes, but it saves having a seperate datatype for
+    OP_ABS = 10,
+    OP_UNIT = 11,
+    OP_SQRT = 12,
+    OP_SQUARE = 13,
+    OP_FLOOR = 14,
+    OP_CEIL = 15,
+    OP_LOD_IMM,//16
+    OP_LOD_VAR,//17
+    OP_OPEN_PAREN,//18 // Not opcodes, but it saves having a seperate datatype for
     // tokens
-    OP_CLOSE_PAREN
+    OP_CLOSE_PAREN//19
 } animation_opcode_t;
 
-#define ANIMATION_NUM_VARIABLES 7
-#define ANIMATION_MAX_OBJECTS 32
+#define ANIMATION_NUM_FUNCTIONS 11
+static animation_opcode_t ANIMATION_FUNCTIONS[] = {
+    OP_EXP,
+    OP_LN,
+    OP_SIN,
+    OP_COS,
+    OP_CLAMP,
+    OP_ABS,
+    OP_UNIT,
+    OP_SQRT,
+    OP_SQUARE,
+    OP_FLOOR,
+    OP_CEIL
+};
+static char* OP_FUNC_IDENTIFIERS[] = {
+    "exp",
+    "ln",
+    "sin",
+    "cos",
+    "clamp",
+    "abs",
+    "unit",
+    "sqrt",
+    "square",
+    "floor",
+    "ceil"
+};
+
+#define ANIMATION_MAX_OBJECTS 64
 typedef struct {
     animation_opcode_t opcode;
     union {

@@ -1,6 +1,7 @@
 #include "math_defines.h"
 #include "modeldialog.h"
 #include "image.h"
+#include "math_defines.h"
 #include "palette.h"
 #include "renderer.h"
 #include <stdlib.h>
@@ -50,7 +51,34 @@ strcpy(model->Name,name);
 }
 */
 
-void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
+Matrix DefaultView()
+{
+    Matrix matrix;
+
+    matrix.Data[0] = -4;
+    matrix.Data[4] = 0;
+    matrix.Data[8] = 0;
+    matrix.Data[12] = 0;
+
+    matrix.Data[1] = 0;
+    matrix.Data[5] = 4;
+    matrix.Data[9] = 0;
+    matrix.Data[13] = 0;
+
+    matrix.Data[2] = 0;
+    matrix.Data[6] = 0;
+    matrix.Data[10] = -4;
+    matrix.Data[14] = 0;
+
+    matrix.Data[3] = 0;
+    matrix.Data[7] = 0;
+    matrix.Data[11] = 0;
+    matrix.Data[15] = 1;
+
+    return matrix;
+}
+
+static void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
 {
     int i, j;
     int rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -68,7 +96,7 @@ void pixbuf_set_color(GdkPixbuf* pixbuf, uint8_t color_index)
     }
 }
 
-void model_viewer_render_preview(model_viewer_t* viewer)
+static void model_viewer_render_preview(model_viewer_t* viewer)
 {
     renderer_clear_buffers();
     renderer_render_model(viewer->grid, viewer->model_view);
@@ -80,7 +108,7 @@ void model_viewer_render_preview(model_viewer_t* viewer)
 static void model_viewer_reset(GtkWidget* button, gpointer user_data)
 {
     model_viewer_t* model_viewer = (model_viewer_t*)user_data;
-    model_viewer->model_view = MatrixIdentity();
+    model_viewer->model_view = DefaultView();
     if (model_viewer->model != NULL)
         model_viewer_render_preview(model_viewer);
 }
@@ -206,12 +234,12 @@ static void model_viewer_zoom_out(GtkWidget* button, gpointer user_data)
         model_viewer_render_preview(model_viewer);
 }
 
-model_viewer_t* model_viewer_new()
+static model_viewer_t* model_viewer_new()
 {
     model_viewer_t* model_viewer = malloc(sizeof(model_viewer_t));
     model_viewer->model = NULL;
     model_viewer->grid = model_new_grid();
-    model_viewer->model_view = MatrixIdentity();
+    model_viewer->model_view = DefaultView();
 
     model_viewer->container = gtk_vbox_new(FALSE, 1);
 
@@ -304,12 +332,12 @@ model_viewer_t* model_viewer_new()
 
     return model_viewer;
 }
-void model_viewer_set_model(model_viewer_t* viewer, model_t* model)
+static void model_viewer_set_model(model_viewer_t* viewer, model_t* model)
 {
     viewer->model = model;
     model_viewer_render_preview(viewer);
 }
-void model_viewer_free(model_viewer_t* viewer)
+static void model_viewer_free(model_viewer_t* viewer)
 {
     image_viewer_free(viewer->image_viewer);
     gtk_widget_destroy(viewer->reset);
@@ -335,43 +363,47 @@ static void color_select_tool_clicked(GtkWidget* widget, gpointer user_data)
     if (tool->color != NULL)
         *(tool->color) = tool->value;
 }
-color_select_tool_t* color_select_tool_new(uint8_t color)
+static color_select_tool_t* color_select_tool_new(uint8_t color)
 {
     color_select_tool_t* tool = malloc(sizeof(color_select_tool_t));
     tool->color = NULL;
     tool->value = color;
-    tool->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 20, 20);
+    tool->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 28, 24);
     pixbuf_set_color(tool->pixbuf, palette_remap_section_index(color, 6));
     tool->image = gtk_image_new_from_pixbuf(tool->pixbuf);
-    tool->tool_item = gtk_tool_button_new(tool->image, "");
+    tool->tool_item = gtk_tool_button_new(tool->image, color_name_from_color(color));
+    //tool->tool_item = gtk_tool_button_new(tool->image, "");
+    //tool->tool_item->["icon-spacing"] = 0;
     g_signal_connect(tool->tool_item, "clicked",
         G_CALLBACK(color_select_tool_clicked), tool);
     return tool;
 }
-void color_select_tool_set_color(color_select_tool_t* tool, uint8_t* color)
+static void color_select_tool_set_color(color_select_tool_t* tool, uint8_t* color)
 {
     tool->color = color;
 }
-void color_select_tool_free(color_select_tool_t* tool)
+static void color_select_tool_free(color_select_tool_t* tool)
 {
     gtk_widget_destroy(tool->image);
     g_object_unref(G_OBJECT(tool->pixbuf));
     gtk_widget_destroy(GTK_WIDGET(tool->tool_item));
     free(tool);
 }
-color_selector_t* color_selector_new()
+static color_selector_t* color_selector_new()
 {
     color_selector_t* selector = malloc(sizeof(color_selector_t));
     selector->color = NULL;
     selector->container = gtk_tool_palette_new();
     selector->remap_tools = gtk_tool_item_group_new("Remap colors");
     selector->peep_tools = gtk_tool_item_group_new("Peep colors");
-    selector->color_tools = gtk_tool_item_group_new("Other colors");
+    selector->color_tools = gtk_tool_item_group_new("Paint colors");
+    selector->special_tools = gtk_tool_item_group_new("Tool colors");
     gtk_container_add(GTK_CONTAINER(selector->container), selector->remap_tools);
     gtk_container_add(GTK_CONTAINER(selector->container), selector->peep_tools);
     gtk_container_add(GTK_CONTAINER(selector->container), selector->color_tools);
+    gtk_container_add(GTK_CONTAINER(selector->container), selector->special_tools);
 
-    selector->tools = malloc(39 * sizeof(color_select_tool_t*));
+    selector->tools = malloc(NUMBER_OF_COLORS * sizeof(color_select_tool_t*));
 
     selector->tools[0] = color_select_tool_new(COLOR_REMAP_1);
     selector->tools[1] = color_select_tool_new(COLOR_REMAP_2);
@@ -392,26 +424,43 @@ color_selector_t* color_selector_new()
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
         selector->tools[4]->tool_item, 1);
     gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
-        selector->tools[5]->tool_item, 3);
-    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
-        selector->tools[6]->tool_item, 4);
+        selector->tools[5]->tool_item, 2);
+    //gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->peep_tools),
+    //    selector->tools[6]->tool_item, 3);
+
+    selector->tools[7] = color_select_tool_new(TRANSPARENT);
+    selector->tools[8] = color_select_tool_new(BLACKTILE);
+    selector->tools[9] = color_select_tool_new(NEON_REMAP_1);
+    selector->tools[10] = color_select_tool_new(NEON_REMAP_2);
+    selector->tools[11] = color_select_tool_new(NEON_REMAP_3);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[7]->tool_item, 0);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[8]->tool_item, 1);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[9]->tool_item, 2);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[10]->tool_item, 3);
+    gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->special_tools),
+        selector->tools[11]->tool_item, 4);
+
     int i;
     for (i = 0; i < 32; i++) {
-        selector->tools[7 + i] = color_select_tool_new(i);
+        selector->tools[NUMBER_OF_COLORS - 32 + i] = color_select_tool_new(i);
         gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(selector->color_tools),
-            selector->tools[7 + i]->tool_item, i);
+            selector->tools[NUMBER_OF_COLORS - 32 + i]->tool_item, i);
     }
     return selector;
 }
-void color_selector_set_color(color_selector_t* selector, uint8_t* color)
+static void color_selector_set_color(color_selector_t* selector, uint8_t* color)
 {
     int i;
     selector->color = color;
-    for (i = 0; i < 39; i++) {
+    for (i = 0; i < NUMBER_OF_COLORS; i++) {
         color_select_tool_set_color(selector->tools[i], color);
     }
 }
-void color_selector_free(color_selector_t* selector)
+static void color_selector_free(color_selector_t* selector)
 {
     int i;
     for (i = 0; i < 39; i++) {
@@ -420,6 +469,7 @@ void color_selector_free(color_selector_t* selector)
     gtk_widget_destroy(selector->remap_tools);
     gtk_widget_destroy(selector->peep_tools);
     gtk_widget_destroy(selector->color_tools);
+    gtk_widget_destroy(selector->special_tools);
     gtk_widget_destroy(selector->container);
     free(selector->tools);
     free(selector);
@@ -433,7 +483,7 @@ static void matrix_transform_button_clicked(GtkWidget* widget,
         return;
     *(button->matrix) = MatrixMultiply(button->transform, *(button->matrix));
 }
-matrix_transform_button_t* matrix_transform_button_new(const char* label,
+static matrix_transform_button_t* matrix_transform_button_new(const char* label,
     Matrix matrix)
 {
     matrix_transform_button_t* button = malloc(sizeof(matrix_transform_button_t));
@@ -444,12 +494,12 @@ matrix_transform_button_t* matrix_transform_button_new(const char* label,
         G_CALLBACK(matrix_transform_button_clicked), button);
     return button;
 }
-void matrix_transform_button_set_matrix(matrix_transform_button_t* button,
+static void matrix_transform_button_set_matrix(matrix_transform_button_t* button,
     Matrix* matrix)
 {
     button->matrix = matrix;
 }
-void matrix_transform_button_free(matrix_transform_button_t* button)
+static void matrix_transform_button_free(matrix_transform_button_t* button)
 {
     gtk_widget_destroy(button->container);
     free(button);
@@ -645,6 +695,8 @@ model_dialog_t* model_dialog_new(model_t* model)
     gtk_box_pack_start(GTK_BOX(top_hbox), dialog->rotate_z->container, FALSE,
         FALSE, 2);
 
+    // create paint selector
+
     GtkWidget* hbox = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(content_area), hbox, FALSE, FALSE, 2);
 
@@ -656,16 +708,23 @@ model_dialog_t* model_dialog_new(model_t* model)
     GtkWidget* paint_vbox = gtk_vbox_new(FALSE, 2);
 
     dialog->color_selector = color_selector_new();
+    gtk_widget_set_size_request(dialog->color_selector->container, 304, 200);
     color_selector_set_color(dialog->color_selector, &(dialog->color));
     gtk_box_pack_start(GTK_BOX(paint_vbox), dialog->color_selector->container,
         TRUE, TRUE, 2);
+
+    GtkWidget* hsep = gtk_hseparator_new();
+    gtk_box_pack_start(GTK_BOX(paint_vbox), hsep, FALSE, FALSE, 2);
 
     dialog->paint_all = gtk_button_new_with_label("Paint all");
     g_signal_connect(dialog->paint_all, "clicked",
         G_CALLBACK(model_dialog_paint_all), dialog);
     gtk_box_pack_start(GTK_BOX(paint_vbox), dialog->paint_all, FALSE, FALSE, 2);
 
+
     gtk_box_pack_start(GTK_BOX(hbox), paint_vbox, FALSE, FALSE, 2);
+
+    // create button press events
 
     g_signal_connect(dialog->model_viewer->image_viewer->container,
         "motion_notify_event", G_CALLBACK(model_dialog_paint_model),
