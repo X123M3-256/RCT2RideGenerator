@@ -16,7 +16,7 @@
 #define SQRT1_2 0.707106781
 #define SQRT_3 1.73205080757
 #define SQRT_6 2.44948974278
-#define S (64.0 / (3.0 * SQRT_3))
+#define S ((64.0 / (3.0 * SQRT_3))*1.14)
 // Dimetric projection
 const Matrix projection = {
     { SQRT1_2 * S, 0.0, -SQRT1_2* S, FRAME_BUFFER_SIZE / 2.0, 0.5 * SQRT1_2* S,
@@ -173,12 +173,14 @@ void renderer_remap_color(uint8_t source, uint8_t dest)
 float shade_fragment(Vector normal)
 {
     // printf("%f %f %f\n",normal.X,normal.Y,normal.Z);
-    const Vector light_direction = { sqrt(10.0) / 5.0, -sqrt(10.0) / 5.0,
-        -sqrt(10.0) / 5.0 };
+	float o=tan(34.0*3.14159265358979/180.0);
+	float l=sqrt(1+o*o);
+	Vector light_direction={1.0/(l*sqrt(2)),-o/l,-1.0/(l*sqrt(2))};
+   // const Vector light_direction = { sqrt(10.0) / 5.0, -sqrt(10.0) / 5.0, -sqrt(10.0) / 5.0 };
     float lambert = VectorDotProduct(normal, light_direction);
     if (lambert < 0.0)
         lambert = 0.0;
-    float luminance = lambert * 0.5 + 0.275;
+    float luminance = lambert*0.5+0.275;
     if (luminance > 1.0)
         return 1.0;
     return luminance;

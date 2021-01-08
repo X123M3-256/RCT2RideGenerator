@@ -154,7 +154,7 @@ model_t* model_load_obj(char* filename)
     strcpy(model->name, "Unnamed Model");
     // Count vertices
     model->num_vertices = obj_data.vertex_count;
-    // Count normals
+	// Count normals
     model->num_normals = obj_data.vertex_normal_count;
     // Count faces
     for (i = 0; i < obj_data.face_count; i++)
@@ -183,17 +183,17 @@ model_t* model_load_obj(char* filename)
         model->faces[face_index].color = 0; // Default to grey
         if (obj_data.material_list != NULL && obj_data.face_list[i]->material_index >= 0) {
             obj_material* material = obj_data.material_list[obj_data.face_list[i]->material_index];
-            if (material->diff[0] < 0.1 && material->diff[1] > 0.9 && material->diff[2] < 0.1)
+            if (material->diff[0] < 0.3 && material->diff[1] > 0.7 && material->diff[2] < 0.3)
                 model->faces[face_index].color = COLOR_REMAP_1;
-            if (material->diff[0] > 0.9 && material->diff[1] < 0.1 && material->diff[2] > 0.9)
+            else if (material->diff[0] > 0.7 && material->diff[1] < 0.3 && material->diff[2] > 0.7)
                 model->faces[face_index].color = COLOR_REMAP_2;
-            if (material->diff[0] > 0.9 && material->diff[1] > 0.9 && material->diff[2] < 0.1)
+            else if (material->diff[0] > 0.7 && material->diff[1] > 0.7 && material->diff[2] < 0.3)
                 model->faces[face_index].color = COLOR_REMAP_3;
-            if (material->diff[0] > 0.9 && material->diff[1] > 0.9 && material->diff[2] > 0.9)
+            else if (material->diff[0] > 0.7 && material->diff[1] > 0.7 && material->diff[2] > 0.7)
                 model->faces[face_index].color = 2;
-            if (material->diff[0] > 0.4 && material->diff[0] < 0.6 && material->diff[1] > 0.4 && material->diff[1] < 0.6 && material->diff[2] > 0.4 && material->diff[2] < 0.6)
+            else if (material->diff[0] > 0.3 && material->diff[0] < 0.7 && material->diff[1] > 0.3 && material->diff[1] < 0.7 && material->diff[2] > 0.3 && material->diff[2] < 0.7)
                 model->faces[face_index].color = 1;
-            if (material->diff[0] < 0.1 && material->diff[1] < 0.1 && material->diff[2] < 0.1)
+            else if (material->diff[0] < 0.3 && material->diff[1] < 0.3 && material->diff[2] < 0.3)
                 model->faces[face_index].color = 0;
         }
         for (j = 0; j < 3; j++) {
@@ -215,7 +215,7 @@ model_t* model_load_obj(char* filename)
     }
 
     delete_obj_data(&obj_data);
-    return model;
+    return model; 
 }
 void model_free(model_t* model)
 {

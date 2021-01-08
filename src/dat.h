@@ -46,7 +46,7 @@ typedef enum {
 typedef enum { LANGUAGE_ENGLISH_UK = 0,
     LANGUAGE_ENGLISH_US = 1 } language_t;
 
-enum {
+typedef enum {
     RIDE_WET = 0x00000100u,
     RIDE_COVERED = 0x00000400u,
     RIDE_SLOW_IN_WATER = 0x00000200u,
@@ -55,7 +55,7 @@ enum {
     // from showing in the window
 } ride_flags_t;
 
-enum {
+typedef enum {
     CAR_ENABLE_REMAP2 = 0x01000000u,
     CAR_ENABLE_REMAP3 = 0x00020000u,
     CAR_IS_SWINGING = 0x02000000u,
@@ -66,7 +66,7 @@ enum {
     CAR_FAKE_SPINNING = 0x00000001u
 } car_flags_t;
 
-enum {
+typedef enum {
     SPRITE_FLAT_SLOPE = 0x0001,
     SPRITE_GENTLE_SLOPE = 0x0002,
     SPRITE_STEEP_SLOPE = 0x0004,
@@ -84,7 +84,7 @@ enum {
     SPRITE_SPIRAL_LIFT = 0x4000
 } sprite_flags_t;
 
-enum {
+typedef enum {
     RUNNING_SOUND_WOODEN_OLD = 1,
     RUNNING_SOUND_WOODEN_MODERN = 54,
     RUNNING_SOUND_STEEL = 2,
@@ -95,7 +95,7 @@ enum {
     RUNNING_SOUND_NONE = 255
 } running_sound_t;
 
-enum {
+typedef enum {
     SECONDARY_SOUND_SCREAMS_1 = 0,
     SECONDARY_SOUND_SCREAMS_2 = 1,
     SECONDARY_SOUND_SCREAMS_3 = 2,
@@ -104,7 +104,7 @@ enum {
     SECONDARY_SOUND_NONE = 255,
 } secondary_sound_t;
 
-enum {
+typedef enum {
     CAR_INDEX_DEFAULT = 0,
     CAR_INDEX_FRONT = 1,
     CAR_INDEX_SECOND = 2,
@@ -112,7 +112,7 @@ enum {
     CAR_INDEX_REAR = 3
 } car_index_t;
 
-enum {
+typedef enum {
     CATEGORY_TRANSPORT_RIDE = 0,
     CATEGORY_GENTLE_RIDE = 1,
     CATEGORY_ROLLERCOASTER = 2,

@@ -11,18 +11,18 @@ typedef struct {
 typedef struct {
     uint16_t color;
     // Each point has a position, normal
-    uint16_t vertices[3];
-    uint16_t normals[3];
+    uint32_t vertices[3];
+    uint32_t normals[3];
 } face_t;
 
 typedef struct {
     char* name;
     Matrix transform;
     unsigned short is_rider;
-    unsigned short num_vertices;
-    unsigned short num_normals;
-    unsigned short num_lines;
-    unsigned short num_faces;
+    unsigned int num_vertices;
+    unsigned int num_normals;
+    unsigned int num_lines;
+    unsigned int num_faces;
     Vector* vertices;
     Vector* normals;
     line_t* lines;
