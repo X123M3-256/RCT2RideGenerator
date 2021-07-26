@@ -5,8 +5,11 @@
 
 typedef enum {
     VALUE_SIZE_BYTE,
+    VALUE_SIZE_BYTE_SIGNED,
     VALUE_SIZE_WORD,
-    VALUE_SIZE_DWORD
+    VALUE_SIZE_WORD_SIGNED,
+    VALUE_SIZE_DWORD,
+    VALUE_SIZE_DWORD_SIGNED
 } value_size_t;
 
 typedef struct {

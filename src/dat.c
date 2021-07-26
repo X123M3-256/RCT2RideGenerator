@@ -323,15 +323,24 @@ static void ride_header_write(ride_header_t* header, buffer_t* buffer)
         /*Write friction*/
         *((uint16_t*)(car_data + 8)) = car->friction;
         /*Write riders*/
+        car_data[10] = car->vehicle_tab_vertical_offset; // tab height
         car_data[11] = car->rider_pairs | car->riders;
         /*Write sprite flags*/
         *((uint16_t*)(car_data + 12)) = car->sprites;
-        /*Write rider sprites*/
-        car_data[84] = car->rider_sprites;
-		/*Write animation type*/
-		car_data[17] = car->animation_type;
+        car_data[14] = car->sprite_width; // sprite width
+        car_data[15] = car->sprite_height_negative; // sprite height negative
+        car_data[16] = car->sprite_height_positive; // sprite height positive
+        /*Write animation type*/
+        car_data[17] = car->animation_type;
         /*Write flags*/
         *((uint32_t*)(car_data + 18)) = car->flags;
+
+
+        // nothing here but us chickens
+
+
+        /*Write rider sprites*/
+        car_data[84] = car->rider_sprites;
         /*Write spin parameters*/
         car_data[85] = car->spin_inertia;
         car_data[86] = car->spin_friction;
@@ -345,15 +354,12 @@ static void ride_header_write(ride_header_t* header, buffer_t* buffer)
         car_data[91] = car->powered_acceleration;
         car_data[92] = car->powered_velocity;
         /*Write Z value*/
-        car_data[95] = car->z_value;
-        /*Write unknown fields*/
-	car_data[93] = car->car_visual;
+        car_data[93] = car->car_visual;
         car_data[94] = car->effect_visual;// splash types: 0x01 no splash, 0x0B river rafts 0x0C log flume 0x0D splash boats
-        *((uint16_t*)(car_data + 96)) = car->unknown[1];
-        car_data[10] = (uint8_t)car->unknown[4];
-        car_data[14] = (uint8_t)car->unknown[5];
-        car_data[15] = (uint8_t)car->unknown[6];
-        car_data[16] = (uint8_t)car->unknown[7];
+        car_data[95] = car->z_value;
+        car_data[96] = car->override_vertical_frames;
+        /*Write unknown fields*/
+        //*((uint16_t*)(car_data + 96)) = car->unknown[1]; // no idea what this does
         /*Move to next car*/
         car_data += 101;
     }

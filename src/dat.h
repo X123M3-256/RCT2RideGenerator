@@ -92,30 +92,30 @@ enum {
 
 // clang-format off
 typedef enum {
-    CAR_COASTS_DOWNHILL =             0x1u,//these are all bit-shifted 8 because the flags field is offset one byte
-    CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  0x2u,
-    CAR_NO_UPSTOPS =                  0x4u,//bobsled-style with 0.05 extra G's
-    CAR_IS_MINIGOLFER =               0x8u,
-    CAR_FLAG_4 =                     0x10u,
-    CAR_FLAG_5 =                     0x20u,
-    CAR_CAN_INVERT =                 0x40u,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
-    CAR_DODGEM_USE_LIGHTS =          0x80u,
-    CAR_OPENS_DOORS =               0x100u,//only relevant for making things backwards-compatible with RCT2 and doors
-    CAR_ENABLE_REMAP3 =             0x200u,
-    CAR_FLAG_10 =                   0x400u,
-    CAR_FLAG_11 =                   0x800u,
-    CAR_OVERRIDE_VERTICAL_FRAMES = 0x1000u,
-    CAR_FLAG_13 =                  0x2000u,
-    CAR_EXTRA_SPINNING_FRAMES =    0x4000u,
-    CAR_EXTRA_POWER_ON_ASCENT =    0x8000u,
-    CAR_ENABLE_REMAP2 =           0x10000u,
-    CAR_IS_SWINGING =             0x20000u,
-    CAR_IS_SPINNING =             0x40000u,
-    CAR_IS_POWERED =              0x80000u,
-    CAR_ENABLE_ROLLING_SOUND =   0x100000u,//riders scream
-    CAR_FLAG_21 =                0x200000u,//related to swinging sprites - I believe this is set automatically
-    CAR_WANDERS =                0x400000u,
-    CAR_IS_ANIMATED =            0x800000u,
+    CAR_COASTS_DOWNHILL =             1 << 0,//these are all bit-shifted 8 because the flags field is offset one byte
+    CAR_NO_UPSTOPS_TIGHT_TOLERANCE =  1 << 1,
+    CAR_NO_UPSTOPS =                  1 << 2,//bobsled-style with 0.05 extra G's
+    CAR_IS_MINIGOLFER =               1 << 3,
+    CAR_FLAG_4 =                      1 << 4,
+    CAR_FLAG_5 =                      1 << 5,
+    CAR_CAN_INVERT =                  1 << 6,//I assume this is set on the flying and lay-down so they can spawn properly on inverted station track
+    CAR_DODGEM_USE_LIGHTS =           1 << 7,
+    CAR_OPENS_DOORS =                 1 << 8,//only relevant for making things backwards-compatible with RCT2 and doors
+    CAR_ENABLE_REMAP3 =               1 << 9,
+    CAR_RECALCULATE_SPRITE_BOUNDS =   1 << 10,
+    CAR_USE_16_ROTATION_FRAMES =      1 << 11,
+    CAR_OVERRIDE_VERTICAL_FRAMES =    1 << 12,
+    SPRITE_BOUNDS_INCLUDE_INVERTED_SET = 1 << 13,
+    CAR_EXTRA_SPINNING_FRAMES =       1 << 14,
+    CAR_EXTRA_POWER_ON_ASCENT =       1 << 15,
+    CAR_ENABLE_REMAP2 =               1 << 16,
+    CAR_IS_SWINGING =                 1 << 17,
+    CAR_IS_SPINNING =                 1 << 18,
+    CAR_IS_POWERED =                  1 << 19,
+    CAR_ENABLE_ROLLING_SOUND =        1 << 20,//riders scream
+    CAR_FLAG_21 =                     1 << 21,//related to swinging sprites - I believe this is set automatically
+    CAR_WANDERS =                     1 << 22,
+    CAR_IS_ANIMATED =                 1 << 23,
 
     CAR_FLAG_RIDER_ANIMATION = 1 << 24,
     CAR_FLAG_25 = 1 << 25,// related to swinging sprites?
@@ -295,6 +295,12 @@ typedef struct {
 	uint8_t effect_visual;
 	uint8_t logflume_reverser_vehicle;
 	uint8_t double_sound_frequency;
+    uint8_t override_vertical_frames;
+    int8_t vehicle_tab_vertical_offset;
+
+    uint8_t sprite_width;
+    uint8_t sprite_height_negative;
+    uint8_t sprite_height_positive;
 } car_t;
 
 typedef struct {

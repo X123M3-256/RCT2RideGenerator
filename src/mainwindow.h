@@ -92,6 +92,10 @@ typedef struct { // edits a single car at a time
 	value_editor_t* powered_velocity_editor;
 	value_editor_t* car_visual_editor;
 	value_editor_t* effect_visual_editor;
+	value_editor_t* override_vertical_frames_editor;
+	value_editor_t* vehicle_tab_vertical_offset_editor;
+	value_editor_t* logflume_reverser_vehicle_editor;
+	value_editor_t* animation_type_selector;
 
     GtkWidget* animation_button;
     GtkWidget* container;

@@ -27,7 +27,12 @@ typedef struct { // moving the car_t properties here for better WYSIWYG (do-able
 	uint8_t powered_velocity;
 	uint8_t logflume_reverser_vehicle;
 	uint8_t double_sound_frequency;
+	uint8_t override_vertical_frames;
+	int8_t vehicle_tab_vertical_offset;
 
+	uint8_t sprite_width;
+	uint8_t sprite_height_negative;
+	uint8_t sprite_height_positive;
 
 	uint8_t highest_rotation_index; // not for editing by mere mortals
 	uint8_t rider_pairs;

@@ -238,7 +238,8 @@ static car_editor_t* car_editor_new()
     flag_editor_add_checkbox(editor->flag_editor, "Swinging", CAR_IS_SWINGING);
     flag_editor_add_checkbox(editor->flag_editor, "Spinning", CAR_IS_SPINNING);
     flag_editor_add_checkbox(editor->flag_editor, "Powered", CAR_IS_POWERED);
-    flag_editor_add_checkbox(editor->flag_editor, "Animated", CAR_IS_ANIMATED);
+    flag_editor_add_checkbox(editor->flag_editor, "Car animated", CAR_IS_ANIMATED);
+    flag_editor_add_checkbox(editor->flag_editor, "Rider animated", CAR_FLAG_RIDER_ANIMATION);
     flag_editor_add_checkbox(editor->flag_editor, "Can invert for long periods", CAR_CAN_INVERT);
     flag_editor_add_checkbox(editor->flag_editor, "Boat wandering", CAR_WANDERS);
     flag_editor_add_checkbox(editor->flag_editor, "Powered cars freewheel downhill", CAR_COASTS_DOWNHILL);
@@ -249,13 +250,14 @@ static car_editor_t* car_editor_new()
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 21", CAR_FLAG_21);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 25", CAR_FLAG_25);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 27 (SLIDE_SWING)", CAR_FLAG_27);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 4", CAR_FLAG_4);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 5", CAR_FLAG_5);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 10", CAR_FLAG_10);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 11", CAR_FLAG_11);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 13", CAR_FLAG_13);
+	flag_editor_add_checkbox(editor->flag_editor, "Reverser bogie", CAR_FLAG_4);
+	flag_editor_add_checkbox(editor->flag_editor, "Reverser car", CAR_FLAG_5);
+	flag_editor_add_checkbox(editor->flag_editor, "Recalculate sprite bounds", CAR_RECALCULATE_SPRITE_BOUNDS);
+	flag_editor_add_checkbox(editor->flag_editor, "Spinning uses 16 frames", CAR_USE_16_ROTATION_FRAMES);
+	flag_editor_add_checkbox(editor->flag_editor, "Sprite bound recalc. include inverted", SPRITE_BOUNDS_INCLUDE_INVERTED_SET);
     flag_editor_add_checkbox(editor->flag_editor, "Minigolfer", CAR_IS_MINIGOLFER);
     flag_editor_add_checkbox(editor->flag_editor, "2D loading", CAR_FLAG_2D_LOADING_WAYPOINTS);
+    flag_editor_add_checkbox(editor->flag_editor, "Override vertical frames", CAR_OVERRIDE_VERTICAL_FRAMES);
     gtk_box_pack_start(GTK_BOX(editor->left_vbox), editor->flag_editor->container, FALSE, FALSE, 1);
 
     editor->sprite_editor = flag_editor_new("Sprites");
@@ -277,6 +279,8 @@ static car_editor_t* car_editor_new()
         SPRITE_CORKSCREW);
     flag_editor_add_checkbox(editor->sprite_editor, "Animated restraints",
         SPRITE_RESTRAINT_ANIMATION);
+    flag_editor_add_checkbox(editor->sprite_editor, "Spiral lift (unused)",
+        SPRITE_SPIRAL_LIFT);
     gtk_box_pack_start(GTK_BOX(editor->left_vbox),
         editor->sprite_editor->container, FALSE, FALSE, 1);
 
@@ -315,13 +319,19 @@ static car_editor_t* car_editor_new()
     editor->spacing_editor = value_editor_new(VALUE_SIZE_DWORD, "Spacing:");
     editor->friction_editor = value_editor_new(VALUE_SIZE_WORD, "Mass:");
     editor->z_value_editor = value_editor_new(VALUE_SIZE_BYTE, "Z Value:");
+    editor->vehicle_tab_vertical_offset_editor = value_editor_new(VALUE_SIZE_BYTE_SIGNED, "Vertical\nTab Offset:");
+    editor->powered_acceleration_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nAcceleration:");
+    editor->powered_velocity_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nVelocity:");
 
 	editor->spin_inertia_editor = value_editor_new(VALUE_SIZE_BYTE, "Spin Inertia:");
 	editor->spin_friction_editor = value_editor_new(VALUE_SIZE_BYTE, "Spin Friction:");
-	editor->powered_acceleration_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nAcceleration:");
-	editor->powered_velocity_editor= value_editor_new(VALUE_SIZE_BYTE, "Powered\nVelocity:");
+
+    editor->logflume_reverser_vehicle_editor = value_editor_new(VALUE_SIZE_BYTE, "Logflume\nReverser\n Vehicle:");
+    editor->animation_type_selector = value_editor_new(VALUE_SIZE_BYTE, "Animation Type:");
+
 	editor->car_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Car Visual:");
 	editor->effect_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Effect Visual:");
+    editor->override_vertical_frames_editor = value_editor_new(VALUE_SIZE_BYTE, "Custom\nVertical Frames:");
 
     editor->animation_button = gtk_button_new_with_label("Edit Animation");
     g_signal_connect(editor->animation_button, "clicked",
@@ -333,6 +343,8 @@ static car_editor_t* car_editor_new()
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->spacing_editor->container, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->friction_editor->container, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->z_value_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->vehicle_tab_vertical_offset_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->animation_type_selector->container, FALSE, FALSE, 1);
 
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->powered_velocity_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->powered_acceleration_editor->container, FALSE, FALSE, 1);
@@ -340,6 +352,7 @@ static car_editor_t* car_editor_new()
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->spin_friction_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->car_visual_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->effect_visual_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->override_vertical_frames_editor->container, FALSE, FALSE, 1);
 
     return editor;
 }
@@ -367,6 +380,10 @@ static void car_editor_set_car(car_editor_t* editor, car_settings_t* car_setting
 	value_editor_set_value(editor->powered_velocity_editor, &(car_settings->powered_velocity));
 	value_editor_set_value(editor->car_visual_editor, &(car_settings->car_visual));
 	value_editor_set_value(editor->effect_visual_editor, &(car_settings->effect_visual));
+    value_editor_set_value(editor->animation_type_selector, &(car_settings->animation_type));
+    value_editor_set_value(editor->logflume_reverser_vehicle_editor, &(car_settings->logflume_reverser_vehicle));
+    value_editor_set_value(editor->vehicle_tab_vertical_offset_editor, &(car_settings->vehicle_tab_vertical_offset));
+    value_editor_set_value(editor->override_vertical_frames_editor, &(car_settings->override_vertical_frames));
 }
 
 static void preview_editor_set_preview_pressed(GtkWidget* widget,

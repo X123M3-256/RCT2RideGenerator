@@ -60,6 +60,12 @@ project_t* project_new()
 		project->cars[i].powered_velocity = 0;
 		project->cars[i].logflume_reverser_vehicle = 0;
 		project->cars[i].double_sound_frequency = 0;
+        project->cars[i].override_vertical_frames = 0;
+
+        project->cars[i].sprite_width = 0;
+        project->cars[i].sprite_height_negative = 0;
+        project->cars[i].sprite_height_positive = 0;
+
 		memset(project->cars[i].unknown, 0, 9);
     }
     return project;
@@ -728,7 +734,7 @@ object_t* project_export_dat(project_t* project)
             object->ride_header->cars[i].flags = project->cars[i].flags;
             // Enable all extra swinging frames
         // printf("flags %x\n",project->cars[i].flags);
-            //if (!project->cars[i].flags & CAR_CAN_INVERT /*|| i%2==0*/) object->ride_header->cars[i].flags |= CAR_FLAG_13;//this is only set on the above trains for some reason.
+            //if (!project->cars[i].flags & CAR_CAN_INVERT /*|| i%2==0*/) object->ride_header->cars[i].flags |= SPRITE_BOUNDS_INCLUDE_INVERTED_SET;//this is only set on the above trains for some reason.
             //if (project->cars[i].flags & CAR_IS_SWINGING) {
                 //see RideObject.cpp for details
                 /*
