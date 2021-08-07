@@ -134,7 +134,21 @@ int count_sprites_per_view(uint32_t flags, uint8_t animation_type)
         }
 
     }
-    if (flags & CAR_IS_ANIMATED) { sprites_per_view = 4; }
+    if (flags & CAR_IS_ANIMATED) {
+        switch (animation_type)
+        {
+        case CAR_ANIMATION_NONE: return 1;
+        case CAR_ANIMATION_LOCOMOTIVE: return 4;
+        case CAR_ANIMATION_SWAN: return 2; // SORT-OF
+        case CAR_ANIMATION_CANOES: return 6;
+        case CAR_ANIMATION_ROW_BOATS: return 7;
+        case CAR_ANIMATION_WATER_TRICYCLES: return 2;
+        case CAR_ANIMATION_OBSERVATION: return 8;
+        case CAR_ANIMATION_HELICARS: return 4;
+        case CAR_ANIMATION_MONORAIL_CYCLE: return 4;
+        case CAR_ANIMATION_4D: return 8;
+        }
+    }
     if (flags & CAR_IS_SPINNING) { sprites_per_view = 16; }
     if (flags & CAR_EXTRA_SPINNING_FRAMES) {sprites_per_view = 32; } // assumes car is spinning
     return sprites_per_view;

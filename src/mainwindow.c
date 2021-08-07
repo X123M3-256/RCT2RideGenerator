@@ -138,19 +138,26 @@ static void car_type_editor_changed(GtkWidget* widget, gpointer data)
     if (editor->car_type == NULL)
         return;
     int active = gtk_combo_box_get_active(GTK_COMBO_BOX(editor->car_select));
-    switch (active) {
-    case 0:
-        *(editor->car_type) = 0xFF;
-        break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-        *(editor->car_type) = active - 1;
-        break;
+    if (editor->include_default)
+    {
+        switch (active) {
+        case 0:
+            *(editor->car_type) = 0xFF;
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            *(editor->car_type) = active - 1;
+            break;
+        }
+    }
+    else
+    {
+        *(editor->car_type) = active;
     }
 }
-static car_type_editor_t* car_type_editor_new(const char* label)
+static car_type_editor_t* car_type_editor_new(const char* label, int include_default)
 {
     int i;
     car_type_editor_t* editor = malloc(sizeof(car_type_editor_t));
@@ -159,8 +166,13 @@ static car_type_editor_t* car_type_editor_new(const char* label)
     editor->label = gtk_label_new(label);
     editor->car_select = gtk_combo_box_text_new();
     gtk_widget_set_sensitive(editor->car_select, FALSE);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),
-        "Default");
+    editor->include_default = 0;
+    if (include_default)
+    {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),
+            "Default");
+        editor->include_default = 1;
+    }
     for (i = 0; i < NUM_CARS; i++) {
         char option_text[256];
         sprintf(option_text, "Car %d", i);
@@ -182,18 +194,82 @@ static void car_type_editor_set_car_type(car_type_editor_t* editor,
 {
     editor->car_type = car_type;
     gtk_widget_set_sensitive(editor->car_select, TRUE);
-    switch (*car_type) {
-    case 0xFF:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select), 0);
-        break;
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
-            (*car_type) + 1);
-        break;
+    if (editor->include_default)
+    {
+        switch (*car_type) {
+        case 0xFF:
+            gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select), 0);
+            break;
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
+                (*car_type) + 1);
+            break;
+        }
     }
+    else
+    {
+        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
+            (*car_type));
+    }
+}
+
+static void animation_type_editor_changed(GtkWidget* widget, gpointer data)
+{
+    animation_type_editor_t* editor = (animation_type_editor_t*)data;
+    if (editor->animation_type == NULL)
+        return;
+    int active = gtk_combo_box_get_active(GTK_COMBO_BOX(editor->animation_select));
+    *(editor->animation_type) = active;
+}
+static animation_type_editor_t* animation_type_editor_new(const char* label)
+{
+    int i;
+    animation_type_editor_t* editor = malloc(sizeof(animation_type_editor_t));
+    editor->animation_type = NULL;
+    editor->container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    editor->label = gtk_label_new(label);
+    editor->animation_select = gtk_combo_box_text_new();
+    gtk_widget_set_sensitive(editor->animation_select, FALSE);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "None");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Steam Locomotive");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Swan Boats");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Canoes");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Rowboats");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Water Tricycles");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Observation Tower");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Helicars");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Monorail Cycles");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Multidimension Coaster");
+
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->animation_select), 0);
+    g_signal_connect(editor->animation_select, "changed",
+        G_CALLBACK(animation_type_editor_changed), editor);
+    gtk_box_pack_start(GTK_BOX(editor->container), editor->label, FALSE, FALSE,
+        2);
+    gtk_box_pack_start(GTK_BOX(editor->container), editor->animation_select, FALSE,
+        FALSE, 2);
+    return editor;
+}
+
+static void animation_type_editor_set_animation_type(animation_type_editor_t* editor,
+    uint8_t* animation_type)
+{
+    editor->animation_type = animation_type;
+    gtk_widget_set_sensitive(editor->animation_select, TRUE);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->animation_select), (*animation_type));
 }
 
 static void car_editor_edit_animation(GtkWidget* widget, gpointer data)
@@ -299,7 +375,7 @@ static car_editor_t* car_editor_new()
         RUNNING_SOUND_WATERSLIDE);
     value_selector_add_selection(editor->running_sound_editor, "Train",
         RUNNING_SOUND_TRAIN);
-    value_selector_add_selection(editor->running_sound_editor, "Engine",
+    value_selector_add_selection(editor->running_sound_editor, "Go-Kart",
         RUNNING_SOUND_ENGINE);
 
     editor->secondary_sound_editor = value_selector_new("Secondary sound:");
@@ -327,7 +403,7 @@ static car_editor_t* car_editor_new()
 	editor->spin_friction_editor = value_editor_new(VALUE_SIZE_BYTE, "Spin Friction:");
 
     editor->logflume_reverser_vehicle_editor = value_editor_new(VALUE_SIZE_BYTE, "Logflume\nReverser\n Vehicle:");
-    editor->animation_type_selector = value_editor_new(VALUE_SIZE_BYTE, "Animation Type:");
+    editor->animation_type_selector = animation_type_editor_new("Animation Type:");
 
 	editor->car_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Car Visual:");
 	editor->effect_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Effect Visual:");
@@ -380,7 +456,7 @@ static void car_editor_set_car(car_editor_t* editor, car_settings_t* car_setting
 	value_editor_set_value(editor->powered_velocity_editor, &(car_settings->powered_velocity));
 	value_editor_set_value(editor->car_visual_editor, &(car_settings->car_visual));
 	value_editor_set_value(editor->effect_visual_editor, &(car_settings->effect_visual));
-    value_editor_set_value(editor->animation_type_selector, &(car_settings->animation_type));
+    animation_type_editor_set_animation_type(editor->animation_type_selector, &(car_settings->animation_type));
     value_editor_set_value(editor->logflume_reverser_vehicle_editor, &(car_settings->logflume_reverser_vehicle));
     value_editor_set_value(editor->vehicle_tab_vertical_offset_editor, &(car_settings->vehicle_tab_vertical_offset));
     value_editor_set_value(editor->override_vertical_frames_editor, &(car_settings->override_vertical_frames));
@@ -634,11 +710,11 @@ center_panel_t* center_panel_new()
 	gtk_box_pack_start(GTK_BOX(cars_vbox),
 		editor->car_icon_index_editor->container, FALSE, FALSE, 2);
 
-	editor->default_car_editor = car_type_editor_new("Default car");
-	editor->front_car_editor = car_type_editor_new("First car");
-	editor->second_car_editor = car_type_editor_new("Second car");
-	editor->third_car_editor = car_type_editor_new("Third car");
-	editor->rear_car_editor = car_type_editor_new("Rear car");
+	editor->default_car_editor = car_type_editor_new("Default car",0);
+	editor->front_car_editor = car_type_editor_new("First car",1);
+	editor->second_car_editor = car_type_editor_new("Second car", 1);
+	editor->third_car_editor = car_type_editor_new("Third car", 1);
+	editor->rear_car_editor = car_type_editor_new("Rear car", 1);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->default_car_editor->container,
 		FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->front_car_editor->container,

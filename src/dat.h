@@ -79,15 +79,15 @@ enum {
 
 enum {
     CAR_ANIMATION_NONE = 0x00u, //1 vehicle sprite, 1 peep sprite
-    CAR_ANIMATION_STEAM = 0x01u, //4 vehicle sprites, uknown peep sprites, slow animation
-    CAR_ANIMATION_2 = 0x02u, //unknown, possibly 3
-    CAR_ANIMATION_ROWING = 0x03u, // 1 vehicle sprite, 6 peep sprites
-    CAR_ANIMATION_4 = 0x04u, //unknown
-    CAR_ANIMATION_5 = 0x05u, //unknown, possibly 2 frames?
+    CAR_ANIMATION_LOCOMOTIVE = 0x01u, //4 vehicle sprites, uknown peep sprites, slow animation
+    CAR_ANIMATION_SWAN = 0x02u, //1 vehicle sprite, 2 peep sprites for the first pair, 1 peep sprite for the second pair (maybe more?)
+    CAR_ANIMATION_CANOES = 0x03u, // 1 vehicle sprite, 6 peep sprites
+    CAR_ANIMATION_ROW_BOATS = 0x04u, // 1 vehicle sprite, 7 peep sprites
+    CAR_ANIMATION_WATER_TRICYCLES = 0x05u, //1 vehicle sprite, 2 peep sprites
     CAR_ANIMATION_OBSERVATION = 0x06u, //8 vehicle sprites, unknown peep sprites, we don't really know how to get this to work
-    CAR_ANIMATION_GENERIC = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
-    CAR_ANIMATION_BICYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
-    CAR_ANIMATION_4D = 0x09u, // unknown
+    CAR_ANIMATION_HELICARS = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
+    CAR_ANIMATION_MONORAIL_CYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
+    CAR_ANIMATION_4D = 0x09u, // 8 vehicle sprites, 8 peep sprites=
 };
 
 // clang-format off
