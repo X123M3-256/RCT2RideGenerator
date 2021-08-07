@@ -675,7 +675,7 @@ project_t* project_deserialize(json_t* json)
 			project->cars[i].spin_friction = try_catch_int(car, "spin_friction", 0);
 			project->cars[i].powered_acceleration = try_catch_int(car, "powered_acceleration", 0);
 			project->cars[i].powered_velocity = try_catch_int(car, "powered_velocity", 0);
-
+            project->cars[i].vehicle_tab_vertical_offset = try_catch_int(car, "vehicle_tab_vertical_offset", 0);
 			project->cars[i].car_visual = try_catch_int(car, "car_visual", 0);
 			project->cars[i].effect_visual = try_catch_int(car, "effect_visual", 1);
 			project->cars[i].logflume_reverser_vehicle = try_catch_int(car, "logflume_reverser_vehicle", 0);

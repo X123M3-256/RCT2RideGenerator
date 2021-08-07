@@ -740,34 +740,18 @@ object_t* project_export_dat(project_t* project)
             cars_used[project->car_types[i]] = 1;
     for (int i = 0; i < NUM_CARS; i++) {
         if (cars_used[i] || project->cars[i].flags & CAR_CAN_INVERT) {
-            // printf("%d %d %d %d
-            // %d\n",object->ride_header->cars[i].unknown[0],object->ride_header->cars[i].unknown[1],object->ride_header->cars[i].unknown[2],object->ride_header->cars[i].unknown[3],object->ride_header->cars[i].unknown[4]);
-            object->ride_header->cars[i].highest_rotation_index = 31;
+            object->ride_header->cars[i].highest_rotation_index = 31; // TODO: change this based on flags
 			object->ride_header->cars[i].car_visual = project->cars[i].car_visual;
 			object->ride_header->cars[i].effect_visual = project->cars[i].effect_visual;
             object->ride_header->cars[i].flags = project->cars[i].flags;
-            // Enable all extra swinging frames
-        // printf("flags %x\n",project->cars[i].flags);
-            //if (!project->cars[i].flags & CAR_CAN_INVERT /*|| i%2==0*/) object->ride_header->cars[i].flags |= SPRITE_BOUNDS_INCLUDE_INVERTED_SET;//this is only set on the above trains for some reason.
-            //if (project->cars[i].flags & CAR_IS_SWINGING) {
-                //see RideObject.cpp for details
-                /*
-                Swinging flags karnaugh map
-                FLAG_21 | FLAG_25 | FLAG_27 | number of sprites
-                    -         -         -        5
-                    -         -         1        7 <-- dinghy slide
-                    -         1         -        3 <-- wood wild mouse
-                    -         1         1        7
-                    1         -         -        7 <-- arrow suspended
-                    1         -         1       13 <-- bobsled
-                    1         1         -        7
-                    1         1         1       13
-                */
-                //object->ride_header->cars[i].flags |= (CAR_IS_SWINGING);
-                //if (i%2==0) 
-                //object->ride_header->cars[i].flags |= CAR_FLAG_27;//this is only set on the above trains for some reason.
-                //object->ride_header->cars[i].extra_swing_frames = 0x08; //this is 1<<27 (enables 13 frames instead of 7)
-            //}
+            object->ride_header->cars[i].friction = project->cars[i].friction;
+            object->ride_header->cars[i].spacing = project->cars[i].spacing;
+            object->ride_header->cars[i].running_sound = project->cars[i].running_sound;
+            object->ride_header->cars[i].secondary_sound = project->cars[i].secondary_sound;
+            object->ride_header->cars[i].z_value = project->cars[i].z_value;
+            object->ride_header->cars[i].override_vertical_frames = project->cars[i].override_vertical_frames;
+            object->ride_header->cars[i].vehicle_tab_vertical_offset = project->cars[i].vehicle_tab_vertical_offset;
+
             if (project->cars[i].flags & CAR_IS_POWERED) {
 				object->ride_header->cars[i].powered_velocity = project->cars[i].powered_velocity;
                 object->ride_header->cars[i].powered_acceleration = project->cars[i].powered_acceleration;
@@ -779,16 +763,7 @@ object_t* project_export_dat(project_t* project)
                 object->ride_header->cars[i].spin_inertia = project->cars[i].spin_inertia;
                 object->ride_header->cars[i].spin_friction = project->cars[i].spin_friction;
             }
-        // printf("flags of car %x: %x %x\n",i,object->ride_header->cars[i].flags,object->ride_header->cars[i].extra_swing_frames);
 
-            // object->ride_header->cars[i].flags |= CAR_COASTING_POWER;
-
-            object->ride_header->cars[i].friction = project->cars[i].friction;
-            object->ride_header->cars[i].spacing = project->cars[i].spacing;
-            object->ride_header->cars[i].running_sound = project->cars[i].running_sound;
-            object->ride_header->cars[i].secondary_sound = project->cars[i].secondary_sound;
-            object->ride_header->cars[i].z_value = project->cars[i].z_value;
-            object->ride_header->cars[i].override_vertical_frames = project->cars[i].override_vertical_frames;
             // Some sprites ought be included if others are. Here we compute the
             // minimum set of sprite flags needed that includes all the selected flags
             object->ride_header->cars[i].sprites = project->cars[i].sprites | SPRITE_FLAT_SLOPE;
