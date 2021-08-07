@@ -189,6 +189,31 @@ Matrix MatrixMultiply(Matrix A, Matrix B)
     return result;
 }
 
+// scale a matrix by a vector3 scalar
+Matrix MatrixScale(Matrix A, Vector scale)
+{
+    Matrix result;
+    int i;
+    for (i = 0; i < 16; i++)
+        result.Data[i] = A.Data[i];
+
+    result.Data[0] *= scale.X;
+    result.Data[5] *= scale.Y;
+    result.Data[10] *= scale.Z;
+    return result;
+}
+
+// scale an identity matrix by a vector3 scalar
+Matrix ScaleMatrix(Vector scale)
+{
+    Matrix matrix = MatrixIdentity();
+    matrix.Data[0] = scale.X;
+    matrix.Data[5] = scale.Y;
+    matrix.Data[10] = scale.Z;
+    return matrix;
+}
+
+
 Matrix TranslationMatrix(Vector displacement)
 {
     Matrix matrix = MatrixIdentity();
