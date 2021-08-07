@@ -335,7 +335,6 @@ static void ride_header_write(ride_header_t* header, buffer_t* buffer)
         /*Write flags*/
         *((uint32_t*)(car_data + 18)) = car->flags;
 
-
         // nothing here but us chickens
 
 

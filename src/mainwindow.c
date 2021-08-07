@@ -407,7 +407,7 @@ static car_editor_t* car_editor_new()
 
 	editor->car_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Car Visual:");
 	editor->effect_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Effect Visual:");
-    editor->override_vertical_frames_editor = value_editor_new(VALUE_SIZE_BYTE, "Custom\nVertical Frames:");
+    editor->override_vertical_frames_editor = value_editor_new(VALUE_SIZE_BYTE, "Override\nVertical Frames:");
 
     editor->animation_button = gtk_button_new_with_label("Edit Animation");
     g_signal_connect(editor->animation_button, "clicked",

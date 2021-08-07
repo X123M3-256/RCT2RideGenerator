@@ -788,6 +788,7 @@ object_t* project_export_dat(project_t* project)
             object->ride_header->cars[i].running_sound = project->cars[i].running_sound;
             object->ride_header->cars[i].secondary_sound = project->cars[i].secondary_sound;
             object->ride_header->cars[i].z_value = project->cars[i].z_value;
+            object->ride_header->cars[i].override_vertical_frames = project->cars[i].override_vertical_frames;
             // Some sprites ought be included if others are. Here we compute the
             // minimum set of sprite flags needed that includes all the selected flags
             object->ride_header->cars[i].sprites = project->cars[i].sprites | SPRITE_FLAT_SLOPE;
