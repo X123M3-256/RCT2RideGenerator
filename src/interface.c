@@ -21,11 +21,20 @@ static void value_editor_changed(GtkWidget* widget, gpointer data)
     case VALUE_SIZE_BYTE:
         *((uint8_t*)(editor->value)) = value;
         break;
+    case VALUE_SIZE_BYTE_SIGNED:
+        *((int8_t*)(editor->value)) = value;
+        break;
     case VALUE_SIZE_WORD:
         *((uint16_t*)(editor->value)) = value;
         break;
+    case VALUE_SIZE_WORD_SIGNED:
+        *((int16_t*)(editor->value)) = value;
+        break;
     case VALUE_SIZE_DWORD:
         *((uint32_t*)(editor->value)) = value;
+        break;
+    case VALUE_SIZE_DWORD_SIGNED:
+        *((int32_t*)(editor->value)) = value;
         break;
     }
 }
