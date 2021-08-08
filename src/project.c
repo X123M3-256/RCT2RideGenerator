@@ -750,7 +750,7 @@ object_t* project_export_dat(project_t* project)
             object->ride_header->cars[i].secondary_sound = project->cars[i].secondary_sound;
             object->ride_header->cars[i].z_value = project->cars[i].z_value;
             object->ride_header->cars[i].override_vertical_frames = project->cars[i].override_vertical_frames;
-            object->ride_header->cars[i].vehicle_tab_vertical_offset = project->cars[i].vehicle_tab_vertical_offset;
+            object->ride_header->cars[i].vehicle_tab_vertical_offset = project->cars[i].vehicle_tab_vertical_offset; // vertical offset in vehicle preview and paint preview
 
             if (project->cars[i].flags & CAR_IS_POWERED) {
 				object->ride_header->cars[i].powered_velocity = project->cars[i].powered_velocity;
