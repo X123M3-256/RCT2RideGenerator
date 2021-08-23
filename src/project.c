@@ -147,6 +147,8 @@ int count_sprites_per_view(uint32_t flags, uint8_t animation_type)
         case CAR_ANIMATION_HELICARS: return 4;
         case CAR_ANIMATION_MONORAIL_CYCLE: return 4;
         case CAR_ANIMATION_4D: return 8;
+        case CAR_ANIMATION_ANIMAL_FLYING: return 7;
+        case CAR_ANIMATION_ANIMAL_WALKING: return 7;
         }
     }
     if (flags & CAR_IS_SPINNING) { sprites_per_view = 16; }

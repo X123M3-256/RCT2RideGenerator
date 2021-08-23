@@ -253,6 +253,10 @@ static animation_type_editor_t* animation_type_editor_new(const char* label)
         "Monorail Cycles");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
         "Multidimension Coaster");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Flying Animal");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Walking Animal");
 
     gtk_combo_box_set_active(GTK_COMBO_BOX(editor->animation_select), 0);
     g_signal_connect(editor->animation_select, "changed",
