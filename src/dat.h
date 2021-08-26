@@ -88,8 +88,8 @@ enum {
     CAR_ANIMATION_HELICARS = 0x07u, //4 vehicle sprites, 4 peep sprites, fast animation speed
     CAR_ANIMATION_MONORAIL_CYCLE = 0x08u, //4 vehicle sprites, 4 peep sprites, medium animation speed, only animates with riders present
     CAR_ANIMATION_4D = 0x09u, // 8 vehicle sprites, 8 peep sprites=
-    CAR_ANIMATION_ANIMAL_FLYING = 10,
-    CAR_ANIMATION_ANIMAL_WALKING = 11
+    CAR_ANIMATION_ANIMAL_FLYING = 10u,
+    CAR_ANIMATION_ANIMAL_WALKING = 11u
 };
 
 // clang-format off
