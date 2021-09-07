@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+project_t* _project;
+
 project_t* project_new()
 {
     int i;
@@ -148,7 +150,7 @@ int count_sprites_per_view(uint32_t flags, uint8_t animation_type)
         case CAR_ANIMATION_MONORAIL_CYCLE: return 4;
         case CAR_ANIMATION_4D: return 8;
         case CAR_ANIMATION_ANIMAL_FLYING: return 4;
-        case CAR_ANIMATION_ANIMAL_WALKING: return 7;
+        case CAR_ANIMATION_ANIMAL_WALKING: return 8;
         }
     }
     if (flags & CAR_IS_SPINNING) { sprites_per_view = 16; }
@@ -676,6 +678,7 @@ static void project_render_sprites(project_t* project, object_t* object)
 
 object_t* project_export_dat(project_t* project)
 {
+    _project = project;
     object_t* object = object_new_ride();
 
     object->ride_header->track_style = project->track_type;
@@ -809,5 +812,6 @@ object_t* project_export_dat(project_t* project)
         }
     }
     project_render_sprites(project, object);
+    _project = NULL;
     return object;
 }
