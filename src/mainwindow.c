@@ -321,10 +321,10 @@ static car_editor_t* car_editor_new()
     flag_editor_add_checkbox(editor->flag_editor, "Car animated", CAR_IS_ANIMATED);
     flag_editor_add_checkbox(editor->flag_editor, "Rider animated", CAR_FLAG_RIDER_ANIMATION);
     flag_editor_add_checkbox(editor->flag_editor, "Can invert for long periods", CAR_CAN_INVERT);
-    flag_editor_add_checkbox(editor->flag_editor, "Boat wandering", CAR_WANDERS);
+    flag_editor_add_checkbox(editor->flag_editor, "Boat wandering and collision", CAR_WANDERS);
     flag_editor_add_checkbox(editor->flag_editor, "Powered cars freewheel downhill", CAR_COASTS_DOWNHILL);
-	flag_editor_add_checkbox(editor->flag_editor, "Propelled by water", CAR_FLAG_WATER_PROPULSION);
-    flag_editor_add_checkbox(editor->flag_editor, "Elevator car", CAR_EXTRA_POWER_ON_ASCENT);
+	flag_editor_add_checkbox(editor->flag_editor, "Powered car powered by water", CAR_FLAG_WATER_PROPULSION);
+    flag_editor_add_checkbox(editor->flag_editor, "Extra power on ascent", CAR_EXTRA_POWER_ON_ASCENT);
 	flag_editor_add_checkbox(editor->flag_editor, "Chairlift car", CAR_IS_CHAIRLIFT);
 	flag_editor_add_checkbox(editor->flag_editor, "Go-kart car", CAR_IS_GO_KART);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 21", CAR_FLAG_21);
@@ -334,9 +334,10 @@ static car_editor_t* car_editor_new()
 	flag_editor_add_checkbox(editor->flag_editor, "Reverser car", CAR_FLAG_5);
 	flag_editor_add_checkbox(editor->flag_editor, "Recalculate sprite bounds", CAR_RECALCULATE_SPRITE_BOUNDS);
 	flag_editor_add_checkbox(editor->flag_editor, "Spinning uses 16 frames", CAR_USE_16_ROTATION_FRAMES);
-	flag_editor_add_checkbox(editor->flag_editor, "Sprite bound recalc. include inverted", SPRITE_BOUNDS_INCLUDE_INVERTED_SET);
-    flag_editor_add_checkbox(editor->flag_editor, "Minigolfer", CAR_IS_MINIGOLFER);
+    flag_editor_add_checkbox(editor->flag_editor, "Dodgem car", CAR_FLAG_DODGEM_CAR_PLACEMENT);
+    flag_editor_add_checkbox(editor->flag_editor, "Dodgem car lights", CAR_DODGEM_USE_LIGHTS);
     flag_editor_add_checkbox(editor->flag_editor, "2D loading", CAR_FLAG_2D_LOADING_WAYPOINTS);
+    flag_editor_add_checkbox(editor->flag_editor, "Sprite bound recalc. include inverted", SPRITE_BOUNDS_INCLUDE_INVERTED_SET);
     flag_editor_add_checkbox(editor->flag_editor, "Override vertical frames", CAR_OVERRIDE_VERTICAL_FRAMES);
     gtk_box_pack_start(GTK_BOX(editor->left_vbox), editor->flag_editor->container, FALSE, FALSE, 1);
 
