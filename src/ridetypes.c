@@ -13,6 +13,7 @@ ride_type_t ride_types[NUM_RIDE_TYPES] = {
     { 0x10, "Dinghy Slide" },
     { 25, "Dodgems" },
     { 0x39, "Flying Coaster" },
+    { 70, "Flying Saucers" },
     { 0x32, "Ghost Train" },
     { 0x44, "Giga Coaster" },
     { 0x16, "Go Karts" },
