@@ -26,6 +26,7 @@ project_t* project_new()
     project->flags = RIDE_SEPARATE_RIDE_DEPRECATED | RIDE_SEPARATE_RIDE;
     project->minimum_cars = 3;
     project->maximum_cars = 8;
+    project->cars_per_flat_ride = 0;
     project->zero_cars = 0;
     project->car_icon_index = 0;
     project->excitement = 0;
@@ -711,7 +712,7 @@ object_t* project_export_dat(project_t* project)
     for (uint32_t i = 0; i < project->num_color_schemes; i++) {
         object->optional->default_colors[i] = project->color_schemes[i];
     }
-
+    object->ride_header->cars_per_flat_ride = project->cars_per_flat_ride;
     // Set car types
     object->ride_header->car_types[CAR_INDEX_DEFAULT] = project->car_types[CAR_INDEX_DEFAULT];
     object->ride_header->car_types[CAR_INDEX_FRONT] = project->car_types[CAR_INDEX_FRONT];

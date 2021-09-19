@@ -61,6 +61,7 @@ typedef struct {
 	uint8_t car_types[5];
 	uint8_t minimum_cars;
 	uint8_t maximum_cars;
+	uint8_t cars_per_flat_ride;
     car_settings_t cars[4];
     image_t* preview_image;
     model_t** models;

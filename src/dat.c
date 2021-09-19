@@ -289,6 +289,7 @@ static void ride_header_write(ride_header_t* header, buffer_t* buffer)
     /*Write minimum and maximum car length*/
     header_bytes[15] = header->minimum_cars;
     header_bytes[16] = header->maximum_cars;
+    header_bytes[17] = header->cars_per_flat_ride;
     /*Write track sections*/
     *((uint64_t*)(header_bytes + 438)) = header->track_sections;
 

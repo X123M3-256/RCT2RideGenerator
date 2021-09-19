@@ -386,6 +386,8 @@ json_t* project_serialize(project_t* project)
     json_object_set_new(json, "minimum_cars", min_cars);
     json_t* max_cars = json_integer(project->maximum_cars);
     json_object_set_new(json, "maximum_cars", max_cars);
+    json_t* cpfr = json_integer(project->cars_per_flat_ride);
+    json_object_set_new(json, "cars_per_flat_ride", cpfr);
     // Serialize zero cars
     json_t* zero_cars = json_integer(project->zero_cars);
     json_object_set_new(json, "zero_cars", zero_cars);
@@ -551,8 +553,9 @@ project_t* project_deserialize(json_t* json)
     // Deserialize track type
 	project->track_type = try_catch_int(json, "track_type", 5);
     // Deserialize minimum/maximum cars
-	project->minimum_cars = try_catch_int(json, "minimum_cars", 8);
+	project->minimum_cars = try_catch_int(json, "minimum_cars", 3);
 	project->maximum_cars = try_catch_int(json, "maximum_cars", 8);
+    project->cars_per_flat_ride = try_catch_int(json, "cars_per_flat_ride", 0);
     // Deserialize zero cars
 	project->zero_cars = try_catch_int(json, "zero_cars", 0);
     // Deserialize car icon index

@@ -708,6 +708,9 @@ center_panel_t* center_panel_new()
 		FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->max_cars_editor->container,
 		FALSE, FALSE, 2);
+    editor->cars_per_flat_ride_editor = value_editor_new(VALUE_SIZE_BYTE, "Cars per flat ride:");
+    gtk_box_pack_start(GTK_BOX(cars_vbox), editor->cars_per_flat_ride_editor->container,
+        FALSE, FALSE, 2);
 	editor->zero_cars_editor = value_editor_new(VALUE_SIZE_BYTE, "Number of zero cars:");
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->zero_cars_editor->container,
 		FALSE, FALSE, 2);
@@ -755,6 +758,8 @@ void center_panel_set_project(center_panel_t* editor, project_t* project)
 		&(project->car_types[CAR_INDEX_THIRD]));
 	car_type_editor_set_car_type(editor->rear_car_editor,
 		&(project->car_types[CAR_INDEX_REAR]));
+    value_editor_set_value(editor->cars_per_flat_ride_editor,
+        &(project->cars_per_flat_ride));
 }
 
 right_panel_t* right_panel_new()

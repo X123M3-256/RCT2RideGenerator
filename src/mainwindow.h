@@ -143,6 +143,7 @@ typedef struct { // edits train configuration
 	value_editor_t* max_height_editor;
 	value_editor_t* min_cars_editor;
 	value_editor_t* max_cars_editor;
+	value_editor_t* cars_per_flat_ride_editor;
 	value_editor_t* zero_cars_editor;
 	value_editor_t* car_icon_index_editor;
 	car_type_editor_t* default_car_editor;
