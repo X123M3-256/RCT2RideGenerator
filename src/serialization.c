@@ -386,6 +386,8 @@ json_t* project_serialize(project_t* project)
     json_object_set_new(json, "minimum_cars", min_cars);
     json_t* max_cars = json_integer(project->maximum_cars);
     json_object_set_new(json, "maximum_cars", max_cars);
+    json_t* cpfr = json_integer(project->cars_per_flat_ride);
+    json_object_set_new(json, "cars_per_flat_ride", cpfr);
     // Serialize zero cars
     json_t* zero_cars = json_integer(project->zero_cars);
     json_object_set_new(json, "zero_cars", zero_cars);
@@ -476,7 +478,6 @@ json_t* project_serialize(project_t* project)
             json_t* z_value = json_integer(project->cars[i].z_value);
             json_object_set_new(car, "z_value", z_value);
 
-
 			json_t* spin_inertia = json_integer(project->cars[i].spin_inertia);
 			json_object_set_new(car, "spin_inertia", spin_inertia);
 			json_t* spin_friction = json_integer(project->cars[i].spin_friction);
@@ -493,6 +494,19 @@ json_t* project_serialize(project_t* project)
 
 			json_t* logflume_reverser_vehicle = json_integer(project->cars[i].logflume_reverser_vehicle);
 			json_object_set_new(car, "logflume_reverser_vehicle", logflume_reverser_vehicle);
+
+            json_t* override_vertical_frames = json_integer(project->cars[i].override_vertical_frames);
+            json_object_set_new(car, "override_vertical_frames", override_vertical_frames);
+
+            json_t* vehicle_tab_vertical_offset = json_integer(project->cars[i].vehicle_tab_vertical_offset);
+            json_object_set_new(car, "vehicle_tab_vertical_offset", vehicle_tab_vertical_offset);
+
+            json_t* sprite_width = json_integer(project->cars[i].sprite_width);
+            json_object_set_new(car, "sprite_width", sprite_width);
+            json_t* sprite_height_positive = json_integer(project->cars[i].sprite_height_positive);
+            json_object_set_new(car, "sprite_height_positive", sprite_height_positive);
+            json_t* sprite_height_negative = json_integer(project->cars[i].sprite_height_negative);
+            json_object_set_new(car, "sprite_height_negative", sprite_height_negative);
 
 			json_t* double_sound_frequency = json_integer(project->cars[i].double_sound_frequency);
 			json_object_set_new(car, "double_sound_frequency", double_sound_frequency);
@@ -539,8 +553,9 @@ project_t* project_deserialize(json_t* json)
     // Deserialize track type
 	project->track_type = try_catch_int(json, "track_type", 5);
     // Deserialize minimum/maximum cars
-	project->minimum_cars = try_catch_int(json, "minimum_cars", 8);
+	project->minimum_cars = try_catch_int(json, "minimum_cars", 3);
 	project->maximum_cars = try_catch_int(json, "maximum_cars", 8);
+    project->cars_per_flat_ride = try_catch_int(json, "cars_per_flat_ride", 0);
     // Deserialize zero cars
 	project->zero_cars = try_catch_int(json, "zero_cars", 0);
     // Deserialize car icon index
@@ -663,11 +678,12 @@ project_t* project_deserialize(json_t* json)
 			project->cars[i].spin_friction = try_catch_int(car, "spin_friction", 0);
 			project->cars[i].powered_acceleration = try_catch_int(car, "powered_acceleration", 0);
 			project->cars[i].powered_velocity = try_catch_int(car, "powered_velocity", 0);
-
+            project->cars[i].vehicle_tab_vertical_offset = try_catch_int(car, "vehicle_tab_vertical_offset", 0);
 			project->cars[i].car_visual = try_catch_int(car, "car_visual", 0);
 			project->cars[i].effect_visual = try_catch_int(car, "effect_visual", 1);
 			project->cars[i].logflume_reverser_vehicle = try_catch_int(car, "logflume_reverser_vehicle", 0);
 			project->cars[i].double_sound_frequency = try_catch_int(car, "double_sound_frequency", 0);
+            project->cars[i].override_vertical_frames = try_catch_int(car, "override_vertical_frames", 0);
         }
     }
     return project;

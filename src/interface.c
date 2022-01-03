@@ -21,11 +21,20 @@ static void value_editor_changed(GtkWidget* widget, gpointer data)
     case VALUE_SIZE_BYTE:
         *((uint8_t*)(editor->value)) = value;
         break;
+    case VALUE_SIZE_BYTE_SIGNED:
+        *((int8_t*)(editor->value)) = value;
+        break;
     case VALUE_SIZE_WORD:
         *((uint16_t*)(editor->value)) = value;
         break;
+    case VALUE_SIZE_WORD_SIGNED:
+        *((int16_t*)(editor->value)) = value;
+        break;
     case VALUE_SIZE_DWORD:
         *((uint32_t*)(editor->value)) = value;
+        break;
+    case VALUE_SIZE_DWORD_SIGNED:
+        *((int32_t*)(editor->value)) = value;
         break;
     }
 }
@@ -41,14 +50,24 @@ value_editor_t* value_editor_new(value_size_t size, const char* label)
     case VALUE_SIZE_BYTE:
         editor->spin_button = gtk_spin_button_new_with_range(0, 255, 1);
         break;
+    case VALUE_SIZE_BYTE_SIGNED:
+        editor->spin_button = gtk_spin_button_new_with_range(-128, 127, 1);
+        break;
     case VALUE_SIZE_WORD:
         editor->spin_button = gtk_spin_button_new_with_range(0, 65535, 1);
+        break;
+    case VALUE_SIZE_WORD_SIGNED:
+        editor->spin_button = gtk_spin_button_new_with_range(-256, 255, 1);
         break;
     case VALUE_SIZE_DWORD:
         editor->spin_button = gtk_spin_button_new_with_range(0, 4294967296, 1);
         break;
+    case VALUE_SIZE_DWORD_SIGNED:
+        editor->spin_button = gtk_spin_button_new_with_range(-65536, 65535, 1);
+        break;
     }
     gtk_widget_set_sensitive(editor->spin_button, FALSE);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->spin_button), 0);
     gtk_box_pack_start(GTK_BOX(editor->container), editor->label, FALSE, FALSE,
         1);
     gtk_box_pack_start(GTK_BOX(editor->container), editor->spin_button, FALSE,
@@ -65,11 +84,20 @@ void value_editor_set_value(value_editor_t* editor, void* value_ptr)
     case VALUE_SIZE_BYTE:
         value = *((uint8_t*)value_ptr);
         break;
+    case VALUE_SIZE_BYTE_SIGNED:
+        value = *((int8_t*)value_ptr);
+        break;
     case VALUE_SIZE_WORD:
         value = *((uint16_t*)value_ptr);
         break;
+    case VALUE_SIZE_WORD_SIGNED:
+        value = *((int16_t*)value_ptr);
+        break;
     case VALUE_SIZE_DWORD:
         value = *((uint32_t*)value_ptr);
+        break;
+    case VALUE_SIZE_DWORD_SIGNED:
+        value = *((int32_t*)value_ptr);
         break;
     }
     gtk_widget_set_sensitive(editor->spin_button, TRUE);

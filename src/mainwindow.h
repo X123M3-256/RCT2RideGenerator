@@ -56,10 +56,19 @@ typedef struct { // changes various flags
 
 typedef struct { // chooses car slot
     uint8_t* car_type;
+	uint8_t include_default;
     GtkWidget* container;
     GtkWidget* label;
     GtkWidget* car_select;
 } car_type_editor_t;
+
+
+typedef struct { // chooses animation type
+	uint8_t* animation_type;
+	GtkWidget* container;
+	GtkWidget* label;
+	GtkWidget* animation_select;
+} animation_type_editor_t;
 
 
 typedef struct { // changes one of the two ride categories
@@ -92,6 +101,10 @@ typedef struct { // edits a single car at a time
 	value_editor_t* powered_velocity_editor;
 	value_editor_t* car_visual_editor;
 	value_editor_t* effect_visual_editor;
+	value_editor_t* override_vertical_frames_editor;
+	value_editor_t* vehicle_tab_vertical_offset_editor;
+	value_editor_t* logflume_reverser_vehicle_editor;
+	animation_type_editor_t* animation_type_selector;
 
     GtkWidget* animation_button;
     GtkWidget* container;
@@ -130,6 +143,7 @@ typedef struct { // edits train configuration
 	value_editor_t* max_height_editor;
 	value_editor_t* min_cars_editor;
 	value_editor_t* max_cars_editor;
+	value_editor_t* cars_per_flat_ride_editor;
 	value_editor_t* zero_cars_editor;
 	value_editor_t* car_icon_index_editor;
 	car_type_editor_t* default_car_editor;

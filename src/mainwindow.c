@@ -138,19 +138,26 @@ static void car_type_editor_changed(GtkWidget* widget, gpointer data)
     if (editor->car_type == NULL)
         return;
     int active = gtk_combo_box_get_active(GTK_COMBO_BOX(editor->car_select));
-    switch (active) {
-    case 0:
-        *(editor->car_type) = 0xFF;
-        break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-        *(editor->car_type) = active - 1;
-        break;
+    if (editor->include_default)
+    {
+        switch (active) {
+        case 0:
+            *(editor->car_type) = 0xFF;
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            *(editor->car_type) = active - 1;
+            break;
+        }
+    }
+    else
+    {
+        *(editor->car_type) = active;
     }
 }
-static car_type_editor_t* car_type_editor_new(const char* label)
+static car_type_editor_t* car_type_editor_new(const char* label, int include_default)
 {
     int i;
     car_type_editor_t* editor = malloc(sizeof(car_type_editor_t));
@@ -159,8 +166,13 @@ static car_type_editor_t* car_type_editor_new(const char* label)
     editor->label = gtk_label_new(label);
     editor->car_select = gtk_combo_box_text_new();
     gtk_widget_set_sensitive(editor->car_select, FALSE);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),
-        "Default");
+    editor->include_default = 0;
+    if (include_default)
+    {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->car_select),
+            "Default");
+        editor->include_default = 1;
+    }
     for (i = 0; i < NUM_CARS; i++) {
         char option_text[256];
         sprintf(option_text, "Car %d", i);
@@ -182,18 +194,86 @@ static void car_type_editor_set_car_type(car_type_editor_t* editor,
 {
     editor->car_type = car_type;
     gtk_widget_set_sensitive(editor->car_select, TRUE);
-    switch (*car_type) {
-    case 0xFF:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select), 0);
-        break;
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
-            (*car_type) + 1);
-        break;
+    if (editor->include_default)
+    {
+        switch (*car_type) {
+        case 0xFF:
+            gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select), 0);
+            break;
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
+                (*car_type) + 1);
+            break;
+        }
     }
+    else
+    {
+        gtk_combo_box_set_active(GTK_COMBO_BOX(editor->car_select),
+            (*car_type));
+    }
+}
+
+static void animation_type_editor_changed(GtkWidget* widget, gpointer data)
+{
+    animation_type_editor_t* editor = (animation_type_editor_t*)data;
+    if (editor->animation_type == NULL)
+        return;
+    int active = gtk_combo_box_get_active(GTK_COMBO_BOX(editor->animation_select));
+    *(editor->animation_type) = active;
+}
+static animation_type_editor_t* animation_type_editor_new(const char* label)
+{
+    int i;
+    animation_type_editor_t* editor = malloc(sizeof(animation_type_editor_t));
+    editor->animation_type = NULL;
+    editor->container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    editor->label = gtk_label_new(label);
+    editor->animation_select = gtk_combo_box_text_new();
+    gtk_widget_set_sensitive(editor->animation_select, FALSE);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "None");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Steam Locomotive");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Swan Boats");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Canoes");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Rowboats");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Water Tricycles");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Observation Tower");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Helicars");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Monorail Cycles");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Multidimension Coaster");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Flying Animal");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(editor->animation_select),
+        "Walking Animal");
+
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->animation_select), 0);
+    g_signal_connect(editor->animation_select, "changed",
+        G_CALLBACK(animation_type_editor_changed), editor);
+    gtk_box_pack_start(GTK_BOX(editor->container), editor->label, FALSE, FALSE,
+        2);
+    gtk_box_pack_start(GTK_BOX(editor->container), editor->animation_select, FALSE,
+        FALSE, 2);
+    return editor;
+}
+
+static void animation_type_editor_set_animation_type(animation_type_editor_t* editor,
+    uint8_t* animation_type)
+{
+    editor->animation_type = animation_type;
+    gtk_widget_set_sensitive(editor->animation_select, TRUE);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(editor->animation_select), (*animation_type));
 }
 
 static void car_editor_edit_animation(GtkWidget* widget, gpointer data)
@@ -238,24 +318,27 @@ static car_editor_t* car_editor_new()
     flag_editor_add_checkbox(editor->flag_editor, "Swinging", CAR_IS_SWINGING);
     flag_editor_add_checkbox(editor->flag_editor, "Spinning", CAR_IS_SPINNING);
     flag_editor_add_checkbox(editor->flag_editor, "Powered", CAR_IS_POWERED);
-    flag_editor_add_checkbox(editor->flag_editor, "Animated", CAR_IS_ANIMATED);
+    flag_editor_add_checkbox(editor->flag_editor, "Car animated", CAR_IS_ANIMATED);
+    flag_editor_add_checkbox(editor->flag_editor, "Rider animated", CAR_FLAG_RIDER_ANIMATION);
     flag_editor_add_checkbox(editor->flag_editor, "Can invert for long periods", CAR_CAN_INVERT);
-    flag_editor_add_checkbox(editor->flag_editor, "Boat wandering", CAR_WANDERS);
+    flag_editor_add_checkbox(editor->flag_editor, "Boat wandering and collision", CAR_WANDERS);
     flag_editor_add_checkbox(editor->flag_editor, "Powered cars freewheel downhill", CAR_COASTS_DOWNHILL);
-	flag_editor_add_checkbox(editor->flag_editor, "Propelled by water", CAR_FLAG_WATER_PROPULSION);
-    flag_editor_add_checkbox(editor->flag_editor, "Elevator car", CAR_EXTRA_POWER_ON_ASCENT);
+	flag_editor_add_checkbox(editor->flag_editor, "Powered car powered by water", CAR_FLAG_WATER_PROPULSION);
+    flag_editor_add_checkbox(editor->flag_editor, "Extra power on ascent", CAR_EXTRA_POWER_ON_ASCENT);
 	flag_editor_add_checkbox(editor->flag_editor, "Chairlift car", CAR_IS_CHAIRLIFT);
 	flag_editor_add_checkbox(editor->flag_editor, "Go-kart car", CAR_IS_GO_KART);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 21", CAR_FLAG_21);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 25", CAR_FLAG_25);
 	flag_editor_add_checkbox(editor->flag_editor, "Swing Flag 27 (SLIDE_SWING)", CAR_FLAG_27);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 4", CAR_FLAG_4);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 5", CAR_FLAG_5);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 10", CAR_FLAG_10);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 11", CAR_FLAG_11);
-	flag_editor_add_checkbox(editor->flag_editor, "Car Flag 13", CAR_FLAG_13);
-    flag_editor_add_checkbox(editor->flag_editor, "Minigolfer", CAR_IS_MINIGOLFER);
+	flag_editor_add_checkbox(editor->flag_editor, "Reverser bogie", CAR_FLAG_4);
+	flag_editor_add_checkbox(editor->flag_editor, "Reverser car", CAR_FLAG_5);
+	flag_editor_add_checkbox(editor->flag_editor, "Recalculate sprite bounds", CAR_RECALCULATE_SPRITE_BOUNDS);
+	flag_editor_add_checkbox(editor->flag_editor, "Spinning uses 16 frames", CAR_USE_16_ROTATION_FRAMES);
+    flag_editor_add_checkbox(editor->flag_editor, "Dodgem car", CAR_FLAG_DODGEM_CAR_PLACEMENT);
+    flag_editor_add_checkbox(editor->flag_editor, "Dodgem car lights", CAR_DODGEM_USE_LIGHTS);
     flag_editor_add_checkbox(editor->flag_editor, "2D loading", CAR_FLAG_2D_LOADING_WAYPOINTS);
+    flag_editor_add_checkbox(editor->flag_editor, "Sprite bound recalc. include inverted", SPRITE_BOUNDS_INCLUDE_INVERTED_SET);
+    flag_editor_add_checkbox(editor->flag_editor, "Override vertical frames", CAR_OVERRIDE_VERTICAL_FRAMES);
     gtk_box_pack_start(GTK_BOX(editor->left_vbox), editor->flag_editor->container, FALSE, FALSE, 1);
 
     editor->sprite_editor = flag_editor_new("Sprites");
@@ -277,6 +360,8 @@ static car_editor_t* car_editor_new()
         SPRITE_CORKSCREW);
     flag_editor_add_checkbox(editor->sprite_editor, "Animated restraints",
         SPRITE_RESTRAINT_ANIMATION);
+    flag_editor_add_checkbox(editor->sprite_editor, "Spiral lift (unused)",
+        SPRITE_SPIRAL_LIFT);
     gtk_box_pack_start(GTK_BOX(editor->left_vbox),
         editor->sprite_editor->container, FALSE, FALSE, 1);
 
@@ -295,7 +380,7 @@ static car_editor_t* car_editor_new()
         RUNNING_SOUND_WATERSLIDE);
     value_selector_add_selection(editor->running_sound_editor, "Train",
         RUNNING_SOUND_TRAIN);
-    value_selector_add_selection(editor->running_sound_editor, "Engine",
+    value_selector_add_selection(editor->running_sound_editor, "Go-Kart",
         RUNNING_SOUND_ENGINE);
 
     editor->secondary_sound_editor = value_selector_new("Secondary sound:");
@@ -315,13 +400,19 @@ static car_editor_t* car_editor_new()
     editor->spacing_editor = value_editor_new(VALUE_SIZE_DWORD, "Spacing:");
     editor->friction_editor = value_editor_new(VALUE_SIZE_WORD, "Mass:");
     editor->z_value_editor = value_editor_new(VALUE_SIZE_BYTE, "Z Value:");
+    editor->vehicle_tab_vertical_offset_editor = value_editor_new(VALUE_SIZE_BYTE_SIGNED, "Vertical\nTab Offset:");
+    editor->powered_acceleration_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nAcceleration:");
+    editor->powered_velocity_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nVelocity:");
 
 	editor->spin_inertia_editor = value_editor_new(VALUE_SIZE_BYTE, "Spin Inertia:");
 	editor->spin_friction_editor = value_editor_new(VALUE_SIZE_BYTE, "Spin Friction:");
-	editor->powered_acceleration_editor = value_editor_new(VALUE_SIZE_BYTE, "Powered\nAcceleration:");
-	editor->powered_velocity_editor= value_editor_new(VALUE_SIZE_BYTE, "Powered\nVelocity:");
+
+    editor->logflume_reverser_vehicle_editor = value_editor_new(VALUE_SIZE_BYTE, "Logflume\nReverser\n Vehicle:");
+    editor->animation_type_selector = animation_type_editor_new("Animation Type:");
+
 	editor->car_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Car Visual:");
 	editor->effect_visual_editor = value_editor_new(VALUE_SIZE_BYTE, "Effect Visual:");
+    editor->override_vertical_frames_editor = value_editor_new(VALUE_SIZE_BYTE, "Override\nVertical Frames:");
 
     editor->animation_button = gtk_button_new_with_label("Edit Animation");
     g_signal_connect(editor->animation_button, "clicked",
@@ -333,6 +424,8 @@ static car_editor_t* car_editor_new()
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->spacing_editor->container, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->friction_editor->container, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->z_value_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->vehicle_tab_vertical_offset_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->animation_type_selector->container, FALSE, FALSE, 1);
 
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->powered_velocity_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->powered_acceleration_editor->container, FALSE, FALSE, 1);
@@ -340,6 +433,7 @@ static car_editor_t* car_editor_new()
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->spin_friction_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->car_visual_editor->container, FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->effect_visual_editor->container, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(editor->right_vbox), editor->override_vertical_frames_editor->container, FALSE, FALSE, 1);
 
     return editor;
 }
@@ -367,6 +461,10 @@ static void car_editor_set_car(car_editor_t* editor, car_settings_t* car_setting
 	value_editor_set_value(editor->powered_velocity_editor, &(car_settings->powered_velocity));
 	value_editor_set_value(editor->car_visual_editor, &(car_settings->car_visual));
 	value_editor_set_value(editor->effect_visual_editor, &(car_settings->effect_visual));
+    animation_type_editor_set_animation_type(editor->animation_type_selector, &(car_settings->animation_type));
+    value_editor_set_value(editor->logflume_reverser_vehicle_editor, &(car_settings->logflume_reverser_vehicle));
+    value_editor_set_value(editor->vehicle_tab_vertical_offset_editor, &(car_settings->vehicle_tab_vertical_offset));
+    value_editor_set_value(editor->override_vertical_frames_editor, &(car_settings->override_vertical_frames));
 }
 
 static void preview_editor_set_preview_pressed(GtkWidget* widget,
@@ -610,6 +708,9 @@ center_panel_t* center_panel_new()
 		FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->max_cars_editor->container,
 		FALSE, FALSE, 2);
+    editor->cars_per_flat_ride_editor = value_editor_new(VALUE_SIZE_BYTE, "Cars per flat ride:");
+    gtk_box_pack_start(GTK_BOX(cars_vbox), editor->cars_per_flat_ride_editor->container,
+        FALSE, FALSE, 2);
 	editor->zero_cars_editor = value_editor_new(VALUE_SIZE_BYTE, "Number of zero cars:");
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->zero_cars_editor->container,
 		FALSE, FALSE, 2);
@@ -617,11 +718,11 @@ center_panel_t* center_panel_new()
 	gtk_box_pack_start(GTK_BOX(cars_vbox),
 		editor->car_icon_index_editor->container, FALSE, FALSE, 2);
 
-	editor->default_car_editor = car_type_editor_new("Default car");
-	editor->front_car_editor = car_type_editor_new("First car");
-	editor->second_car_editor = car_type_editor_new("Second car");
-	editor->third_car_editor = car_type_editor_new("Third car");
-	editor->rear_car_editor = car_type_editor_new("Rear car");
+	editor->default_car_editor = car_type_editor_new("Default car",0);
+	editor->front_car_editor = car_type_editor_new("First car",1);
+	editor->second_car_editor = car_type_editor_new("Second car", 1);
+	editor->third_car_editor = car_type_editor_new("Third car", 1);
+	editor->rear_car_editor = car_type_editor_new("Rear car", 1);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->default_car_editor->container,
 		FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(cars_vbox), editor->front_car_editor->container,
@@ -657,6 +758,8 @@ void center_panel_set_project(center_panel_t* editor, project_t* project)
 		&(project->car_types[CAR_INDEX_THIRD]));
 	car_type_editor_set_car_type(editor->rear_car_editor,
 		&(project->car_types[CAR_INDEX_REAR]));
+    value_editor_set_value(editor->cars_per_flat_ride_editor,
+        &(project->cars_per_flat_ride));
 }
 
 right_panel_t* right_panel_new()

@@ -38,6 +38,9 @@ Matrix MatrixTranspose(Matrix A);
 Matrix MatrixInverse(Matrix A);
 Matrix MatrixMultiply(Matrix A, Matrix B);
 
+Matrix MatrixScale(Matrix A, Vector scale);
+Matrix ScaleMatrix(Vector scale);
+
 Matrix MatrixFromEulerAngles(Vector rotation);
 Matrix TranslationMatrix(Vector displacement);
 Matrix ProjectionMatrix(float left,
